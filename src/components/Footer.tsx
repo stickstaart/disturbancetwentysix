@@ -9,7 +9,7 @@ const Footer: React.FC = () => {
         {/* LOGO IN FOOTER - GECENTREERD */}
         <div className="flex justify-center mb-10">
           <img
-            src="/src/assets/Disturbance_L.svg"
+            src="/Disturbance_L.svg"
             alt="Disturbance Logo"
             className="w-[200px] h-auto opacity-80 hover:opacity-100 transition-opacity"
           />

@@ -4,9 +4,6 @@ const Videos: React.FC = () => {
   return (
     <section id="video" className="py-24 bg-black overflow-hidden border-y border-gray-900">
       <div className="max-w-7xl mx-auto px-6">
-        <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-16 text-center">
-          Visual <span className="text-gray-500">&</span> Violence
-        </h2>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
 

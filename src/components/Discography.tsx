@@ -1,5 +1,4 @@
 import React from "react";
-import { FaSpotify, FaBandcamp, FaShoppingBag } from 'react-icons/fa';
 
 // De data voor je eigen releases
 const mainReleases = [
@@ -8,7 +7,7 @@ const mainReleases = [
     title: 'Civilization Leftovers',
     type: 'Split 10" with Blatoidea / 10"',
     year: '2024',
-    cover: '/src/assets/releases/civilization-leftovers.webp',
+    cover: '/releases/civilization-leftovers.webp',
     label: 'Katabomb Records (France)',
     spotify: 'https://open.spotify.com/album/30v8cKBiNCRy113LhLAhwf' ,
     bandcamp: 'https://disturbancepunk.bandcamp.com/album/civilization-leftovers',
@@ -19,7 +18,7 @@ const mainReleases = [
     title: 'Tox Populi',
     type: 'Full Album / CD and LP',
     year: '2018',
-    cover: '/src/assets/releases/tox-populi.webp',
+    cover: '/releases/tox-populi.webp',
     label: 'Punk ‘n’ Loud Records (Greece), Dirty Punk Records (France), Dead Lamb Records (Ireland), Dirty Old Man' +
       ' Records (UK)',
     spotify: 'https://open.spotify.com/album/0ODUvNfdFzJrUWe3utlPhv',
@@ -31,7 +30,7 @@ const mainReleases = [
     title: 'Disturbance / Burning Lady',
     type: 'Split 10" with Burning Lady / 10"',
     year: '2011',
-    cover: '/src/assets/releases/disturbance-burninglady.webp',
+    cover: '/releases/disturbance-burninglady.webp',
     label: 'Dirty Punk Records (France)',
     spotify: 'https://open.spotify.com/album/09AfLfuStDOf8TfK3kmMLL',
     bandcamp: 'https://disturbancepunk.bandcamp.com/album/disturbance-burning-lady-split-album',
@@ -42,7 +41,7 @@ const mainReleases = [
     title: 'Shades of Fear',
     type: 'Full Album / CD and LP',
     year: '2007',
-    cover: '/src/assets/releases/shades-of-fear.webp',
+    cover: '/releases/shades-of-fear.webp',
     label: 'Dirty Punk Records (France)',
     spotify: 'https://open.spotify.com/album/4PG3VKo6boT50JaqkBTQMH',
     bandcamp: 'https://disturbancepunk.bandcamp.com/album/shades-of-fear',
@@ -53,7 +52,7 @@ const mainReleases = [
     title: 'Malice in Slumberland',
     type: 'Full Album / CD and LP',
     year: '2003',
-    cover: '/src/assets/releases/malice-in-slumberland.webp',
+    cover: '/releases/malice-in-slumberland.webp',
     label: 'StreetMusic OTK Records (Germany)',
     spotify: 'https://open.spotify.com/album/67ytXdYJsamj9wYoK3dbd1',
     bandcamp: 'https://disturbancepunk.bandcamp.com/album/malice-in-slumberland',
@@ -65,7 +64,7 @@ const mainReleases = [
     title: 'Live on to Decline',
     type: 'EP / 7"',
     year: '2001',
-    cover: '/src/assets/releases/live-on-to-decline.webp',
+    cover: '/releases/live-on-to-decline.webp',
     label: 'Tocado Records (The Netherlands)',
     spotify: 'https://open.spotify.com/album/3KIx2EC9nUcWuBS19yhgdC',
     bandcamp: 'https://disturbancepunk.bandcamp.com/album/live-on-to-decline-first-ep-release',
@@ -106,52 +105,50 @@ const Discography: React.FC = () => {
 
         {/* MAIN RELEASES GRID */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-          {mainReleases.map((album) => (
-            <div key={album.id} className="group">
-              {/* Cover Container */}
-              <div
-                className="relative aspect-square overflow-hidden bg-gray-900 border border-gray-800 transition-all duration-500 group-hover:border-white">
+          {mainReleases.map((release, index) => (
+            <div key={index} className="group relative flex flex-col bg-zinc-900 overflow-hidden">
+              {/* Afbeelding Container */}
+              <div className="relative overflow-hidden aspect-square">
                 <img
-                  src={album.cover}
-                  alt={album.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 group-hover:opacity-30"
+                  src={release.cover}
+                  alt={release.title}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
 
-                {/* Overlay met Iconen */}
-                <div
-                  className="absolute inset-0 flex flex-col justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <p className="text-xs uppercase tracking-[0.2em] text-gray-400 mb-2">{album.year}</p>
-                  <p className="text-center font-bold text-xl px-4 mb-6 leading-tight uppercase">{album.type}</p>
+                {/* Overlay: Op desktop verschijnt deze bij hover. Op mobiel verbergen we deze overlay vaak om verwarring te voorkomen, OF we laten hem staan. */}
+                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 p-4">
+                  <h3 className="text-xl font-black uppercase text-white mb-4 text-center leading-none">
+                    {release.title} ({release.year})
+                  </h3>
 
-                  <div className="flex gap-6 text-3xl">
-                    {album.spotify && (
-                      <a href={album.spotify} target="_blank" rel="noreferrer"
-                         className="hover:text-[#1DB954] transition-colors">
-                        <FaSpotify/>
-                      </a>
-                    )}
-                    {album.bandcamp && (
-                      <a href={album.bandcamp} target="_blank" rel="noreferrer"
-                         className="hover:text-[#629aa9] transition-colors">
-                        <FaBandcamp/>
-                      </a>
-                    )}
-                    {album.shop && (
-                      <a href={album.shop} target="_blank" rel="noreferrer"
-                         className="hover:text-white transition-colors">
-                        <FaShoppingBag/>
-                      </a>
-                    )}
+                  {/* Desktop Links (binnen de hover) */}
+                  <div className="hidden md:flex flex-col gap-3 w-full max-w-[160px]">
+                    <a href={release.spotify} target="_blank" className="bg-[#1DB954] hover:bg-[#1ed760] text-white py-2 px-4 rounded-full text-xs font-bold uppercase text-center transition-colors">
+                      Spotify
+                    </a>
+                    <a href={release.bandcamp} target="_blank" className="bg-[#629aa9] hover:bg-[#72aab9] text-white py-2 px-4 rounded-full text-xs font-bold uppercase text-center transition-colors">
+                      Bandcamp
+                    </a>
                   </div>
                 </div>
               </div>
 
-              {/* Info onder de hoes */}
-              <div className="mt-5 flex justify-between items-start">
-                <div>
-                  <h3 className="text-xl font-black uppercase leading-none">{album.title}</h3>
-                  <p className="text-sm text-gray-500 mt-1 uppercase tracking-wider">{album.label}</p>
-                </div>
+              {/* Mobiele Links: Altijd zichtbaar direct onder de afbeelding op kleine schermen */}
+              <div className="flex md:hidden border-t border-white/10">
+                <a
+                  href={release.spotify}
+                  target="_blank"
+                  className="flex-1 bg-[#1DB954] text-white py-4 text-center text-xs font-black uppercase tracking-tighter"
+                >
+                  Spotify
+                </a>
+                <a
+                  href={release.bandcamp}
+                  target="_blank"
+                  className="flex-1 bg-[#629aa9] text-white py-4 text-center text-xs font-black uppercase tracking-tighter border-l border-black/20"
+                >
+                  Bandcamp
+                </a>
               </div>
             </div>
           ))}

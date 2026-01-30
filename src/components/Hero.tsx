@@ -34,7 +34,7 @@ const Hero: React.FC = () => {
       {/* Content */}
       <div className="relative z-10 px-4 animate-fade-in">
         <img
-          src="/src/assets/Disturbance_L.svg"
+          src="/Disturbance_L.svg"
           alt="Disturbance Logo"
           className="mx-auto mb-4 w-[600px]"
         />

@@ -13,7 +13,7 @@ const Bio: React.FC = () => {
 
             <div className="relative overflow-hidden border border-white/20 shadow-2xl">
               <img
-                src="/src/assets/Disturbance-square-0030834.jpg"
+                src="/Disturbance-square-0030834.jpg"
                 alt="Disturbance Live"
                 className="w-full h-auto grayscale hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-100"
               />
