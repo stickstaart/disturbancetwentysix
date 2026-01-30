@@ -7,6 +7,7 @@ import Discography from "./components/Discography";
 import Bio from "./components/Bio";
 import Contact from "./components/Contact";
 import Footer from "./components/Footer";
+import { Analytics } from "@vercel/analytics/react"; // <--- Regel 1: Import
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
       <Bio />
       <Contact />
       <Footer />
+      <Analytics /> {/* <--- Regel 2: De tracker */}
     </div>
   );
 }
