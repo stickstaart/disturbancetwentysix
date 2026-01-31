@@ -1,6 +1,6 @@
 export const shows = [
   {
-    id: '1997-??-??-oud-beijerland-dabar',
+    id: '0',
     date: '1997-??-??',
     country: 'NL',
     city: 'Oud-Beijerland',

@@ -1,6 +1,6 @@
 const tourData = [
   {
-    date: "??-??-1997",
+    date: "1997",
     country: "NL",
     city: "Oud-Beijerland",
     venue: "Dabar",
@@ -10,7 +10,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-1998",
+    date: "1998",
     country: "NL",
     city: "Oud-Beijerland",
     venue: "Dinges",
@@ -20,7 +20,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-1998",
+    date: "1998",
     country: "NL",
     city: "Rotterdam",
     venue: "Cafe De Buurman",
@@ -30,7 +30,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-1998",
+    date: "1998",
     country: "NL",
     city: "Den Haag",
     venue: "Cafe The Big Confusion",
@@ -70,7 +70,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-1999",
+    date: "1999",
     country: "NL",
     city: "Oud-Beijerland",
     venue: "Dinges",
@@ -100,7 +100,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-1999",
+    date: "1999",
     country: "NL",
     city: "Oud-Beijerland",
     venue: "Hakuna Matata",
@@ -110,7 +110,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-1999",
+    date: "1999",
     country: "NL",
     city: "Nieuwekerk a/d IJssel",
     venue: "Taverna",
@@ -130,7 +130,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-1999",
+    date: "1999",
     country: "NL",
     city: "Vlaardingen",
     venue: "Villa Musica",
@@ -140,17 +140,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-1999",
-    country: "NL",
-    city: "Gouda",
-    venue: "De Gonz",
-    name: "",
-    tour: "",
-    with: "Aggro Culture",
-  },
-
-  {
-    date: "??-??-1999",
+    date: "1999",
     country: "NL",
     city: "Gouda",
     venue: "De Gonz",
@@ -180,7 +170,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-2001",
+    date: "2001",
     country: "NL",
     city: "Den Haag",
     venue: "Musicon",
@@ -189,7 +179,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-2001",
+    date: "2001",
     country: "NL",
     city: "Rotterdam",
     venue: "Waterfront",
@@ -198,7 +188,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-2001",
+    date: "2001",
     country: "NL",
     city: "Rotterdam",
     venue: "Stubnitz",
@@ -207,16 +197,16 @@ const tourData = [
   },
 
   {
-    date: "??-??-2001",
+    date: "01-01-2001",
     country: "NL",
     city: "Rotterdam",
     venue: "Nighttown",
     name: "Best of Heel Erg Punk",
-    with: "",
+    with: "Cenobites",
   },
 
   {
-    date: "??-??-2001",
+    date: "2001",
     country: "NL",
     city: "Scheveningen",
     venue: "De Franse Bulldog",
@@ -225,7 +215,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-2001",
+    date: "2001",
     country: "NL",
     city: "Sliedrecht",
     venue: "Elektra",
@@ -243,7 +233,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-2001",
+    date: "2001",
     country: "NL",
     city: "Den Haag",
     venue: "De Blauwe Aanslag",
@@ -252,7 +242,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-2001",
+    date: "2001",
     country: "DE",
     city: "Aachen",
     venue: "AZ Bunker",
@@ -261,7 +251,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-2001",
+    date: "2001",
     country: "NL",
     city: "Leeuwarden",
     venue: "De Gloppe",
@@ -270,7 +260,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-2001",
+    date: "2001",
     country: "NL",
     city: "Rotterdam",
     venue: "Nighttown",
@@ -279,7 +269,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-2001",
+    date: "2001",
     country: "NL",
     city: "Roosendaal",
     venue: "The Music Temple",
@@ -288,7 +278,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-2001",
+    date: "2001",
     country: "NL",
     city: "Rotterdam",
     venue: "Nighttown",
@@ -306,7 +296,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-2001",
+    date: "2001",
     country: "NL",
     city: "Utrecht",
     venue: "Ekko",
@@ -435,7 +425,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-2002",
+    date: "2002",
     county: "DE",
     city: "Wermelskirchen",
     venue: "AJZ Bahndam",
@@ -444,7 +434,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-2002",
+    date: "2002",
     country: "NL",
     city: "Rotterdam",
     venue: "Zuiderpark",
@@ -453,7 +443,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-2002",
+    date: "2002",
     country: "NL",
     city: "Rotterdam",
     venue: "Baroeg",
@@ -471,7 +461,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-2002",
+    date: "2002",
     country: "NL",
     city: "Nijmegen",
     venue: "Squatted Army Base",
@@ -498,7 +488,7 @@ const tourData = [
   },
 
   {
-    date: "??-??-2002",
+    date: "2002",
     country: "BE",
     city: "Herentals",
     venue: "",
@@ -1093,7 +1083,7 @@ const tourData = [
   },
 
   {
-    date: "23-10 -2004",
+    date: "23-10-2004",
     country: "NL",
     city: "Utrecht",
     venue: "ACU",
@@ -1387,16 +1377,6 @@ const tourData = [
     country: "CN",
     city: "Guangzhou",
     venue: "Solo Bar",
-    name: "",
-    tour: "CHINA TOUR with 400 Blows from Wuhan",
-    with: "400 Blows",
-  },
-
-  {
-    date: "10-04-2005",
-    country: "CN",
-    city: "Hongkong",
-    venue: "Warehouse Youthcenter",
     name: "",
     tour: "CHINA TOUR with 400 Blows from Wuhan",
     with: "400 Blows",

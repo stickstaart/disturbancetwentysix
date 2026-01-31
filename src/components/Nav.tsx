@@ -36,6 +36,7 @@ const Nav: React.FC = () => {
           <li><a href="#music" className="hover:text-gray-400 transition-colors">Music</a></li>
           <li><a href="#bio" className="hover:text-gray-400 transition-colors">Bio</a></li>
           <li><a href="#contact" className="hover:text-gray-400 transition-colors">Contact</a></li>
+          <li><a href="#history" className="hover:text-gray-400 transition-colors">History</a></li>
         </ul>
       </div>
 
