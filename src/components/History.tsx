@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { nieuweData } from '../../SHOWS/dates.js';
 
 interface Show {
@@ -13,10 +13,13 @@ const History = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const shows = nieuweData as Show[];
 
-  // 1. Filter alleen de shows uit het verleden
+// 1. Filter alleen de shows uit het verleden
   const pastShows = shows
-    .filter(show => new Date(show.date) < new Date())
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
+    .filter(show => {
+      const d = new Date(show.date);
+      return !isNaN(d.getTime()) && d < new Date();
+    })
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   // 2. Uitgebreide en veilige filter logica
   const filteredShows = pastShows.filter(show => {
