@@ -2925,7 +2925,7 @@ const tourData = [
   {
     date: "08-12-2017",
     country: "BE",
-    city: "Kortijk",
+    city: "Kortrijk",
     venue: "The Pits",
     name: "",
     tour: "",
@@ -3759,7 +3759,7 @@ const tourData = [
   {
     date: "04-07-2024",
     country: "DE",
-    city: "Berlijn",
+    city: "Berlin",
     venue: "Køpi",
     name: "",
     tour: "",
