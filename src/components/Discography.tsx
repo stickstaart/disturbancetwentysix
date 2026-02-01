@@ -1,6 +1,5 @@
 import React from "react";
 
-// De data voor je eigen releases
 const mainReleases = [
   {
     id: 'civilization-leftovers',

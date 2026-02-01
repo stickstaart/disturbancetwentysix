@@ -1,6 +1,5 @@
 import React from "react";
 
-// Hiermee vertel je TypeScript precies wat er in een show staat
 interface Show {
   date: string;
   venue: string;
@@ -9,7 +8,6 @@ interface Show {
   bands?: string[];
 }
 
-// Importeer je geconverteerde data
 import { nieuweData } from '../../SHOWS/dates';
 
 const Hero: React.FC = () => {

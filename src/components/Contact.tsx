@@ -31,6 +31,7 @@ const Contact: React.FC = () => {
           required
           className="p-3 bg-gray-900 text-white border border-gray-800 focus:border-white outline-none transition-colors"
         />
+
         <textarea
           name="message" // Belangrijk!
           placeholder="Message"
@@ -38,6 +39,9 @@ const Contact: React.FC = () => {
           className="p-3 bg-gray-900 text-white border border-gray-800 focus:border-white outline-none transition-colors"
           rows={4}
         ></textarea>
+
+        {/* Honeypot veld - onzichtbaar voor mensen, valstrik voor bots */}
+        <input type="text" name="_gotcha" style={{ display: 'none' }} />
 
         <button
           type="submit"

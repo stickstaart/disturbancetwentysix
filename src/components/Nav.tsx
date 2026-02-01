@@ -14,7 +14,7 @@ const Nav: React.FC = () => {
           className="w-[150px] md:w-[200px]"
         />
 
-        {/* Hamburger Icon (alleen zichtbaar op mobiel) */}
+        {/* Hamburger Menu */}
         <button
           onClick={toggleMenu}
           className="md:hidden text-white focus:outline-none"
@@ -49,6 +49,7 @@ const Nav: React.FC = () => {
           <li><a href="#music" onClick={toggleMenu} className="hover:text-accent">Music</a></li>
           <li><a href="#bio" onClick={toggleMenu} className="hover:text-accent">Bio</a></li>
           <li><a href="#contact" onClick={toggleMenu} className="hover:text-accent">Contact</a></li>
+          <li><a href="#history" onClick={toggleMenu} className="hover:text-accent">History</a></li>
         </ul>
       </div>
     </nav>
