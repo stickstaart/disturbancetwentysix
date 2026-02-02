@@ -30,7 +30,7 @@ const Nav: React.FC = () => {
 
         {/* Desktop Menu */}
         <ul className="hidden md:flex gap-6 uppercase text-sm font-semibold">
-          <li><a href="#hero" className="hover:text-gray-400 transition-colors">Home</a></li>
+          <li><a href="#hero" className="text-secondary hover:text-gray-400 transition-colors">Home</a></li>
           <li><a href="#video" className="hover:text-gray-400 transition-colors">Video</a></li>
           <li><a href="#tour" className="hover:text-gray-400 transition-colors">Tour</a></li>
           <li><a href="#music" className="hover:text-gray-400 transition-colors">Music</a></li>

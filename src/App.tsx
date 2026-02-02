@@ -9,6 +9,7 @@ import Contact from "./components/Contact";
 import Footer from "./components/Footer";
 import History from "./components/History";
 import { Analytics } from "@vercel/analytics/react"; // <--- Regel 1: Import
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
       <Footer />
       <History />
       <Analytics /> {/* <--- Regel 2: De tracker */}
+      <SpeedInsights />
     </div>
   );
 }
