@@ -9,7 +9,7 @@ import Contact from "./components/Contact";
 import Footer from "./components/Footer";
 import History from "./components/History";
 import { Analytics } from "@vercel/analytics/react"; // <--- Regel 1: Import
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import { SpeedInsights } from "@vercel/speed-insights/react"
 
 function App() {
   return (
