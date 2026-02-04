@@ -3994,7 +3994,7 @@ const tourData = [
   {
     date: "06-02-2026",
     country: "BE",
-    city: "Aarschot",
+    city: "Diest",
     venue: "HELL",
     name: "",
     tour: "",
