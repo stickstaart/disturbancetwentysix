@@ -11,12 +11,22 @@ interface Show {
 import { nieuweData } from '../../SHOWS/dates';
 
 const Hero: React.FC = () => {
-  // 1. Zoek de eerstvolgende show
-  const now = new Date();
+// Pak de huidige tijd en zet deze op het begin van de dag (00:00:00)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const shows = nieuweData as Show[];
+
+  // 1. Zoek de eerstvolgende show
   const nextShow = shows
-    .filter(show => new Date(show.date) >= now)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0]; // Pak de eerste na sorteren
+    .map(show => ({
+      ...show,
+      // Gebruik de slash-methode voor stabiliteit
+      parsedDate: new Date(show.date.replace(/-/g, "/"))
+    }))
+    // Filter nu op 'today' in plaats van 'now'
+    .filter(show => show.parsedDate >= today)
+    .sort((a, b) => a.parsedDate.getTime() - b.parsedDate.getTime())[0];
   const formattedHeroDate = new Date(nextShow.date).toLocaleDateString('en-GB', {
     day: '2-digit',
     month: 'short',
