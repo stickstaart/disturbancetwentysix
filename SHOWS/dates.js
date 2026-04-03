@@ -4103,6 +4103,16 @@ const tourData = [
   },
 
   {
+    date: "30-05-2026",
+    country: "NL",
+    city: "Rotterdam",
+    venue: "Baroeg",
+    name: "",
+    tour: "",
+    otherbands: "Peter Pan Speedrock, Cenobites",
+  },
+
+  {
     date: "04-09-2026",
     country: "NL",
     city: "Arnhem",
@@ -4157,6 +4167,8 @@ function convertShowFormat(show) {
     poster: null,
   };
 }
+
+
 
 export const nieuweData = tourData.map(convertShowFormat);
 console.log(nieuweData);
