@@ -4113,6 +4113,16 @@ const tourData = [
   },
 
   {
+    date: "25-07-2026",
+    country: "NL",
+    city: "Den Haag",
+    venue: "Musicon",
+    name: "",
+    tour: "",
+    otherbands: "Svetlanas",
+  },
+
+  {
     date: "04-09-2026",
     country: "NL",
     city: "Arnhem",
