@@ -4131,6 +4131,26 @@ const tourData = [
     tour: "",
     otherbands: "UK Subs, GBH",
   },
+
+  {
+    date: "10-12-2026",
+    country: "NL",
+    city: "Utrecht",
+    venue: "DB's",
+    name: "",
+    tour: "",
+    otherbands: "Mullet Monster Mafia",
+  },
+
+  {
+    date: "13-12-2026",
+    country: "NL",
+    city: "Dordrecht",
+    venue: "Bibelot",
+    name: "",
+    tour: "",
+    otherbands: "Peter and the Test Tube Babies",
+  },
 ];
 
 ////////////////////////////////////////////////////////////////////////////
