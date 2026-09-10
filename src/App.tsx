@@ -1,32 +1,24 @@
-import "./index.css";
-import Nav from "./components/Nav";
-import Hero from "./components/Hero";
-import Video from "./components/Video";
-import Tour from "./components/Tour";
-import Discography from "./components/Discography";
-import Bio from "./components/Bio";
-import Contact from "./components/Contact";
-import Footer from "./components/Footer";
-import History from "./components/History";
-import { Analytics } from "@vercel/analytics/react"; // <--- Regel 1: Import
-import { SpeedInsights } from "@vercel/speed-insights/react"
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
-function App() {
+import "./index.css";
+
+// Documentatie: Importeer de hoofdpagina en de agenda uit de components map
+import Home from "./components/Home";
+import BandDashboard from "./components/BandDashboard";
+
+const App: React.FC = () => {
   return (
-    <div className="bg-black text-white">
-      <Nav />
-      <Hero />
-      <Video />
-      <Tour />
-      <Discography />
-      <Bio />
-      <Contact />
-      <Footer />
-      <History />
-      <Analytics /> {/* <--- Regel 2: De tracker */}
-      <SpeedInsights />
-    </div>
+    <Router>
+      <Routes>
+        {/* De openbare homepage op het hoofdadres */}
+        <Route path="/" element={<Home />} />
+
+        {/* De afgeschermde Band Agenda op /agenda */}
+        <Route path="/agenda" element={<BandDashboard />} />
+      </Routes>
+    </Router>
   );
-}
+};
 
 export default App;
