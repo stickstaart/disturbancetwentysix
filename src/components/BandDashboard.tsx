@@ -64,6 +64,9 @@ const BandDashboard: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<string>("2026");
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
 
+  // Modal State voor de Landkeuze
+  const [isCountryModalOpen, setIsCountryModalOpen] = useState<boolean>(false);
+
   const [shows, setShows] = useState<DateItem[]>(() => {
     const saved = localStorage.getItem("band_events_v3");
     return saved ? JSON.parse(saved) : [];
@@ -248,7 +251,7 @@ const BandDashboard: React.FC = () => {
         <span className="text-[10px] md:text-xs font-mono text-zinc-500">BEVEILIGDE BANDZONE</span>
         <button
           onClick={() => { setIsAuthenticated(false); localStorage.removeItem("band_auth"); }}
-          className="text-xs font-mono text-red-500 hover:underline"
+          className="text-xs font-mono text-red-500 hover:underline cursor-pointer"
         >
           Uitloggen 🔒
         </button>
@@ -297,23 +300,40 @@ const BandDashboard: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsFormOpen(true)}
-              className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-xs tracking-widest rounded transition-all shadow"
+              className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-xs tracking-widest rounded transition-all shadow cursor-pointer"
             >
               + NIEUWE SHOW TOEVOEGEN
             </button>
           ) : (
             <form onSubmit={handleSaveShow} className="p-4 bg-zinc-900 rounded border border-zinc-800 space-y-4">
-              <div className="flex justify-between items-center">
+              {/* NIEUWE HEADER CODE MET GROEN VINKJE EN ROOD KRUIS */}
+              <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
                 <h3 className="text-sm font-bold uppercase text-red-500 tracking-wider">
                   {editingId ? "✏️ Show Bewerken" : "+ Nieuwe Show Toevoegen"}
                 </h3>
-                <button
-                  type="button"
-                  onClick={resetShowForm}
-                  className="text-xs text-zinc-400 hover:text-white underline"
-                >
-                  Annuleren / Sluiten
-                </button>
+
+                <div className="flex items-center gap-2">
+                  {/* GROENE OPSLAAN KNOP */}
+                  <button
+                    type="submit"
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-emerald-950/60 border border-emerald-600 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all text-base font-extrabold cursor-pointer shadow"
+                    title="Show opslaan"
+                    aria-label="Show opslaan"
+                  >
+                    ✓
+                  </button>
+
+                  {/* ROODE SLUIT KNOP */}
+                  <button
+                    type="button"
+                    onClick={resetShowForm}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-red-950/60 border border-red-600 text-red-500 hover:bg-red-600 hover:text-white transition-all text-base font-extrabold cursor-pointer shadow"
+                    title="Formulier sluiten"
+                    aria-label="Formulier sluiten"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
@@ -322,19 +342,66 @@ const BandDashboard: React.FC = () => {
                   <CustomDatePicker value={date} onChange={(newDate) => setDate(newDate)} />
                 </div>
 
+                {/* HERONTWORPEN CUSTOM LANDKEUZE MET MODAL */}
                 <div>
                   <label className="text-[10px] text-zinc-400 uppercase font-mono block mb-1">Land</label>
-                  <select
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    className="w-full p-2 bg-black border border-zinc-700 rounded text-xs text-white"
+
+                  <button
+                    type="button"
+                    onClick={() => setIsCountryModalOpen(true)}
+                    className="w-full p-2 bg-black border border-zinc-700 rounded text-xs text-white text-left flex items-center justify-between cursor-pointer font-mono"
                   >
-                    {COUNTRIES.map((item) => (
-                      <option key={item.code} value={item.code}>
-                        {item.name} ({item.code})
-                      </option>
-                    ))}
-                  </select>
+                    <span>🚩 {COUNTRIES.find((c) => c.code === country)?.name || country} ({country})</span>
+                    <span className="text-[10px] text-zinc-400">▼</span>
+                  </button>
+
+                  {isCountryModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                      <div className="bg-zinc-900 border border-zinc-700 rounded-lg max-w-xs w-full p-4 space-y-3 shadow-2xl">
+                        <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
+                          <h3 className="text-sm font-bold uppercase text-zinc-200 font-mono">
+                            Kies Land
+                          </h3>
+                          <button
+                            type="button"
+                            onClick={() => setIsCountryModalOpen(false)}
+                            className="text-zinc-400 hover:text-white text-base font-bold p-1 cursor-pointer"
+                          >
+                            ✕
+                          </button>
+                        </div>
+
+                        <div className="max-h-60 overflow-y-auto space-y-1 font-mono pr-1">
+                          {COUNTRIES.map((item) => (
+                            <button
+                              key={item.code}
+                              type="button"
+                              onClick={() => {
+                                setCountry(item.code);
+                                setIsCountryModalOpen(false);
+                              }}
+                              className={`w-full p-2 rounded text-xs font-bold text-left border flex justify-between items-center cursor-pointer ${
+                                country === item.code
+                                  ? "bg-red-950 text-red-400 border-red-500"
+                                  : "bg-black/50 text-zinc-300 border-zinc-800 hover:border-zinc-600"
+                              }`}
+                            >
+                              <span>{item.name} ({item.code})</span>
+                              {country === item.code && <span>✓</span>}
+                            </button>
+                          ))}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setIsCountryModalOpen(false)}
+                          className="w-full py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-mono text-xs uppercase font-bold rounded cursor-pointer"
+                        >
+                          Sluiten
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -465,7 +532,7 @@ const BandDashboard: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full py-2 bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-xs tracking-widest rounded transition-all"
+                className="w-full py-2 bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-xs tracking-widest rounded transition-all cursor-pointer"
               >
                 {editingId ? "Wijzigingen Opslaan" : "Opslaan & Bovenaan Plaatsen"}
               </button>
@@ -555,7 +622,7 @@ const BandDashboard: React.FC = () => {
             </div>
             <button
               type="submit"
-              className="w-full py-2 bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-xs tracking-widest rounded transition-all"
+              className="w-full py-2 bg-red-600 hover:bg-red-700 text-white font-bold uppercase text-xs tracking-widest rounded transition-all cursor-pointer"
             >
               Toevoegen aan Schetsen
             </button>
