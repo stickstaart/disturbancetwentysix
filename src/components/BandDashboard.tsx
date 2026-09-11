@@ -62,10 +62,12 @@ const BandDashboard: React.FC = () => {
   const [passwordInput, setPasswordInput] = useState("");
   const [activeTab, setActiveTab] = useState<"agenda" | "ideas">("agenda");
   const [selectedYear, setSelectedYear] = useState<string>("2026");
-  const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
 
-  // Modal State voor de Landkeuze
+  // Modals voor land en jaar
+  const [isYearModalOpen, setIsYearModalOpen] = useState<boolean>(false);
   const [isCountryModalOpen, setIsCountryModalOpen] = useState<boolean>(false);
+
+  const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
 
   const [shows, setShows] = useState<DateItem[]>(() => {
     const saved = localStorage.getItem("band_events_v3");
@@ -219,7 +221,7 @@ const BandDashboard: React.FC = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordInput === "demons666") {
+    if (passwordInput === "band2026") {
       setIsAuthenticated(true);
       localStorage.setItem("band_auth", "true");
     }
@@ -283,17 +285,70 @@ const BandDashboard: React.FC = () => {
 
       {activeTab === "agenda" && (
         <div className="space-y-4 md:space-y-6">
+          {/* JAAR SELECTIE MET POPUP MODAL */}
           <div className="flex items-center justify-between bg-zinc-900 p-3 rounded border border-zinc-800">
             <span className="text-xs font-bold uppercase text-zinc-400 tracking-wider">SELECTEER JAAR:</span>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className="bg-black border border-zinc-700 rounded p-1.5 text-xs text-white font-mono font-bold text-center focus:border-red-500"
+
+            <button
+              type="button"
+              onClick={() => setIsYearModalOpen(true)}
+              className="bg-black border border-red-600 hover:border-red-500 rounded px-4 py-2 text-base font-mono font-extrabold text-white flex items-center gap-2 cursor-pointer transition-colors"
             >
-              {Array.from({ length: 7 }, (_, i) => new Date().getFullYear() - 1 + i).map((year) => (
-                <option key={year} value={year.toString()}>{year}</option>
-              ))}
-            </select>
+              <span>{selectedYear}</span>
+              <span className="text-xs text-zinc-400">▼</span>
+            </button>
+
+            {isYearModalOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                <div className="bg-zinc-900 border border-zinc-700 rounded-lg max-w-xs w-full p-4 space-y-3 shadow-2xl">
+                  <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
+                    <h3 className="text-sm font-bold uppercase text-zinc-200 font-mono">
+                      KIES JAAR
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setIsYearModalOpen(false)}
+                      className="text-zinc-400 hover:text-white text-base font-bold p-1 cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="max-h-60 overflow-y-auto space-y-2 font-mono pr-1">
+                    {Array.from({ length: 7 }, (_, i) => new Date().getFullYear() - 1 + i).map((year) => {
+                      const yearStr = year.toString();
+                      const isSelected = selectedYear === yearStr;
+                      return (
+                        <button
+                          key={year}
+                          type="button"
+                          onClick={() => {
+                            setSelectedYear(yearStr);
+                            setIsYearModalOpen(false);
+                          }}
+                          className={`w-full p-3 rounded text-sm font-bold text-left border flex justify-between items-center cursor-pointer transition-all ${
+                            isSelected
+                              ? "bg-red-950/80 text-red-400 border-red-500 shadow-md"
+                              : "bg-black/60 text-zinc-300 border-zinc-800 hover:border-zinc-600"
+                          }`}
+                        >
+                          <span>{yearStr}</span>
+                          {isSelected && <span className="text-sm">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsYearModalOpen(false)}
+                    className="w-full py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-mono text-xs uppercase font-bold rounded cursor-pointer transition-colors"
+                  >
+                    SLUITEN
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {!isFormOpen ? (
@@ -306,14 +361,12 @@ const BandDashboard: React.FC = () => {
             </button>
           ) : (
             <form onSubmit={handleSaveShow} className="p-4 bg-zinc-900 rounded border border-zinc-800 space-y-4">
-              {/* NIEUWE HEADER CODE MET GROEN VINKJE EN ROOD KRUIS */}
               <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
                 <h3 className="text-sm font-bold uppercase text-red-500 tracking-wider">
                   {editingId ? "✏️ Show Bewerken" : "+ Nieuwe Show Toevoegen"}
                 </h3>
 
                 <div className="flex items-center gap-2">
-                  {/* GROENE OPSLAAN KNOP */}
                   <button
                     type="submit"
                     className="w-8 h-8 flex items-center justify-center rounded-full bg-emerald-950/60 border border-emerald-600 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all text-base font-extrabold cursor-pointer shadow"
@@ -323,7 +376,6 @@ const BandDashboard: React.FC = () => {
                     ✓
                   </button>
 
-                  {/* ROODE SLUIT KNOP */}
                   <button
                     type="button"
                     onClick={resetShowForm}
@@ -342,7 +394,6 @@ const BandDashboard: React.FC = () => {
                   <CustomDatePicker value={date} onChange={(newDate) => setDate(newDate)} />
                 </div>
 
-                {/* HERONTWORPEN CUSTOM LANDKEUZE MET MODAL */}
                 <div>
                   <label className="text-[10px] text-zinc-400 uppercase font-mono block mb-1">Land</label>
 
