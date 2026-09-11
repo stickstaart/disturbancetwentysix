@@ -219,7 +219,7 @@ const BandDashboard: React.FC = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordInput === "band2026") {
+    if (passwordInput === "demons666") {
       setIsAuthenticated(true);
       localStorage.setItem("band_auth", "true");
     }
