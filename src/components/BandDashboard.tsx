@@ -254,23 +254,24 @@ const BandDashboard: React.FC = () => {
         </button>
       </div>
 
-      <div className="flex border-b border-zinc-800">
+      {/* HOOFDTABS */}
+      <div className="flex gap-2">
         <button
           onClick={() => { setActiveTab("agenda"); resetShowForm(); }}
-          className={`py-2 px-4 md:py-3 md:px-6 font-extrabold text-xs md:text-sm uppercase tracking-wider border-b-2 transition-all ${
+          className={`flex-1 py-3 px-2 text-xs font-bold uppercase rounded border transition-colors flex items-center justify-center gap-2 cursor-pointer font-mono ${
             activeTab === "agenda"
-              ? "border-red-600 text-red-500 bg-zinc-900/50"
-              : "border-transparent text-gray-400 hover:text-white"
+              ? "bg-red-950/40 border-red-600 text-red-500"
+              : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white"
           }`}
         >
-          📅 AGENDA & SHOWS
+          📆 AGENDA & SHOWS
         </button>
         <button
           onClick={() => setActiveTab("ideas")}
-          className={`py-2 px-4 md:py-3 md:px-6 font-extrabold text-xs md:text-sm uppercase tracking-wider border-b-2 transition-all ${
+          className={`flex-1 py-3 px-2 text-xs font-bold uppercase rounded border transition-colors flex items-center justify-center gap-2 cursor-pointer font-mono ${
             activeTab === "ideas"
-              ? "border-red-600 text-red-500 bg-zinc-900/50"
-              : "border-transparent text-gray-400 hover:text-white"
+              ? "bg-red-950/40 border-red-600 text-red-500"
+              : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white"
           }`}
         >
           ✈️ TOUR IDEAS & CONCEPTS
