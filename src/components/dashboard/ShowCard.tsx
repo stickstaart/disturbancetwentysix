@@ -25,27 +25,32 @@ interface ShowCardProps {
 }
 
 export const ShowCard: React.FC<ShowCardProps> = ({ item, onEdit, onDelete, onStatusChange }) => {
-  // Dynamische styling op basis van show status
   const getStatusStyles = (status: ShowStatus) => {
     switch (status) {
       case "confirmed":
         return {
           titleColor: "text-emerald-400 font-extrabold",
+          locationColor: "text-white font-bold",
           borderColor: "border-l-4 border-l-emerald-500",
-          selectStyle: "bg-emerald-950 text-emerald-400 border border-emerald-500 font-bold",
+          selectStyle: "bg-emerald-950 text-emerald-400 border-emerald-500 font-bold",
+          isCancelled: false,
         };
       case "cancelled":
         return {
-          titleColor: "text-red-500 line-through font-extrabold",
+          titleColor: "text-red-500 font-extrabold",
+          locationColor: "text-red-500 font-bold",
           borderColor: "border-l-4 border-l-red-500",
-          selectStyle: "bg-red-950 text-red-500 border border-red-500 font-bold",
+          selectStyle: "bg-red-950 text-red-500 border-red-500 font-bold",
+          isCancelled: true,
         };
       case "option":
       default:
         return {
           titleColor: "text-amber-500 font-extrabold",
+          locationColor: "text-white font-bold",
           borderColor: "border-l-4 border-l-amber-500",
-          selectStyle: "bg-amber-950 text-amber-500 border border-amber-500 font-bold",
+          selectStyle: "bg-amber-950 text-amber-500 border-amber-500 font-bold",
+          isCancelled: false,
         };
     }
   };
@@ -53,29 +58,34 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, onEdit, onDelete, onSt
   const styles = getStatusStyles(item.status);
 
   return (
-    <div className={`p-4 rounded bg-zinc-900/90 border border-zinc-800 font-mono space-y-3 ${styles.borderColor}`}>
+    <div className={`w-full p-4 rounded bg-zinc-900/90 border border-zinc-800 font-mono space-y-3 ${styles.borderColor}`}>
+
       {/* REGEL 1: DATUM */}
-      <div className={`text-xs md:text-sm tracking-wide ${styles.titleColor}`}>
-        {formatShowDate(item.date)}
+      <div className="w-full relative">
+        <div className={`w-full md:text-sm tracking-wide leading-snug break-all ${styles.titleColor} ${styles.isCancelled ? 'line-through' : ''}`}>
+          {formatShowDate(item.date)}
+        </div>
       </div>
 
       {/* REGEL 2: VLAG + LAND + LOCATIE */}
-      <div className="text-xs text-white flex items-center gap-1.5 font-bold">
-        <CountryFlag code={item.country} />
-        <span>({item.country})</span>
-        <span>{item.city} @ {item.venue || "TBA"}</span>
+      <div className="w-full relative">
+        <div className={`w- leading-snug break-all flex flex-wrap items-center gap-1.5 ${styles.locationColor} ${styles.isCancelled ? 'line-through' : ''}`}>
+          <CountryFlag code={item.country} />
+          <span className="shrink-0">({item.country})</span>
+          <span className="grow min-w-0">{item.city} @ {item.venue || "TBA"}</span>
+        </div>
       </div>
 
       {/* REGEL 3: BANDS */}
       {item.otherbands && (
-        <p className="text-xs text-zinc-300">
+        <p className="w-full text-xs text-zinc-300 break-words leading-snug">
           <span className="text-zinc-500">Bands:</span> {item.otherbands}
         </p>
       )}
 
       {/* DETAILS / INFORMATIE */}
       {(item.owner || item.guaranteedFee || item.contact?.name || item.transportInfo || item.breakEvenInfo) && (
-        <div className="pt-2 border-t border-zinc-800/80 text-[11px] text-zinc-400 space-y-1">
+        <div className="w-full pt-2 border-t border-zinc-800/80 text-[11px] text-zinc-400 space-y-1">
           {item.owner && (
             <div><span className="text-zinc-500">Band Eigenaar:</span> {item.owner}</div>
           )}
@@ -98,12 +108,12 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, onEdit, onDelete, onSt
       )}
 
       {/* ONDERAAN: DRIE KNOPPEN IN EEN RIJ */}
-      <div className="pt-2 grid grid-cols-3 gap-2">
+      <div className="w-full pt-2 grid grid-cols-3 gap-2">
         <button
           onClick={() => onEdit(item)}
           className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 text-xs py-1.5 rounded font-bold uppercase transition-colors flex items-center justify-center gap-1 cursor-pointer"
         >
-          ✏️ Bewerken
+          ✏️ BEWERKEN
         </button>
 
         <button
@@ -116,13 +126,14 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, onEdit, onDelete, onSt
         <select
           value={item.status}
           onChange={(e) => onStatusChange(item.id, e.target.value as ShowStatus)}
-          className={`w-full text-xs py-1.5 px-2 rounded font-bold uppercase cursor-pointer outline-none ${styles.selectStyle}`}
+          className={`w-full text-xs py-1.5 px-2 rounded font-bold uppercase cursor-pointer outline-none border ${styles.selectStyle}`}
         >
           <option value="option">OPTION</option>
           <option value="confirmed">CONFIRMED</option>
           <option value="cancelled">CANCELLED</option>
         </select>
       </div>
+
     </div>
   );
 };
