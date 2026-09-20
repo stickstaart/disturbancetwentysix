@@ -4133,6 +4133,16 @@ const tourData = [
   },
 
   {
+    date: "17-10-2026",
+    country: "DE",
+    city: "Dusseldorf",
+    venue: "AK47",
+    name: "Marode LP Releaseparty",
+    tour: "",
+    otherbands: "Marode, Trümmerratten",
+  },
+
+  {
     date: "10-12-2026",
     country: "NL",
     city: "Dordrecht",
