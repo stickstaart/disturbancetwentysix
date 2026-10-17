@@ -1,4 +1,4 @@
-const tourData = [
+ const tourData = [
   {
     date: "1997",
     country: "NL",
@@ -4135,7 +4135,7 @@ const tourData = [
   {
     date: "17-10-2026",
     country: "DE",
-    city: "Dusseldorf",
+    city: "Düsseldorf",
     venue: "AK47",
     name: "Marode LP Releaseparty",
     tour: "",
@@ -4149,7 +4149,7 @@ const tourData = [
     venue: "Bibelot",
     name: "",
     tour: "",
-    otherbands: "Peter and the Test Tube Babies",
+    otherbands: "Peter and the Test Tube Babies, Cittizins, De Badslippers",
   },
 
   {
@@ -4159,7 +4159,7 @@ const tourData = [
     venue: "DB's",
     name: "",
     tour: "",
-    otherbands: "Mullet Monster Mafia",
+    otherbands: "Mullet Monster Mafia, Röt Stewart, Mouser",
   },
 ];
 
