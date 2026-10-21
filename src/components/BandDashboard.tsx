@@ -488,10 +488,10 @@ const BandDashboard: React.FC = () => {
                   </select>
                 </label>
 
-                {/* Thema: tegels met voorbeeld (een native keuzelijst kan geen kleuren tonen op iOS) */}
+                {/* Thema: één rij kleurstalen (achtergrond + accentrand), naam van het gekozen thema eronder */}
                 <div>
-                  <span className="block mb-1.5 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70">Thema</span>
-                  <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Thema">
+                  <span className="block mb-2 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70">Thema</span>
+                  <div className="flex items-center justify-between gap-1" role="radiogroup" aria-label="Thema">
                     {(Object.keys(THEME_CONFIGS) as ThemeType[]).map((t) => {
                       const c = THEME_CONFIGS[t];
                       const isActive = theme === t;
@@ -501,25 +501,17 @@ const BandDashboard: React.FC = () => {
                           type="button"
                           role="radio"
                           aria-checked={isActive}
+                          aria-label={t}
+                          title={t}
                           onClick={() => handleThemeChange(t)}
-                          className={`text-left rounded-xl p-1.5 cursor-pointer transition ring-2 ${isActive ? "ring-white/70" : "ring-transparent hover:ring-white/20"}`}
+                          className={`rounded-full p-0.5 cursor-pointer transition ring-2 ${isActive ? "ring-white/80" : "ring-transparent hover:ring-white/25"}`}
                         >
-                          {/* Mini-voorbeeld: achtergrond, kaart met accenttekst en knop */}
-                          <div className={`${c.bg} rounded-lg p-2 border ${c.border}`} aria-hidden="true">
-                            <div className={`${c.cardBg} rounded-md border ${c.border} px-2 py-1.5 space-y-1.5`}>
-                              <div className={`font-display text-lg font-bold leading-none ${c.accentText}`}>ARNHEM</div>
-                              <div className={`h-1.5 w-3/4 rounded-full ${c.text} bg-current opacity-40`} />
-                              <div className={`h-3 w-1/2 rounded border ${c.primaryBtn}`} />
-                            </div>
-                          </div>
-                          <div className="mt-1 px-0.5 flex items-center justify-between text-sm">
-                            <span className={isActive ? "font-semibold" : "opacity-80"}>{t}</span>
-                            {isActive && <span aria-hidden="true">✓</span>}
-                          </div>
+                          <span className={`block h-9 w-9 rounded-full border-[3px] border-current ${c.bg} ${c.accentText}`} />
                         </button>
                       );
                     })}
                   </div>
+                  <div className="mt-2 text-base font-semibold">{theme}</div>
                 </div>
 
                 {/* TESTDATA — alleen zichtbaar bij `npm run dev`, nooit op de live site */}
