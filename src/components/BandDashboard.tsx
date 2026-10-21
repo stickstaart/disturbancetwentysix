@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { CustomDatePicker } from "./dashboard/CustomDatePicker";
 import { ShowCard } from "./dashboard/ShowCard";
 import { CountryFlag } from "./dashboard/CountryFlag";
+import * as store from "../lib/agendaStore";
 
 export type ShowStatus = "confirmed" | "option" | "cancelled";
 
@@ -29,6 +30,9 @@ export interface DateItem {
   transportCost?: string;
   isBlocked?: boolean;
   blockedBy?: string;
+  // Audit (gezet door agendaStore)
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 export interface TourIdea {
@@ -43,6 +47,9 @@ export interface TourIdea {
   notes?: string;
   isScratched?: boolean;
   owner?: string;
+  // Audit (gezet door agendaStore)
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 export type ThemeType = "ORIGINAL" | "80ies Miami" | "Horror" | "Superdark" | "Superlight" | "Lemon" | "Nerd";
@@ -154,15 +161,11 @@ const BandDashboard: React.FC = () => {
 
   const [blockDate, setBlockDate] = useState(getTodayString());
 
-  const [shows, setShows] = useState<DateItem[]>(() => {
-    const saved = localStorage.getItem("band_events_v3");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [tourIdeas, setTourIdeas] = useState<TourIdea[]>(() => {
-    const saved = localStorage.getItem("band_ideas");
-    return saved ? JSON.parse(saved) : [];
-  });
+  // Data komt live uit Firestore (zie src/lib/agendaStore.ts)
+  const [shows, setShows] = useState<DateItem[]>([]);
+  const [tourIdeas, setTourIdeas] = useState<TourIdea[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingIdeaId, setEditingIdeaId] = useState<string | null>(null);
@@ -199,13 +202,26 @@ const BandDashboard: React.FC = () => {
   const isSuperadmin = currentUser === "Joz (Superadmin)";
   const themeStyle = THEME_CONFIGS[theme] || THEME_CONFIGS.ORIGINAL;
 
+  // Live-abonnement op Firestore zodra je bent ingelogd
   useEffect(() => {
-    localStorage.setItem("band_events_v3", JSON.stringify(shows));
-  }, [shows]);
+    if (!isAuthenticated) return;
+    const onError = (e: Error) => setSyncError(e.message);
+    store.migrateLocalStorage(currentUser);
+    const unsubShows = store.subscribeShows((data) => {
+      setShows(data);
+      setIsLoading(false);
+      setSyncError(null);
+    }, onError);
+    const unsubIdeas = store.subscribeIdeas(setTourIdeas, onError);
+    return () => {
+      unsubShows();
+      unsubIdeas();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
-  useEffect(() => {
-    localStorage.setItem("band_ideas", JSON.stringify(tourIdeas));
-  }, [tourIdeas]);
+  // Fouten bij opslaan zichtbaar maken i.p.v. stil falen
+  const run = (p: Promise<unknown>) => p.catch((e: Error) => setSyncError(e.message));
 
   const handleThemeChange = (newTheme: ThemeType) => {
     setTheme(newTheme);
@@ -284,7 +300,7 @@ const BandDashboard: React.FC = () => {
     if (!date || !city) return;
 
     const showData: DateItem = {
-      id: editingId || Date.now().toString(),
+      id: editingId || store.newId(),
       date,
       country,
       city,
@@ -305,11 +321,8 @@ const BandDashboard: React.FC = () => {
       transportCost: transportCost || undefined,
     };
 
-    if (editingId) {
-      setShows(shows.map((s) => (s.id === editingId ? showData : s)));
-    } else {
-      setShows([...shows, showData]);
-    }
+    const original = editingId ? shows.find((s) => s.id === editingId) : undefined;
+    run(store.saveShow({ ...original, ...showData }, currentUser, !editingId));
 
     resetShowForm();
   };
@@ -326,12 +339,10 @@ const BandDashboard: React.FC = () => {
       const names = existing.blockedBy ? existing.blockedBy.split(", ").map((n) => n.trim()) : [];
       if (!names.includes(displayName)) names.push(displayName);
 
-      const updated = [...shows];
-      updated[existingIndex] = { ...existing, blockedBy: names.join(", ") };
-      setShows(updated);
+      run(store.patchShow(existing.id, { blockedBy: names.join(", ") }, currentUser));
     } else {
       const blockData: DateItem = {
-        id: Date.now().toString(),
+        id: store.newId(),
         date: blockDate,
         country: "NL",
         city: "GEBLOKKEERD",
@@ -340,7 +351,7 @@ const BandDashboard: React.FC = () => {
         isBlocked: true,
         blockedBy: displayName,
       };
-      setShows([...shows, blockData]);
+      run(store.saveShow(blockData, currentUser, true));
     }
 
     setIsBlockModalOpen(false);
@@ -351,7 +362,7 @@ const BandDashboard: React.FC = () => {
     if (!newTitle) return;
 
     const ideaData: TourIdea = {
-      id: editingIdeaId || Date.now().toString(),
+      id: editingIdeaId || store.newId(),
       title: newTitle,
       country: newIdeaCountry,
       supportBands: newBands || undefined,
@@ -364,11 +375,12 @@ const BandDashboard: React.FC = () => {
       owner: ideaOwner,
     };
 
-    if (editingIdeaId) {
-      setTourIdeas(tourIdeas.map((i) => (i.id === editingIdeaId ? ideaData : i)));
-    } else {
-      setTourIdeas([...tourIdeas, ideaData]);
-    }
+    const originalIdea = editingIdeaId ? tourIdeas.find((i) => i.id === editingIdeaId) : undefined;
+    run(store.saveIdea(
+      { ...originalIdea, ...ideaData, isScratched: originalIdea?.isScratched ?? false },
+      currentUser,
+      !editingIdeaId,
+    ));
 
     resetIdeaForm();
   };
@@ -390,12 +402,13 @@ const BandDashboard: React.FC = () => {
   };
 
   const handleToggleScratchIdea = (id: string) => {
-    setTourIdeas(tourIdeas.map((i) => (i.id === id ? { ...i, isScratched: !i.isScratched } : i)));
+    const idea = tourIdeas.find((i) => i.id === id);
+    if (idea) run(store.patchIdea(id, { isScratched: !idea.isScratched }, currentUser));
   };
 
   const handleDeleteIdea = (id: string) => {
     if (confirm("Weet je zeker dat je dit idee wilt verwijderen?")) {
-      setTourIdeas(tourIdeas.filter((i) => i.id !== id));
+      run(store.deleteIdea(id));
     }
   };
 
@@ -424,12 +437,12 @@ const BandDashboard: React.FC = () => {
 
   const handleDelete = (id: string) => {
     if (confirm("Weet je zeker dat je dit item wilt verwijderen?")) {
-      setShows((prev) => prev.filter((s) => s.id !== id));
+      run(store.deleteShow(id));
     }
   };
 
   const handleStatusChange = (id: string, newStatus: ShowStatus) => {
-    setShows((prev) => prev.map((s) => (s.id === id ? { ...s, status: newStatus } : s)));
+    run(store.patchShow(id, { status: newStatus }, currentUser));
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -516,6 +529,16 @@ const BandDashboard: React.FC = () => {
             Uitloggen 🔒
           </button>
         </div>
+
+        {/* SYNC-STATUS (Firestore) */}
+        {syncError && (
+          <div className="border border-red-500 bg-red-950/60 text-red-200 text-xs font-mono p-3 rounded">
+            ⚠️ Synchronisatie mislukt: {syncError}
+          </div>
+        )}
+        {isLoading && !syncError && (
+          <div className="text-xs font-mono opacity-60">Agenda laden…</div>
+        )}
 
         {/* HOOFDTABS */}
         <div className="flex gap-2">
