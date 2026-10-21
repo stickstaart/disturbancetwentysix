@@ -42,17 +42,21 @@ function subscribe<T>(name: string, onData: (items: T[]) => void, onError?: (e: 
 }
 
 /** Wie heeft het gedaan: bij de echte inlog wordt dit de ingelogde gebruiker (of wie de superadmin "speelt"). */
-async function save(name: string, item: { id: string }, actor: string, isNew: boolean) {
+function auditedData(item: { id: string }, actor: string, isNew: boolean) {
   // Audit-velden apart houden: createdAt is een Firestore Timestamp en mag niet door clean().
-  const { id, createdBy, createdAt, updatedBy: _ub, updatedAt: _ua, ...rest } = item as Record<string, unknown> & { id: string };
-  void _ub; void _ua;
-  await setDoc(doc(db, name, id), {
+  const { id: _id, createdBy, createdAt, updatedBy: _ub, updatedAt: _ua, ...rest } = item as Record<string, unknown> & { id: string };
+  void _id; void _ub; void _ua;
+  return {
     ...clean(rest),
     createdBy: isNew ? actor : (createdBy ?? actor),
     createdAt: isNew || !createdAt ? serverTimestamp() : createdAt,
     updatedBy: actor,
     updatedAt: serverTimestamp(),
-  });
+  };
+}
+
+async function save(name: string, item: { id: string }, actor: string, isNew: boolean) {
+  await setDoc(doc(db, name, item.id), auditedData(item, actor, isNew));
 }
 
 async function patch(name: string, id: string, fields: Record<string, unknown>, actor: string) {
@@ -60,11 +64,65 @@ async function patch(name: string, id: string, fields: Record<string, unknown>, 
 }
 
 // --- Shows ---
+// Elke show-wijziging werkt in dezelfde batch ook publicShows/{id} bij:
+// alleen datum/land/stad/venue/bands/tour — nooit gages, contacten of afspraken.
+const PUBLIC = "publicShows";
+
+export const isPublishable = (s: Partial<DateItem>) =>
+  !!s.isPublic && s.status === "confirmed" && !s.isBlocked && !s.isDummy;
+
+const publicProjection = (s: DateItem) => ({
+  date: s.date,
+  country: s.country,
+  city: s.city,
+  venue: s.venue || "",
+  bands: (s.otherbands || "").split(",").map((b) => b.trim()).filter(Boolean),
+  tour: s.tourName || null,
+});
+
+function syncPublic(batch: ReturnType<typeof writeBatch>, show: DateItem) {
+  const ref = doc(db, PUBLIC, show.id);
+  if (isPublishable(show)) batch.set(ref, publicProjection(show));
+  else batch.delete(ref); // delete op een niet-bestaand doc is geen fout
+}
+
 export const subscribeShows = (cb: (s: DateItem[]) => void, onError?: (e: Error) => void) =>
   subscribe<DateItem>(SHOWS, cb, onError);
-export const saveShow = (show: DateItem, actor: string, isNew: boolean) => save(SHOWS, show, actor, isNew);
-export const patchShow = (id: string, fields: Partial<DateItem>, actor: string) => patch(SHOWS, id, fields, actor);
-export const deleteShow = (id: string) => deleteDoc(doc(db, SHOWS, id));
+
+export async function saveShow(show: DateItem, actor: string, isNew: boolean) {
+  const batch = writeBatch(db);
+  batch.set(doc(db, SHOWS, show.id), auditedData(show, actor, isNew));
+  syncPublic(batch, show);
+  await batch.commit();
+}
+
+/** Deelwijziging (status, blokkade, website-vinkje). `current` is nodig om publicShows correct bij te werken. */
+export async function patchShow(current: DateItem, fields: Partial<DateItem>, actor: string) {
+  const batch = writeBatch(db);
+  batch.update(doc(db, SHOWS, current.id), { ...clean(fields), updatedBy: actor, updatedAt: serverTimestamp() });
+  syncPublic(batch, { ...current, ...fields });
+  await batch.commit();
+}
+
+export async function deleteShow(id: string) {
+  const batch = writeBatch(db);
+  batch.delete(doc(db, SHOWS, id));
+  batch.delete(doc(db, PUBLIC, id));
+  await batch.commit();
+}
+
+/** Publiek leesbaar: voor TOUR en HISTORY op de website. */
+export interface PublicShow {
+  id: string;
+  date: string;
+  country: string;
+  city: string;
+  venue: string;
+  bands: string[];
+  tour: string | null;
+}
+export const subscribePublicShows = (cb: (s: PublicShow[]) => void, onError?: (e: Error) => void) =>
+  subscribe<PublicShow>(PUBLIC, cb, onError);
 
 // --- Tour ideas ---
 export const subscribeIdeas = (cb: (i: TourIdea[]) => void, onError?: (e: Error) => void) =>
@@ -88,7 +146,7 @@ export async function migrateLocalStorage(actor: string) {
       if (!items.length) continue;
       const existing = await getDocs(query(collection(db, name), limit(1)));
       if (!existing.empty) continue;
-      await Promise.all(items.map((it) => save(name, it, actor, true)));
+      await Promise.all(items.map((it) => (name === SHOWS ? saveShow(it as DateItem, actor, true) : save(name, it, actor, true))));
       console.info(`[agendaStore] ${items.length} items uit localStorage gemigreerd naar ${name}`);
     }
     localStorage.setItem(FLAG, new Date().toISOString());

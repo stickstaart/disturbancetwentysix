@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { nieuweData } from '../../SHOWS/dates.js';
+import { useSiteShows } from '../lib/useSiteShows';
+import { todayString } from './dashboard/dateUtils';
 
 interface Show {
   date: string;
@@ -12,7 +13,7 @@ interface Show {
 const History = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
-  const shows = nieuweData as Show[];
+  const shows = useSiteShows() as Show[];
 
   // 1. Eerst de basislijst maken (Verleden tijd + sorteren)
   const pastShows = shows
@@ -23,7 +24,7 @@ const History = () => {
 
       // Als de datum geldig is, checken we of hij in het verleden ligt
       // Als de datum nog steeds ongeldig is (door typefouten), laten we hem voor de zekerheid toch zien
-      return isNaN(d.getTime()) || d.getTime() < new Date().getTime();
+      return isNaN(d.getTime()) || show.date < todayString(); // vandaag nog niet in HISTORY
     })
     .sort((a, b) => {
       // Sorteer op basis van de tekst (dan komt 2001 netjes bij 2001)

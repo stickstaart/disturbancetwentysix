@@ -31,6 +31,9 @@ export interface DateItem {
   transportCost?: string;
   isBlocked?: boolean;
   blockedBy?: string;
+  // Website (TOUR/HISTORY)
+  isPublic?: boolean;
+  tourName?: string;
   isDummy?: boolean;
   // Audit (gezet door agendaStore)
   createdBy?: string;
@@ -190,6 +193,8 @@ const BandDashboard: React.FC = () => {
   const [drivers, setDrivers] = useState("");
   const [transportMethod, setTransportMethod] = useState("");
   const [transportCost, setTransportCost] = useState("");
+  const [isPublic, setIsPublic] = useState(false);
+  const [tourName, setTourName] = useState("");
 
   // Idea Form State
   const [newTitle, setNewTitle] = useState("");
@@ -285,6 +290,8 @@ const BandDashboard: React.FC = () => {
     setDrivers("");
     setTransportMethod("");
     setTransportCost("");
+    setIsPublic(false);
+    setTourName("");
     setIsFormOpen(false);
   };
 
@@ -348,6 +355,8 @@ const BandDashboard: React.FC = () => {
       drivers: drivers || undefined,
       transportMethod: transportMethod || undefined,
       transportCost: transportCost || undefined,
+      isPublic,
+      tourName: tourName || undefined,
     };
 
     const original = editingId ? shows.find((s) => s.id === editingId) : undefined;
@@ -368,7 +377,7 @@ const BandDashboard: React.FC = () => {
       const names = existing.blockedBy ? existing.blockedBy.split(", ").map((n) => n.trim()) : [];
       if (!names.includes(displayName)) names.push(displayName);
 
-      run(store.patchShow(existing.id, { blockedBy: names.join(", ") }, currentUser));
+      run(store.patchShow(existing, { blockedBy: names.join(", ") }, currentUser));
     } else {
       const blockData: DateItem = {
         id: store.newId(),
@@ -459,6 +468,8 @@ const BandDashboard: React.FC = () => {
     setDrivers(show.drivers || "");
     setTransportMethod(show.transportMethod || "");
     setTransportCost(show.transportCost || "");
+    setIsPublic(!!show.isPublic);
+    setTourName(show.tourName || "");
 
     setIsFormOpen(true);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -471,7 +482,13 @@ const BandDashboard: React.FC = () => {
   };
 
   const handleStatusChange = (id: string, newStatus: ShowStatus) => {
-    run(store.patchShow(id, { status: newStatus }, currentUser));
+    const show = shows.find((s) => s.id === id);
+    if (show) run(store.patchShow(show, { status: newStatus }, currentUser));
+  };
+
+  const handleTogglePublic = (id: string) => {
+    const show = shows.find((s) => s.id === id);
+    if (show) run(store.patchShow(show, { isPublic: !show.isPublic }, currentUser));
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -492,17 +509,17 @@ const BandDashboard: React.FC = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className={`min-h-screen ${themeStyle.bg} ${themeStyle.text} flex items-center justify-center p-4 font-mono`}>
-        <form onSubmit={handleLogin} className={`${themeStyle.cardBg} p-8 rounded border ${themeStyle.border} max-w-sm w-full space-y-4`}>
+      <div className={`min-h-screen ${themeStyle.bg} ${themeStyle.text} flex items-center justify-center p-4 font-mono band-agenda`}>
+        <form onSubmit={handleLogin} className={`${themeStyle.cardBg} p-8 rounded-lg border ${themeStyle.border} max-w-sm w-full space-y-4`}>
           <h2 className={`text-xl font-bold ${themeStyle.accentText} text-center uppercase`}>Band Access</h2>
           <input
             type="password"
             placeholder="Wachtwoord"
             value={passwordInput}
             onChange={(e) => setPasswordInput(e.target.value)}
-            className="w-full p-3 bg-black/50 border border-zinc-700 rounded text-center text-white"
+            className="w-full p-3 bg-black/50 border border-zinc-700 rounded-lg text-center text-white"
           />
-          <button type="submit" className={`w-full py-3 ${themeStyle.primaryBtn} font-bold uppercase text-xs rounded`}>
+          <button type="submit" className={`w-full py-3 ${themeStyle.primaryBtn} font-bold uppercase text-xs rounded-lg`}>
             Inloggen
           </button>
         </form>
@@ -511,7 +528,7 @@ const BandDashboard: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen ${themeStyle.bg} ${themeStyle.text} p-3 md:p-8 font-sans transition-colors duration-200`}>
+    <div className={`min-h-screen ${themeStyle.bg} ${themeStyle.text} p-3 md:p-8 band-agenda transition-colors duration-200`}>
       <div className="max-w-4xl mx-auto space-y-6">
 
         {/* HEADER MET SUPERADMIN ACCOUNT SWITCHER + THEME SELECTOR */}
@@ -522,7 +539,7 @@ const BandDashboard: React.FC = () => {
               <select
                 value={currentUser}
                 onChange={(e) => handleUserChange(e.target.value)}
-                className={`bg-black/40 border ${themeStyle.border} ${themeStyle.accentText} text-xs font-bold py-1 px-2 rounded focus:outline-none cursor-pointer`}
+                className={`bg-black/40 border ${themeStyle.border} ${themeStyle.accentText} text-xs font-bold py-1 px-2 rounded-lg focus:outline-none cursor-pointer`}
               >
                 {BAND_MEMBERS.map((member) => (
                   <option key={member} value={member} className="bg-black text-white">
@@ -538,7 +555,7 @@ const BandDashboard: React.FC = () => {
               <select
                 value={theme}
                 onChange={(e) => handleThemeChange(e.target.value as ThemeType)}
-                className={`bg-black/40 border ${themeStyle.border} ${themeStyle.accentText} text-xs font-bold py-1 px-2 rounded focus:outline-none cursor-pointer`}
+                className={`bg-black/40 border ${themeStyle.border} ${themeStyle.accentText} text-xs font-bold py-1 px-2 rounded-lg focus:outline-none cursor-pointer`}
               >
                 <option value="ORIGINAL" className="bg-black text-white">ORIGINAL</option>
                 <option value="80ies Miami" className="bg-black text-white">80ies Miami</option>
@@ -557,14 +574,14 @@ const BandDashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={() => run(store.seedDummyData(currentUser))}
-                className="text-[10px] px-2 py-1 rounded border border-dashed border-sky-600 text-sky-400 cursor-pointer"
+                className="text-[10px] px-2 py-1 rounded-lg border border-dashed border-sky-600 text-sky-400 cursor-pointer"
               >
                 🧪 Testdata laden
               </button>
               <button
                 type="button"
                 onClick={() => { if (confirm("Alle testdata (isDummy) verwijderen?")) run(store.clearDummyData()); }}
-                className="text-[10px] px-2 py-1 rounded border border-dashed border-zinc-600 text-zinc-400 cursor-pointer"
+                className="text-[10px] px-2 py-1 rounded-lg border border-dashed border-zinc-600 text-zinc-400 cursor-pointer"
               >
                 🧹 Wis testdata
               </button>
@@ -581,7 +598,7 @@ const BandDashboard: React.FC = () => {
 
         {/* SYNC-STATUS (Firestore) */}
         {syncError && (
-          <div className="border border-red-500 bg-red-950/60 text-red-200 text-xs font-mono p-3 rounded">
+          <div className="border border-red-500 bg-red-950/60 text-red-200 text-xs font-mono p-3 rounded-lg">
             ⚠️ Synchronisatie mislukt: {syncError}
           </div>
         )}
@@ -590,38 +607,38 @@ const BandDashboard: React.FC = () => {
         )}
 
         {/* HOOFDTABS */}
-        <div className="flex gap-2">
+        <div className="flex gap-1 p-1 rounded-xl bg-black/40 ring-1 ring-white/[0.06]">
           <button
             onClick={() => { setActiveTab("agenda"); resetShowForm(); }}
-            className={`flex-1 py-3 px-2 text-xs font-bold uppercase rounded border transition-colors flex items-center justify-center gap-2 cursor-pointer font-mono ${
+            className={`flex-1 py-2.5 px-2 text-[11px] font-semibold uppercase tracking-[0.14em] rounded-lg border transition-all flex items-center justify-center gap-2 cursor-pointer font-mono ${
               activeTab === "agenda"
-                ? `${themeStyle.cardBg} ${themeStyle.border} ${themeStyle.accentText}`
-                : "bg-black/30 border-transparent opacity-60 hover:opacity-100"
+                ? `${themeStyle.cardBg} ${themeStyle.border} ${themeStyle.accentText} shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_6px_20px_-10px_rgba(0,0,0,0.9)]`
+                : "border-transparent opacity-55 hover:opacity-100"
             }`}
           >
-            📆 AGENDA & SHOWS
+            Agenda & shows
           </button>
           <button
             onClick={() => { setActiveTab("ideas"); resetIdeaForm(); }}
-            className={`flex-1 py-3 px-2 text-xs font-bold uppercase rounded border transition-colors flex items-center justify-center gap-2 cursor-pointer font-mono ${
+            className={`flex-1 py-2.5 px-2 text-[11px] font-semibold uppercase tracking-[0.14em] rounded-lg border transition-all flex items-center justify-center gap-2 cursor-pointer font-mono ${
               activeTab === "ideas"
-                ? `${themeStyle.cardBg} ${themeStyle.border} ${themeStyle.accentText}`
-                : "bg-black/30 border-transparent opacity-60 hover:opacity-100"
+                ? `${themeStyle.cardBg} ${themeStyle.border} ${themeStyle.accentText} shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_6px_20px_-10px_rgba(0,0,0,0.9)]`
+                : "border-transparent opacity-55 hover:opacity-100"
             }`}
           >
-            ✈️ TOUR IDEAS & CONCEPTS
+            Tour-ideeën
           </button>
         </div>
 
         {/* TAB 1: AGENDA */}
         {activeTab === "agenda" && (
           <div className="space-y-4 md:space-y-6">
-            <div className={`flex items-center justify-between ${themeStyle.cardBg} p-3 rounded border ${themeStyle.border} font-mono`}>
+            <div className={`flex items-center justify-between ${themeStyle.cardBg} p-3 rounded-lg border ${themeStyle.border} font-mono`}>
               <span className="text-xs font-bold uppercase opacity-70 tracking-wider">SELECTEER JAAR:</span>
               <button
                 type="button"
                 onClick={() => setIsYearModalOpen(true)}
-                className={`bg-black/50 border ${themeStyle.border} rounded px-4 py-2 text-base font-extrabold flex items-center gap-2 cursor-pointer`}
+                className={`bg-black/50 border ${themeStyle.border} rounded-lg px-4 py-2 text-base font-extrabold flex items-center gap-2 cursor-pointer`}
               >
                 <span>{selectedYear}</span>
                 <span className="text-xs opacity-50">▼</span>
@@ -632,7 +649,7 @@ const BandDashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={toggleShowForm}
-                className={`w-full py-3 font-bold uppercase text-xs tracking-widest rounded transition-all cursor-pointer shadow border ${
+                className={`w-full py-3 font-bold uppercase text-xs tracking-widest rounded-lg transition-all cursor-pointer shadow border ${
                   isFormOpen ? "bg-zinc-800 border-zinc-600 text-zinc-300" : themeStyle.primaryBtn
                 }`}
               >
@@ -641,7 +658,7 @@ const BandDashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={toggleBlockModal}
-                className={`w-full py-3 font-bold uppercase text-xs tracking-widest rounded transition-all cursor-pointer shadow border ${
+                className={`w-full py-3 font-bold uppercase text-xs tracking-widest rounded-lg transition-all cursor-pointer shadow border ${
                   isBlockModalOpen ? "bg-zinc-800 border-zinc-600 text-zinc-300" : `${themeStyle.cardBg} ${themeStyle.border} ${themeStyle.accentText}`
                 }`}
               >
@@ -650,7 +667,7 @@ const BandDashboard: React.FC = () => {
             </div>
 
             {isFormOpen && (
-              <form onSubmit={handleSaveShow} className={`p-4 ${themeStyle.cardBg} rounded border ${themeStyle.border} space-y-4 font-mono`}>
+              <form onSubmit={handleSaveShow} className={`p-4 ${themeStyle.cardBg} rounded-lg border ${themeStyle.border} space-y-4 font-mono`}>
                 <div className={`flex justify-between items-center border-b ${themeStyle.border} pb-2`}>
                   <h3 className={`text-sm font-bold uppercase ${themeStyle.accentText} tracking-wider`}>
                     {editingId ? "✏️ Show Bewerken" : "+ Nieuwe Show Toevoegen"}
@@ -675,7 +692,7 @@ const BandDashboard: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => { setCountryModalTarget("show"); setIsCountryModalOpen(true); }}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded text-xs text-left flex items-center justify-between"
+                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs text-left flex items-center justify-between"
                     >
                       <span className="flex items-center gap-1.5">
                         <CountryFlag code={country} />
@@ -692,7 +709,7 @@ const BandDashboard: React.FC = () => {
                       placeholder="Stadnaam..."
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                       required
                     />
                   </div>
@@ -704,7 +721,7 @@ const BandDashboard: React.FC = () => {
                       placeholder="Zaalnaam..."
                       value={venue}
                       onChange={(e) => setVenue(e.target.value)}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                     />
                   </div>
 
@@ -715,7 +732,7 @@ const BandDashboard: React.FC = () => {
                       placeholder="Support / Co-headliners..."
                       value={otherbands}
                       onChange={(e) => setOtherbands(e.target.value)}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                     />
                   </div>
 
@@ -724,13 +741,46 @@ const BandDashboard: React.FC = () => {
                     <select
                       value={status}
                       onChange={(e) => setStatus(e.target.value as ShowStatus)}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                     >
                       <option value="option" className="bg-black text-white">In Optie (Oranje)</option>
                       <option value="confirmed" className="bg-black text-white">Bevestigd (Groen)</option>
                       <option value="cancelled" className="bg-black text-white">Geannuleerd (Rood)</option>
                     </select>
                   </div>
+                </div>
+
+                {/* WEBSITE */}
+                <div className={`border-t ${themeStyle.border} pt-3 grid grid-cols-1 md:grid-cols-2 gap-2 items-end`}>
+                  <div>
+                    <label className="text-[10px] opacity-70 uppercase block mb-1">Festival / tournaam (optioneel)</label>
+                    <input
+                      type="text"
+                      placeholder="Bijv. Baroeg Open Air"
+                      value={tourName}
+                      onChange={(e) => setTourName(e.target.value)}
+                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
+                    />
+                  </div>
+                  <label className={`flex items-start gap-2 p-2 rounded-lg border text-xs cursor-pointer ${
+                    status === "confirmed" ? "border-zinc-700" : "border-zinc-800 opacity-50 cursor-not-allowed"
+                  }`}>
+                    <input
+                      type="checkbox"
+                      checked={isPublic && status === "confirmed"}
+                      disabled={status !== "confirmed"}
+                      onChange={(e) => setIsPublic(e.target.checked)}
+                      className="mt-0.5 accent-emerald-500"
+                    />
+                    <span>
+                      <span className="font-bold uppercase">🌐 Aankondigen op website</span>
+                      <span className="block opacity-60 text-[10px]">
+                        {status === "confirmed"
+                          ? "Verschijnt onder TOUR, na de datum vanzelf onder HISTORY. Zonder gage of contact."
+                          : "Kan pas als de show bevestigd is."}
+                      </span>
+                    </span>
+                  </label>
                 </div>
 
                 <div className={`border-t ${themeStyle.border} pt-3`}>
@@ -741,21 +791,21 @@ const BandDashboard: React.FC = () => {
                       placeholder="Naam contactpersoon"
                       value={contactName}
                       onChange={(e) => setContactName(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                     />
                     <input
                       type="email"
                       placeholder="E-mailadres"
                       value={contactEmail}
                       onChange={(e) => setContactEmail(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                     />
                     <input
                       type="text"
                       placeholder="Telefoonnummer"
                       value={contactPhone}
                       onChange={(e) => setContactPhone(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                     />
                   </div>
                 </div>
@@ -768,12 +818,12 @@ const BandDashboard: React.FC = () => {
                       placeholder="Gage Bedrag (€)"
                       value={guaranteedFee}
                       onChange={(e) => setGuaranteedFee(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                     />
                     <select
                       value={paymentMethod}
                       onChange={(e) => setPaymentMethod(e.target.value as "cash" | "wire")}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                     >
                       <option value="cash" className="bg-black text-white">💵 Cash (Contant)</option>
                       <option value="wire" className="bg-black text-white">🏛️ Wire (Bankoverschrijving)</option>
@@ -783,14 +833,14 @@ const BandDashboard: React.FC = () => {
                       <select
                         value={owner}
                         onChange={(e) => setOwner(e.target.value)}
-                        className="p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                        className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                       >
                         {BAND_MEMBERS.map((m) => (
                           <option key={m} value={m} className="bg-black text-white">Eigenaar: {m}</option>
                         ))}
                       </select>
                     ) : (
-                      <div className="p-2 bg-black/40 border border-zinc-800 rounded text-xs opacity-70 flex items-center">
+                      <div className="p-2 bg-black/40 border border-zinc-800 rounded-lg text-xs opacity-70 flex items-center">
                         Eigenaar: <strong className="ml-1">{owner}</strong>
                       </div>
                     )}
@@ -805,34 +855,34 @@ const BandDashboard: React.FC = () => {
                       placeholder="Chauffeur(s)..."
                       value={drivers}
                       onChange={(e) => setDrivers(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                     />
                     <input
                       type="text"
                       placeholder="Vervoer (Bus, Vliegtuig...)"
                       value={transportMethod}
                       onChange={(e) => setTransportMethod(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                     />
                     <input
                       type="number"
                       placeholder="Totale Vervoerskosten (€)"
                       value={transportCost}
                       onChange={(e) => setTransportCost(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                     />
                   </div>
                   <textarea
                     placeholder="Break-even afspraken / Bijzonderheden..."
                     value={breakEvenInfo}
                     onChange={(e) => setBreakEvenInfo(e.target.value)}
-                    className="w-full p-2 bg-black/40 border border-zinc-700 rounded text-xs h-14"
+                    className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs h-14"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className={`w-full py-3 ${themeStyle.primaryBtn} font-bold uppercase text-xs tracking-widest rounded transition-all cursor-pointer`}
+                  className={`w-full py-3 ${themeStyle.primaryBtn} font-bold uppercase text-xs tracking-widest rounded-lg transition-all cursor-pointer`}
                 >
                   OPSLAAN
                 </button>
@@ -850,12 +900,12 @@ const BandDashboard: React.FC = () => {
                     <label className="text-[10px] opacity-70 uppercase block mb-1">Datum om te blokkeren</label>
                     <CustomDatePicker value={blockDate} onChange={(d) => setBlockDate(d)} />
                   </div>
-                  <div className="p-2.5 bg-black/40 border border-zinc-800 rounded text-xs opacity-70">
+                  <div className="p-2.5 bg-black/40 border border-zinc-800 rounded-lg text-xs opacity-70">
                     Blokkade op naam van: <strong className={themeStyle.accentText}>{currentUser}</strong>
                   </div>
                   <button
                     type="submit"
-                    className={`w-full py-2.5 ${themeStyle.primaryBtn} font-bold uppercase text-xs rounded transition-all cursor-pointer`}
+                    className={`w-full py-2.5 ${themeStyle.primaryBtn} font-bold uppercase text-xs rounded-lg transition-all cursor-pointer`}
                   >
                     BLOKKADE OPSLAAN
                   </button>
@@ -864,8 +914,8 @@ const BandDashboard: React.FC = () => {
             )}
 
             <div className="space-y-3">
-              <h2 className="font-mono text-xs font-bold uppercase opacity-70 tracking-wider">
-                AGENDA {selectedYear} ({filteredShows.length})
+              <h2 className="font-mono text-[10px] font-bold uppercase opacity-50 tracking-[0.2em]">
+                Agenda {selectedYear} · {filteredShows.length} items
               </h2>
 
               {filteredShows.length === 0 ? (
@@ -874,16 +924,21 @@ const BandDashboard: React.FC = () => {
                 showsByMonth.map((group) => (
                   <section key={group.key} className="space-y-2">
                     {/* Sticky maandkopje */}
-                    <h3 className={`sticky top-0 z-10 ${themeStyle.bg} py-2 font-mono text-sm font-extrabold tracking-widest ${themeStyle.accentText} border-b ${themeStyle.border}`}>
-                      {group.label}
+                    <h3 className={`sticky top-0 z-10 ${themeStyle.bg} pt-4 pb-2 flex items-baseline justify-between border-b ${themeStyle.border}`}>
+                      <span className={`font-display text-2xl font-bold uppercase tracking-wide ${themeStyle.accentText}`}>{group.label}</span>
+                      <span className="font-mono text-[10px] uppercase tracking-[0.15em] opacity-50">
+                        {group.items.filter((i) => !i.isBlocked).length} shows
+                      </span>
                     </h3>
                     {group.items.map((item) => (
                       <React.Fragment key={item.id}>
                         {item.id === nextShowId && (
-                          <div id="today-marker" className="scroll-mt-12 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-widest opacity-80">
-                            <span className={`h-px grow ${themeStyle.border} border-t`} />
-                            <span className={themeStyle.accentText}>▼ Vandaag / Hierna</span>
-                            <span className={`h-px grow ${themeStyle.border} border-t`} />
+                          <div id="today-marker" className="scroll-mt-16 flex items-center gap-3 py-1">
+                            <span className="h-px grow bg-gradient-to-r from-transparent to-white/25" />
+                            <span className={`font-mono text-[10px] font-bold uppercase tracking-[0.2em] px-2.5 py-1 rounded-full ring-1 ring-white/15 bg-white/[0.04] ${themeStyle.accentText}`}>
+                              Vandaag · hierna
+                            </span>
+                            <span className="h-px grow bg-gradient-to-l from-transparent to-white/25" />
                           </div>
                         )}
                         <ShowCard
@@ -892,6 +947,7 @@ const BandDashboard: React.FC = () => {
                           onEdit={handleEditClick}
                           onDelete={handleDelete}
                           onStatusChange={handleStatusChange}
+                          onTogglePublic={handleTogglePublic}
                         />
                       </React.Fragment>
                     ))}
@@ -908,7 +964,7 @@ const BandDashboard: React.FC = () => {
             <button
               type="button"
               onClick={toggleIdeaForm}
-              className={`w-full py-3 font-bold uppercase text-xs tracking-widest rounded transition-all cursor-pointer shadow border ${
+              className={`w-full py-3 font-bold uppercase text-xs tracking-widest rounded-lg transition-all cursor-pointer shadow border ${
                 isIdeaFormOpen
                   ? "bg-zinc-800 border-zinc-600 text-zinc-300"
                   : themeStyle.primaryBtn
@@ -922,7 +978,7 @@ const BandDashboard: React.FC = () => {
             </button>
 
             {isIdeaFormOpen && (
-              <form onSubmit={handleSaveIdea} className={`p-4 ${themeStyle.cardBg} rounded border ${themeStyle.border} space-y-4`}>
+              <form onSubmit={handleSaveIdea} className={`p-4 ${themeStyle.cardBg} rounded-lg border ${themeStyle.border} space-y-4`}>
                 <div className={`flex justify-between items-center border-b ${themeStyle.border} pb-2`}>
                   <h3 className={`text-sm font-bold uppercase ${themeStyle.accentText} tracking-wider`}>
                     {editingIdeaId ? "✏️ Tour Idee Bewerken" : "+ Nieuw Tour Idee Toevoegen"}
@@ -944,7 +1000,7 @@ const BandDashboard: React.FC = () => {
                       placeholder="Bijv. UK Tour, Japan Run..."
                       value={newTitle}
                       onChange={(e) => setNewTitle(e.target.value)}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                       required
                     />
                   </div>
@@ -954,7 +1010,7 @@ const BandDashboard: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => { setCountryModalTarget("idea"); setIsCountryModalOpen(true); }}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded text-xs text-left flex items-center justify-between"
+                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs text-left flex items-center justify-between"
                     >
                       <span className="flex items-center gap-1.5">
                         <CountryFlag code={newIdeaCountry} />
@@ -971,7 +1027,7 @@ const BandDashboard: React.FC = () => {
                       placeholder="Bijv. Najaar 2027..."
                       value={newPeriod}
                       onChange={(e) => setNewPeriod(e.target.value)}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                     />
                   </div>
                 </div>
@@ -984,7 +1040,7 @@ const BandDashboard: React.FC = () => {
                       placeholder="Co-headliners..."
                       value={newBands}
                       onChange={(e) => setNewBands(e.target.value)}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                     />
                   </div>
 
@@ -994,7 +1050,7 @@ const BandDashboard: React.FC = () => {
                       <select
                         value={ideaOwner}
                         onChange={(e) => setIdeaOwner(e.target.value)}
-                        className="w-full p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                        className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                       >
                         {BAND_MEMBERS.map((m) => (
                           <option key={m} value={m} className="bg-black text-white">
@@ -1003,7 +1059,7 @@ const BandDashboard: React.FC = () => {
                         ))}
                       </select>
                     ) : (
-                      <div className="w-full p-2 bg-black/40 border border-zinc-800 rounded text-xs opacity-80">
+                      <div className="w-full p-2 bg-black/40 border border-zinc-800 rounded-lg text-xs opacity-80">
                         {ideaOwner}
                       </div>
                     )}
@@ -1018,21 +1074,21 @@ const BandDashboard: React.FC = () => {
                       placeholder="Naam contactpersoon"
                       value={newIdeaContactPerson}
                       onChange={(e) => setNewIdeaContactPerson(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                     />
                     <input
                       type="email"
                       placeholder="E-mailadres"
                       value={newIdeaContactEmail}
                       onChange={(e) => setNewIdeaContactEmail(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                     />
                     <input
                       type="text"
                       placeholder="Telefoonnummer"
                       value={newIdeaContactPhone}
                       onChange={(e) => setNewIdeaContactPhone(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded text-xs"
+                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
                     />
                   </div>
                 </div>
@@ -1043,13 +1099,13 @@ const BandDashboard: React.FC = () => {
                     placeholder="Bijzonderheden..."
                     value={newIdeaNotes}
                     onChange={(e) => setNewIdeaNotes(e.target.value)}
-                    className="w-full p-2 bg-black/40 border border-zinc-700 rounded text-xs h-16"
+                    className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs h-16"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className={`w-full py-2.5 ${themeStyle.primaryBtn} font-bold uppercase text-xs rounded transition-all cursor-pointer`}
+                  className={`w-full py-2.5 ${themeStyle.primaryBtn} font-bold uppercase text-xs rounded-lg transition-all cursor-pointer`}
                 >
                   {editingIdeaId ? "BEWERKING OPSLAAN" : "IDEE TOEVOEGEN"}
                 </button>
@@ -1068,7 +1124,7 @@ const BandDashboard: React.FC = () => {
                 tourIdeas.map((idea) => (
                   <div
                     key={idea.id}
-                    className={`p-4 ${themeStyle.cardBg} border rounded space-y-2 ${
+                    className={`p-4 ${themeStyle.cardBg} border rounded-lg space-y-2 ${
                       idea.isScratched ? "border-zinc-800 opacity-50" : themeStyle.border
                     }`}
                   >
@@ -1081,19 +1137,19 @@ const BandDashboard: React.FC = () => {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleEditIdeaClick(idea)}
-                          className="px-2 py-1 bg-black/40 hover:bg-black/60 border border-zinc-700 text-xs rounded uppercase cursor-pointer"
+                          className="px-2 py-1 bg-black/40 hover:bg-black/60 border border-zinc-700 text-xs rounded-lg uppercase cursor-pointer"
                         >
                           ✏️ Bewerken
                         </button>
                         <button
                           onClick={() => handleToggleScratchIdea(idea.id)}
-                          className="px-2 py-1 bg-black/40 hover:bg-black/60 border border-zinc-700 text-xs rounded uppercase cursor-pointer"
+                          className="px-2 py-1 bg-black/40 hover:bg-black/60 border border-zinc-700 text-xs rounded-lg uppercase cursor-pointer"
                         >
                           {idea.isScratched ? "Herstellen" : "Doorstrepen"}
                         </button>
                         <button
                           onClick={() => handleDeleteIdea(idea.id)}
-                          className="px-2 py-1 bg-red-950/60 hover:bg-red-900 text-red-400 border border-red-900 text-xs rounded uppercase cursor-pointer"
+                          className="px-2 py-1 bg-red-950/60 hover:bg-red-900 text-red-400 border border-red-900 text-xs rounded-lg uppercase cursor-pointer"
                         >
                           🗑️
                         </button>
@@ -1159,7 +1215,7 @@ const BandDashboard: React.FC = () => {
                         }
                         setIsCountryModalOpen(false);
                       }}
-                      className={`w-full p-2 rounded text-xs font-bold text-left border flex justify-between items-center cursor-pointer ${
+                      className={`w-full p-2 rounded-lg text-xs font-bold text-left border flex justify-between items-center cursor-pointer ${
                         isSelected ? `${themeStyle.cardBg} ${themeStyle.accentText} ${themeStyle.border}` : "bg-black/40 border-zinc-800"
                       }`}
                     >
@@ -1190,7 +1246,7 @@ const BandDashboard: React.FC = () => {
                     key={yr}
                     type="button"
                     onClick={() => { setSelectedYear(yr); setIsYearModalOpen(false); }}
-                    className={`w-full p-2.5 rounded text-xs font-bold text-left border flex justify-between items-center cursor-pointer ${
+                    className={`w-full p-2.5 rounded-lg text-xs font-bold text-left border flex justify-between items-center cursor-pointer ${
                       selectedYear === yr ? `${themeStyle.cardBg} ${themeStyle.accentText} ${themeStyle.border}` : "bg-black/40 border-zinc-800"
                     }`}
                   >

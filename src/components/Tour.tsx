@@ -1,5 +1,6 @@
 import React from "react";
-import { nieuweData } from '../../SHOWS/dates';
+import { useSiteShows } from '../lib/useSiteShows';
+import { todayString } from './dashboard/dateUtils';
 
 // We definiëren de blauwdruk voor een Show
 interface Show {
@@ -11,14 +12,13 @@ interface Show {
 }
 
 const Tour: React.FC = () => {
-  const now = new Date();
 
 // We vertellen TypeScript dat onze data voldoet aan de Show-interface
-  const shows = nieuweData as Show[];
+  const shows = useSiteShows() as Show[];
 
 // Filter en sorteer de shows
   const upcomingShows = shows
-    .filter(show => new Date(show.date) >= now)
+    .filter(show => show.date >= todayString()) // vandaag telt nog als TOUR
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
 // Helper functie voor de datum: 2026-02-28 -> 28 FEB 2026
