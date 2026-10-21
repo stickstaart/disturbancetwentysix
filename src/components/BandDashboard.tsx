@@ -4,6 +4,7 @@ import { ShowFormSheet, type ShowDraft } from "./dashboard/ShowForm";
 import { ShowCard } from "./dashboard/ShowCard";
 import { CountryFlag } from "./dashboard/CountryFlag";
 import * as store from "../lib/agendaStore";
+import { useSnapZoom } from "../lib/useSnapZoom";
 import { BAND_MEMBERS, COUNTRIES } from "./dashboard/constants";
 import { parseLocalDate, todayString } from "./dashboard/dateUtils";
 
@@ -149,6 +150,8 @@ const BandDashboard: React.FC = () => {
   const [isBlockModalOpen, setIsBlockModalOpen] = useState<boolean>(false);
 
   const [blockDate, setBlockDate] = useState(getTodayString());
+
+  useSnapZoom();
 
   // Data komt live uit Firestore (zie src/lib/agendaStore.ts)
   const [shows, setShows] = useState<DateItem[]>([]);
@@ -426,7 +429,7 @@ const BandDashboard: React.FC = () => {
             onChange={(e) => setPasswordInput(e.target.value)}
             className="w-full p-3 bg-black/50 border border-zinc-700 rounded-lg text-center text-white"
           />
-          <button type="submit" className={`w-full py-3 ${themeStyle.primaryBtn} font-bold uppercase text-xs rounded-lg`}>
+          <button type="submit" className={`w-full py-3 ${themeStyle.primaryBtn} font-bold uppercase text-sm rounded-lg`}>
             Inloggen
           </button>
         </form>
@@ -442,11 +445,11 @@ const BandDashboard: React.FC = () => {
         <div className={`flex flex-wrap items-center justify-between gap-3 border-b ${themeStyle.border} pb-3 font-mono`}>
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-[10px] md:text-xs opacity-70 uppercase font-bold">Account:</span>
+              <span className="text-[13px] md:text-xs opacity-70 uppercase font-bold">Account:</span>
               <select
                 value={currentUser}
                 onChange={(e) => handleUserChange(e.target.value)}
-                className={`bg-black/40 border ${themeStyle.border} ${themeStyle.accentText} text-xs font-bold py-1 px-2 rounded-lg focus:outline-none cursor-pointer`}
+                className={`bg-black/40 border ${themeStyle.border} ${themeStyle.accentText} text-sm font-bold py-1 px-2 rounded-lg focus:outline-none cursor-pointer`}
               >
                 {BAND_MEMBERS.map((member) => (
                   <option key={member} value={member} className="bg-black text-white">
@@ -458,11 +461,11 @@ const BandDashboard: React.FC = () => {
 
             {/* THEMA KIEZER */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] md:text-xs opacity-70 uppercase font-bold">🎨 Thema:</span>
+              <span className="text-[13px] md:text-xs opacity-70 uppercase font-bold">🎨 Thema:</span>
               <select
                 value={theme}
                 onChange={(e) => handleThemeChange(e.target.value as ThemeType)}
-                className={`bg-black/40 border ${themeStyle.border} ${themeStyle.accentText} text-xs font-bold py-1 px-2 rounded-lg focus:outline-none cursor-pointer`}
+                className={`bg-black/40 border ${themeStyle.border} ${themeStyle.accentText} text-sm font-bold py-1 px-2 rounded-lg focus:outline-none cursor-pointer`}
               >
                 <option value="ORIGINAL" className="bg-black text-white">ORIGINAL</option>
                 <option value="80ies Miami" className="bg-black text-white">80ies Miami</option>
@@ -481,14 +484,14 @@ const BandDashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={() => run(store.seedDummyData(currentUser))}
-                className="text-[10px] px-2 py-1 rounded-lg border border-dashed border-sky-600 text-sky-400 cursor-pointer"
+                className="text-[13px] px-2 py-1 rounded-lg border border-dashed border-sky-600 text-sky-400 cursor-pointer"
               >
                 🧪 Testdata laden
               </button>
               <button
                 type="button"
                 onClick={() => { if (confirm("Alle testdata (isDummy) verwijderen?")) run(store.clearDummyData()); }}
-                className="text-[10px] px-2 py-1 rounded-lg border border-dashed border-zinc-600 text-zinc-400 cursor-pointer"
+                className="text-[13px] px-2 py-1 rounded-lg border border-dashed border-zinc-600 text-zinc-400 cursor-pointer"
               >
                 🧹 Wis testdata
               </button>
@@ -497,7 +500,7 @@ const BandDashboard: React.FC = () => {
 
           <button
             onClick={() => { setIsAuthenticated(false); localStorage.removeItem("band_auth"); }}
-            className={`text-xs ${themeStyle.accentText} hover:underline cursor-pointer`}
+            className={`text-sm ${themeStyle.accentText} hover:underline cursor-pointer`}
           >
             Uitloggen 🔒
           </button>
@@ -505,19 +508,19 @@ const BandDashboard: React.FC = () => {
 
         {/* SYNC-STATUS (Firestore) */}
         {syncError && (
-          <div className="border border-red-500 bg-red-950/60 text-red-200 text-xs font-mono p-3 rounded-lg">
+          <div className="border border-red-500 bg-red-950/60 text-red-200 text-sm font-mono p-3 rounded-lg">
             ⚠️ Synchronisatie mislukt: {syncError}
           </div>
         )}
         {isLoading && !syncError && (
-          <div className="text-xs font-mono opacity-60">Agenda laden…</div>
+          <div className="text-sm font-mono opacity-60">Agenda laden…</div>
         )}
 
         {/* HOOFDTABS */}
         <div className="flex gap-1 p-1 rounded-xl bg-black/40 ring-1 ring-white/[0.06]">
           <button
             onClick={() => { setActiveTab("agenda"); resetShowForm(); }}
-            className={`flex-1 py-2.5 px-2 text-[11px] font-semibold uppercase tracking-[0.14em] rounded-lg border transition-all flex items-center justify-center gap-2 cursor-pointer font-mono ${
+            className={`flex-1 py-2.5 px-2 text-sm font-semibold uppercase tracking-[0.06em] rounded-lg border transition-all flex items-center justify-center gap-2 cursor-pointer font-mono ${
               activeTab === "agenda"
                 ? `${themeStyle.cardBg} ${themeStyle.border} ${themeStyle.accentText} shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_6px_20px_-10px_rgba(0,0,0,0.9)]`
                 : "border-transparent opacity-55 hover:opacity-100"
@@ -527,7 +530,7 @@ const BandDashboard: React.FC = () => {
           </button>
           <button
             onClick={() => { setActiveTab("ideas"); resetIdeaForm(); }}
-            className={`flex-1 py-2.5 px-2 text-[11px] font-semibold uppercase tracking-[0.14em] rounded-lg border transition-all flex items-center justify-center gap-2 cursor-pointer font-mono ${
+            className={`flex-1 py-2.5 px-2 text-sm font-semibold uppercase tracking-[0.06em] rounded-lg border transition-all flex items-center justify-center gap-2 cursor-pointer font-mono ${
               activeTab === "ideas"
                 ? `${themeStyle.cardBg} ${themeStyle.border} ${themeStyle.accentText} shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_6px_20px_-10px_rgba(0,0,0,0.9)]`
                 : "border-transparent opacity-55 hover:opacity-100"
@@ -541,14 +544,14 @@ const BandDashboard: React.FC = () => {
         {activeTab === "agenda" && (
           <div className="space-y-4 md:space-y-6">
             <div className={`flex items-center justify-between ${themeStyle.cardBg} p-3 rounded-lg border ${themeStyle.border} font-mono`}>
-              <span className="text-xs font-bold uppercase opacity-70 tracking-wider">SELECTEER JAAR:</span>
+              <span className="text-sm font-bold uppercase opacity-70 tracking-wider">SELECTEER JAAR:</span>
               <button
                 type="button"
                 onClick={() => setIsYearModalOpen(true)}
                 className={`bg-black/50 border ${themeStyle.border} rounded-lg px-4 py-2 text-base font-extrabold flex items-center gap-2 cursor-pointer`}
               >
                 <span>{selectedYear}</span>
-                <span className="text-xs opacity-50">▼</span>
+                <span className="text-sm opacity-50">▼</span>
               </button>
             </div>
 
@@ -556,7 +559,7 @@ const BandDashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={toggleShowForm}
-                className={`w-full py-3 font-bold uppercase text-xs tracking-widest rounded-lg transition-all cursor-pointer shadow border ${
+                className={`w-full py-3 font-bold uppercase text-sm tracking-wider rounded-lg transition-all cursor-pointer shadow border ${
                   isFormOpen ? "bg-zinc-800 border-zinc-600 text-zinc-300" : themeStyle.primaryBtn
                 }`}
               >
@@ -565,7 +568,7 @@ const BandDashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={toggleBlockModal}
-                className={`w-full py-3 font-bold uppercase text-xs tracking-widest rounded-lg transition-all cursor-pointer shadow border ${
+                className={`w-full py-3 font-bold uppercase text-sm tracking-wider rounded-lg transition-all cursor-pointer shadow border ${
                   isBlockModalOpen ? "bg-zinc-800 border-zinc-600 text-zinc-300" : `${themeStyle.cardBg} ${themeStyle.border} ${themeStyle.accentText}`
                 }`}
               >
@@ -589,19 +592,19 @@ const BandDashboard: React.FC = () => {
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm font-mono">
                 <form onSubmit={handleSaveBlockDate} className={`${themeStyle.cardBg} border ${themeStyle.border} rounded-lg max-w-xs w-full p-5 space-y-4 shadow-2xl`}>
                   <div className={`flex justify-between items-center border-b ${themeStyle.border} pb-2`}>
-                    <h3 className={`text-sm font-bold uppercase ${themeStyle.accentText}`}>🚫 Datum Blokken</h3>
+                    <h3 className={`text-base font-bold uppercase ${themeStyle.accentText}`}>🚫 Datum Blokken</h3>
                     <button type="button" onClick={() => setIsBlockModalOpen(false)} className="opacity-70 hover:opacity-100">✕</button>
                   </div>
                   <div>
-                    <label className="text-[10px] opacity-70 uppercase block mb-1">Datum om te blokkeren</label>
+                    <label className="text-[13px] opacity-70 uppercase block mb-1">Datum om te blokkeren</label>
                     <CustomDatePicker value={blockDate} onChange={(d) => setBlockDate(d)} />
                   </div>
-                  <div className="p-2.5 bg-black/40 border border-zinc-800 rounded-lg text-xs opacity-70">
+                  <div className="p-2.5 bg-black/40 border border-zinc-800 rounded-lg text-sm opacity-70">
                     Blokkade op naam van: <strong className={themeStyle.accentText}>{currentUser}</strong>
                   </div>
                   <button
                     type="submit"
-                    className={`w-full py-2.5 ${themeStyle.primaryBtn} font-bold uppercase text-xs rounded-lg transition-all cursor-pointer`}
+                    className={`w-full py-2.5 ${themeStyle.primaryBtn} font-bold uppercase text-sm rounded-lg transition-all cursor-pointer`}
                   >
                     BLOKKADE OPSLAAN
                   </button>
@@ -610,12 +613,12 @@ const BandDashboard: React.FC = () => {
             )}
 
             <div className="space-y-3">
-              <h2 className="font-mono text-[10px] font-bold uppercase opacity-50 tracking-[0.2em]">
+              <h2 className="font-mono text-[13px] font-bold uppercase opacity-70 tracking-[0.08em]">
                 Agenda {selectedYear} · {filteredShows.length} items
               </h2>
 
               {filteredShows.length === 0 ? (
-                <p className="text-xs opacity-50 italic">Geen optredens of blokkades gevonden voor {selectedYear}.</p>
+                <p className="text-sm opacity-70 italic">Geen optredens of blokkades gevonden voor {selectedYear}.</p>
               ) : (
                 showsByMonth.map((group) => {
                   const isPastMonth = group.key < today.substring(0, 7);
@@ -634,18 +637,18 @@ const BandDashboard: React.FC = () => {
                           aria-expanded={!isCollapsed}
                           className="w-full pt-4 pb-2 flex items-baseline justify-between text-left cursor-pointer group"
                         >
-                          <span className={`font-display text-2xl font-bold uppercase tracking-wide opacity-60 group-hover:opacity-100 transition-opacity ${monthColor}`}>
+                          <span className={`font-display text-[28px] font-bold uppercase tracking-wide opacity-60 group-hover:opacity-100 transition-opacity ${monthColor}`}>
                             {group.label}
                           </span>
-                          <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.15em] opacity-50 group-hover:opacity-90">
+                          <span className="flex items-center gap-2 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70 group-hover:opacity-90">
                             {showCount} shows
                             <span className={`inline-block transition-transform duration-200 ${isCollapsed ? "" : "rotate-180"}`}>▾</span>
                           </span>
                         </button>
                       ) : (
                         <div className="pt-4 pb-2 flex items-baseline justify-between">
-                          <span className={`font-display text-2xl font-bold uppercase tracking-wide ${monthColor}`}>{group.label}</span>
-                          <span className="font-mono text-[10px] uppercase tracking-[0.15em] opacity-50">{showCount} shows</span>
+                          <span className={`font-display text-[28px] font-bold uppercase tracking-wide ${monthColor}`}>{group.label}</span>
+                          <span className="font-mono text-[13px] uppercase tracking-[0.06em] opacity-50">{showCount} shows</span>
                         </div>
                       )}
                     </h3>
@@ -654,7 +657,7 @@ const BandDashboard: React.FC = () => {
                         {item.id === nextShowId && (
                           <div id="today-marker" className="scroll-mt-16 flex items-center gap-3 py-1">
                             <span className="h-px grow bg-gradient-to-r from-transparent to-white/25" />
-                            <span className={`font-mono text-[10px] font-bold uppercase tracking-[0.2em] px-2.5 py-1 rounded-full ring-1 ring-white/15 bg-white/[0.04] ${themeStyle.accentText}`}>
+                            <span className={`font-mono text-[13px] font-bold uppercase tracking-[0.08em] px-2.5 py-1 rounded-full ring-1 ring-white/15 bg-white/[0.04] ${themeStyle.accentText}`}>
                               Vandaag · hierna
                             </span>
                             <span className="h-px grow bg-gradient-to-l from-transparent to-white/25" />
@@ -684,7 +687,7 @@ const BandDashboard: React.FC = () => {
             <button
               type="button"
               onClick={toggleIdeaForm}
-              className={`w-full py-3 font-bold uppercase text-xs tracking-widest rounded-lg transition-all cursor-pointer shadow border ${
+              className={`w-full py-3 font-bold uppercase text-sm tracking-wider rounded-lg transition-all cursor-pointer shadow border ${
                 isIdeaFormOpen
                   ? "bg-zinc-800 border-zinc-600 text-zinc-300"
                   : themeStyle.primaryBtn
@@ -700,13 +703,13 @@ const BandDashboard: React.FC = () => {
             {isIdeaFormOpen && (
               <form onSubmit={handleSaveIdea} className={`p-4 ${themeStyle.cardBg} rounded-lg border ${themeStyle.border} space-y-4`}>
                 <div className={`flex justify-between items-center border-b ${themeStyle.border} pb-2`}>
-                  <h3 className={`text-sm font-bold uppercase ${themeStyle.accentText} tracking-wider`}>
+                  <h3 className={`text-base font-bold uppercase ${themeStyle.accentText} tracking-wider`}>
                     {editingIdeaId ? "✏️ Tour Idee Bewerken" : "+ Nieuw Tour Idee Toevoegen"}
                   </h3>
                   <button
                     type="button"
                     onClick={resetIdeaForm}
-                    className="w-7 h-7 flex items-center justify-center rounded-full bg-red-950 border border-red-600 text-red-500 text-xs font-bold"
+                    className="w-7 h-7 flex items-center justify-center rounded-full bg-red-950 border border-red-600 text-red-500 text-sm font-bold"
                   >
                     ✕
                   </button>
@@ -714,63 +717,63 @@ const BandDashboard: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                   <div>
-                    <label className="text-[10px] opacity-70 uppercase block mb-1">Titel / Tour Concept</label>
+                    <label className="text-[13px] opacity-70 uppercase block mb-1">Titel / Tour Concept</label>
                     <input
                       type="text"
                       placeholder="Bijv. UK Tour, Japan Run..."
                       value={newTitle}
                       onChange={(e) => setNewTitle(e.target.value)}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
+                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-sm"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="text-[10px] opacity-70 uppercase block mb-1">Land</label>
+                    <label className="text-[13px] opacity-70 uppercase block mb-1">Land</label>
                     <button
                       type="button"
                       onClick={() => { setIsCountryModalOpen(true); }}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs text-left flex items-center justify-between"
+                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-sm text-left flex items-center justify-between"
                     >
                       <span className="flex items-center gap-1.5">
                         <CountryFlag code={newIdeaCountry} />
                         {COUNTRIES.find((c) => c.code === newIdeaCountry)?.name || newIdeaCountry}
                       </span>
-                      <span className="text-[10px] opacity-50">▼</span>
+                      <span className="text-[13px] opacity-50">▼</span>
                     </button>
                   </div>
 
                   <div>
-                    <label className="text-[10px] opacity-70 uppercase block mb-1">Doelperiode</label>
+                    <label className="text-[13px] opacity-70 uppercase block mb-1">Doelperiode</label>
                     <input
                       type="text"
                       placeholder="Bijv. Najaar 2027..."
                       value={newPeriod}
                       onChange={(e) => setNewPeriod(e.target.value)}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
+                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-sm"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[10px] opacity-70 uppercase block mb-1">Samen met bands</label>
+                    <label className="text-[13px] opacity-70 uppercase block mb-1">Samen met bands</label>
                     <input
                       type="text"
                       placeholder="Co-headliners..."
                       value={newBands}
                       onChange={(e) => setNewBands(e.target.value)}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
+                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[10px] opacity-70 uppercase block mb-1">Tour-eigenaar</label>
+                    <label className="text-[13px] opacity-70 uppercase block mb-1">Tour-eigenaar</label>
                     {isSuperadmin ? (
                       <select
                         value={ideaOwner}
                         onChange={(e) => setIdeaOwner(e.target.value)}
-                        className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
+                        className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-sm"
                       >
                         {BAND_MEMBERS.map((m) => (
                           <option key={m} value={m} className="bg-black text-white">
@@ -779,7 +782,7 @@ const BandDashboard: React.FC = () => {
                         ))}
                       </select>
                     ) : (
-                      <div className="w-full p-2 bg-black/40 border border-zinc-800 rounded-lg text-xs opacity-80">
+                      <div className="w-full p-2 bg-black/40 border border-zinc-800 rounded-lg text-sm opacity-80">
                         {ideaOwner}
                       </div>
                     )}
@@ -787,45 +790,45 @@ const BandDashboard: React.FC = () => {
                 </div>
 
                 <div className={`border-t ${themeStyle.border} pt-3`}>
-                  <span className="text-[11px] font-bold opacity-70 uppercase block mb-2">👤 Contactpersoon / Agent</span>
+                  <span className="text-sm font-bold opacity-70 uppercase block mb-2">👤 Contactpersoon / Agent</span>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                     <input
                       type="text"
                       placeholder="Naam contactpersoon"
                       value={newIdeaContactPerson}
                       onChange={(e) => setNewIdeaContactPerson(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
+                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-sm"
                     />
                     <input
                       type="email"
                       placeholder="E-mailadres"
                       value={newIdeaContactEmail}
                       onChange={(e) => setNewIdeaContactEmail(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
+                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-sm"
                     />
                     <input
                       type="text"
                       placeholder="Telefoonnummer"
                       value={newIdeaContactPhone}
                       onChange={(e) => setNewIdeaContactPhone(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
+                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-sm"
                     />
                   </div>
                 </div>
 
                 <div className={`border-t ${themeStyle.border} pt-3`}>
-                  <label className="text-[11px] font-bold opacity-70 uppercase block mb-1">📝 Opmerkingen & Notities</label>
+                  <label className="text-sm font-bold opacity-70 uppercase block mb-1">📝 Opmerkingen & Notities</label>
                   <textarea
                     placeholder="Bijzonderheden..."
                     value={newIdeaNotes}
                     onChange={(e) => setNewIdeaNotes(e.target.value)}
-                    className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs h-16"
+                    className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-sm h-16"
                   />
                 </div>
 
                 <button
                   type="submit"
-                  className={`w-full py-2.5 ${themeStyle.primaryBtn} font-bold uppercase text-xs rounded-lg transition-all cursor-pointer`}
+                  className={`w-full py-2.5 ${themeStyle.primaryBtn} font-bold uppercase text-sm rounded-lg transition-all cursor-pointer`}
                 >
                   {editingIdeaId ? "BEWERKING OPSLAAN" : "IDEE TOEVOEGEN"}
                 </button>
@@ -834,12 +837,12 @@ const BandDashboard: React.FC = () => {
 
             {/* IDEEËN LIJST WEERGAVE */}
             <div className="space-y-3">
-              <h2 className="text-xs font-bold uppercase opacity-70 tracking-wider">
+              <h2 className="text-sm font-bold uppercase opacity-70 tracking-wider">
                 TOUR CONCEPTEN & IDEEËN ({tourIdeas.length})
               </h2>
 
               {tourIdeas.length === 0 ? (
-                <p className="text-xs opacity-50 italic">Nog geen tour concepten ingevoerd.</p>
+                <p className="text-sm opacity-70 italic">Nog geen tour concepten ingevoerd.</p>
               ) : (
                 tourIdeas.map((idea) => (
                   <div
@@ -857,42 +860,42 @@ const BandDashboard: React.FC = () => {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleEditIdeaClick(idea)}
-                          className="px-2 py-1 bg-black/40 hover:bg-black/60 border border-zinc-700 text-xs rounded-lg uppercase cursor-pointer"
+                          className="px-2 py-1 bg-black/40 hover:bg-black/60 border border-zinc-700 text-sm rounded-lg uppercase cursor-pointer"
                         >
                           ✏️ Bewerken
                         </button>
                         <button
                           onClick={() => handleToggleScratchIdea(idea.id)}
-                          className="px-2 py-1 bg-black/40 hover:bg-black/60 border border-zinc-700 text-xs rounded-lg uppercase cursor-pointer"
+                          className="px-2 py-1 bg-black/40 hover:bg-black/60 border border-zinc-700 text-sm rounded-lg uppercase cursor-pointer"
                         >
                           {idea.isScratched ? "Herstellen" : "Doorstrepen"}
                         </button>
                         <button
                           onClick={() => handleDeleteIdea(idea.id)}
-                          className="px-2 py-1 bg-red-950/60 hover:bg-red-900 text-red-400 border border-red-900 text-xs rounded-lg uppercase cursor-pointer"
+                          className="px-2 py-1 bg-red-950/60 hover:bg-red-900 text-red-400 border border-red-900 text-sm rounded-lg uppercase cursor-pointer"
                         >
                           🗑️
                         </button>
                       </div>
                     </div>
 
-                    <div className={`text-[11px] ${themeStyle.accentText} font-bold`}>
+                    <div className={`text-sm ${themeStyle.accentText} font-bold`}>
                       <span className="opacity-70 font-normal">Tour-eigenaar:</span> {idea.owner || "Onbekend"}
                     </div>
 
                     {idea.supportBands && (
-                      <p className="text-xs">
+                      <p className="text-sm">
                         <span className="opacity-70">Bands:</span> ({idea.supportBands})
                       </p>
                     )}
                     {idea.targetPeriod && (
-                      <p className={`text-xs ${themeStyle.accentText} font-bold`}>
+                      <p className={`text-sm ${themeStyle.accentText} font-bold`}>
                         <span className="opacity-70 font-normal">Periode:</span> {idea.targetPeriod}
                       </p>
                     )}
 
                     {(idea.contactPerson || idea.contactEmail || idea.contactPhone) && (
-                      <div className={`text-[11px] opacity-80 pt-1 border-t ${themeStyle.border}`}>
+                      <div className={`text-sm opacity-80 pt-1 border-t ${themeStyle.border}`}>
                         <span className="opacity-70">Contact:</span> {idea.contactPerson || "Onbekend"}
                         {idea.contactEmail && ` (${idea.contactEmail})`}
                         {idea.contactPhone && ` - ${idea.contactPhone}`}
@@ -900,7 +903,7 @@ const BandDashboard: React.FC = () => {
                     )}
 
                     {idea.notes && (
-                      <div className={`text-[11px] opacity-80 pt-1 border-t ${themeStyle.border}`}>
+                      <div className={`text-sm opacity-80 pt-1 border-t ${themeStyle.border}`}>
                         <span className="opacity-70 block mb-0.5">Opmerkingen:</span>
                         <p className="whitespace-pre-line">{idea.notes}</p>
                       </div>
@@ -917,7 +920,7 @@ const BandDashboard: React.FC = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm font-mono">
             <div className={`${themeStyle.cardBg} border ${themeStyle.border} rounded-lg max-w-xs w-full p-4 space-y-3 shadow-2xl`}>
               <div className={`flex justify-between items-center border-b ${themeStyle.border} pb-2`}>
-                <h3 className="text-sm font-bold uppercase">Kies Land</h3>
+                <h3 className="text-base font-bold uppercase">Kies Land</h3>
                 <button type="button" onClick={() => setIsCountryModalOpen(false)} className="opacity-70 hover:opacity-100">✕</button>
               </div>
               <div className="max-h-60 overflow-y-auto space-y-1 pr-1">
@@ -931,7 +934,7 @@ const BandDashboard: React.FC = () => {
                         setNewIdeaCountry(item.code);
                         setIsCountryModalOpen(false);
                       }}
-                      className={`w-full p-2 rounded-lg text-xs font-bold text-left border flex justify-between items-center cursor-pointer ${
+                      className={`w-full p-2 rounded-lg text-sm font-bold text-left border flex justify-between items-center cursor-pointer ${
                         isSelected ? `${themeStyle.cardBg} ${themeStyle.accentText} ${themeStyle.border}` : "bg-black/40 border-zinc-800"
                       }`}
                     >
@@ -953,7 +956,7 @@ const BandDashboard: React.FC = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm font-mono">
             <div className={`${themeStyle.cardBg} border ${themeStyle.border} rounded-lg max-w-xs w-full p-4 space-y-3 shadow-2xl`}>
               <div className={`flex justify-between items-center border-b ${themeStyle.border} pb-2`}>
-                <h3 className="text-sm font-bold uppercase">Kies Jaar</h3>
+                <h3 className="text-base font-bold uppercase">Kies Jaar</h3>
                 <button type="button" onClick={() => setIsYearModalOpen(false)} className="opacity-70 hover:opacity-100">✕</button>
               </div>
               <div className="space-y-1">
@@ -962,7 +965,7 @@ const BandDashboard: React.FC = () => {
                     key={yr}
                     type="button"
                     onClick={() => { setSelectedYear(yr); setIsYearModalOpen(false); }}
-                    className={`w-full p-2.5 rounded-lg text-xs font-bold text-left border flex justify-between items-center cursor-pointer ${
+                    className={`w-full p-2.5 rounded-lg text-sm font-bold text-left border flex justify-between items-center cursor-pointer ${
                       selectedYear === yr ? `${themeStyle.cardBg} ${themeStyle.accentText} ${themeStyle.border}` : "bg-black/40 border-zinc-800"
                     }`}
                   >

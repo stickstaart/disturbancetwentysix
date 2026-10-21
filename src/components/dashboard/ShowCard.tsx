@@ -57,10 +57,10 @@ const CARD =
 const DateTile: React.FC<{ date: string; tone: string; tile: string }> = ({ date, tone, tile }) => {
   const { weekday, day, week } = dateParts(date);
   return (
-    <div className={`w-12 shrink-0 rounded-lg ring-1 py-1.5 text-center leading-none ${tile}`}>
-      <div className={`font-mono text-[9px] font-bold tracking-[0.15em] ${tone}`}>{weekday}</div>
-      <div className={`font-display text-[26px] font-extrabold tabular my-0.5 ${tone}`}>{day}</div>
-      {week && <div className="font-mono text-[8px] tracking-wider text-zinc-500">WK {week}</div>}
+    <div className={`w-14 shrink-0 rounded-lg ring-1 py-1.5 text-center leading-none ${tile}`}>
+      <div className={`font-mono text-[13px] font-bold tracking-[0.06em] ${tone}`}>{weekday}</div>
+      <div className={`font-display text-[32px] font-extrabold tabular my-0.5 ${tone}`}>{day}</div>
+      {week && <div className="font-mono text-[13px] tracking-wider text-zinc-400">WK {week}</div>}
     </div>
   );
 };
@@ -85,12 +85,12 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
         <span className="absolute left-0 inset-y-0 w-[3px] bg-red-600/80" />
         <DateTile date={item.date} tone="text-red-400" tile="bg-red-500/5 ring-red-500/20" />
         <div className="grow min-w-0">
-          <div className="font-mono text-[10px] font-bold tracking-[0.2em] text-red-400">GEBLOKKEERD</div>
-          <div className="text-sm text-zinc-300 break-words">{item.blockedBy}</div>
+          <div className="font-mono text-[13px] font-bold tracking-[0.08em] text-red-400">GEBLOKKEERD</div>
+          <div className="text-base text-zinc-300 break-words">{item.blockedBy}</div>
         </div>
         <button
           onClick={() => onDelete(item.id)}
-          className="p-2 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 cursor-pointer"
+          className="p-2 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10 cursor-pointer"
           title="Verwijder blokkade"
           aria-label="Verwijder blokkade"
         >
@@ -123,12 +123,12 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
         {item.contact?.name && <span>{item.contact.name}</span>}
         {item.contact?.phone && (
           <a href={`tel:${item.contact.phone}`} className="inline-flex items-center gap-1 text-zinc-200 hover:text-white underline decoration-zinc-600 underline-offset-2">
-            <FiPhone className="text-[11px]" />{item.contact.phone}
+            <FiPhone className="text-sm" />{item.contact.phone}
           </a>
         )}
         {item.contact?.email && (
           <a href={`mailto:${item.contact.email}`} className="inline-flex items-center gap-1 text-zinc-200 hover:text-white underline decoration-zinc-600 underline-offset-2 break-all">
-            <FiMail className="text-[11px]" />{item.contact.email}
+            <FiMail className="text-sm" />{item.contact.email}
           </a>
         )}
       </span>,
@@ -149,27 +149,27 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
         <DateTile date={item.date} tone={st.text} tile={st.tile} />
 
         <div className="grow min-w-0">
-          <div className={`flex items-center gap-1.5 font-display text-xl md:text-2xl font-bold uppercase leading-none break-words ${st.text} ${isCancelled ? "line-through decoration-2" : ""}`}>
+          <div className={`flex items-center gap-1.5 font-display text-[26px] md:text-3xl font-bold uppercase leading-none break-words ${st.text} ${isCancelled ? "line-through decoration-2" : ""}`}>
             <CountryFlag code={item.country} />
             <span className="min-w-0">{item.city}</span>
           </div>
-          <div className={`mt-1 text-[13px] text-zinc-300 leading-snug break-words ${isCancelled ? "line-through opacity-60" : ""}`}>
-            <span className="text-zinc-500">@</span> {item.venue || "TBA"}
-            {item.otherbands && <span className="text-zinc-500"> · w/ {item.otherbands}</span>}
+          <div className={`mt-1 text-base text-zinc-300 leading-snug break-words ${isCancelled ? "line-through opacity-60" : ""}`}>
+            <span className="text-zinc-400">@</span> {item.venue || "TBA"}
+            {item.otherbands && <span className="text-zinc-400"> · w/ {item.otherbands}</span>}
           </div>
         </div>
 
         <div className="shrink-0 flex flex-col items-end gap-1.5">
           {hasFinancials && !isCancelled && (
             <span
-              className={`font-mono tabular text-[11px] font-bold px-2 py-0.5 rounded-full ring-1 ${
+              className={`font-mono tabular text-sm font-bold px-2 py-0.5 rounded-full ring-1 ${
                 net >= 0 ? "bg-emerald-500/10 text-emerald-300 ring-emerald-500/30" : "bg-red-500/10 text-red-300 ring-red-500/30"
               }`}
             >
               {net >= 0 ? `+€${net}` : `−€${Math.abs(net)}`}
             </span>
           )}
-          <span className="flex items-center gap-1.5 text-zinc-500">
+          <span className="flex items-center gap-1.5 text-zinc-400">
             {isOnWebsite && <FiGlobe className="text-sky-400" title="Op de website" />}
             <FiChevronDown className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
           </span>
@@ -180,10 +180,10 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
       {isOpen && (
         <div className="px-3.5 pb-3.5 space-y-3">
           {details.length > 0 && (
-            <dl className="pt-3 border-t border-white/[0.06] grid grid-cols-[5.5rem_1fr] gap-x-3 gap-y-1.5 text-[13px] text-zinc-300">
+            <dl className="pt-3 border-t border-white/[0.06] grid grid-cols-[5.5rem_1fr] gap-x-3 gap-y-1.5 text-base text-zinc-300">
               {details.map(([label, value]) => (
                 <React.Fragment key={label}>
-                  <dt className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500 pt-[3px]">{label}</dt>
+                  <dt className="font-mono text-[13px] uppercase tracking-[0.05em] text-zinc-400 pt-[3px]">{label}</dt>
                   <dd className="break-words min-w-0">{value}</dd>
                 </React.Fragment>
               ))}
@@ -199,8 +199,8 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
                 role="radio"
                 aria-checked={item.status === value}
                 onClick={() => item.status !== value && onStatusChange(item.id, value)}
-                className={`py-1.5 rounded-md text-[11px] font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
-                  item.status === value ? `ring-1 ${STATUS[value].active}` : "text-zinc-500 hover:text-zinc-200"
+                className={`py-1.5 rounded-md text-sm font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
+                  item.status === value ? `ring-1 ${STATUS[value].active}` : "text-zinc-400 hover:text-zinc-200"
                 }`}
               >
                 {STATUS[value].label}
@@ -209,25 +209,25 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
           </div>
 
           {/* Website + acties */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => onTogglePublic(item.id)}
               disabled={item.status !== "confirmed"}
               title={item.status !== "confirmed" ? "Kan pas als de show bevestigd is" : undefined}
-              className={`grow flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-semibold uppercase tracking-wider ring-1 transition-colors ${
+              className={`grow flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold uppercase tracking-wider ring-1 transition-colors ${
                 item.status !== "confirmed"
-                  ? "text-zinc-600 ring-white/[0.05] cursor-not-allowed"
+                  ? "text-zinc-400 ring-white/[0.05] cursor-not-allowed"
                   : isOnWebsite
                   ? "bg-sky-500/15 text-sky-300 ring-sky-500/40 cursor-pointer"
                   : "text-zinc-400 ring-white/10 hover:text-white cursor-pointer"
               }`}
             >
-              <FiGlobe /> {isOnWebsite ? "Op website" : "Aankondigen"}
+              <FiGlobe /> {isOnWebsite ? "Op website" : "Website"}
             </button>
             <button
               onClick={() => onEdit(item)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold uppercase tracking-wider text-zinc-200 bg-white/[0.06] ring-1 ring-white/10 hover:bg-white/10 cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold uppercase tracking-wider text-zinc-200 bg-white/[0.06] ring-1 ring-white/10 hover:bg-white/10 cursor-pointer"
             >
               <FiEdit2 /> Bewerk
             </button>

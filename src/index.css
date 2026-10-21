@@ -41,3 +41,18 @@ html {
 .band-agenda .stripes-blocked {
     background-image: repeating-linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0 8px, transparent 8px 16px);
 }
+
+/* Leesbaarheid & mobiel gedrag band-agenda */
+.band-agenda {
+    font-size: 16px;
+    line-height: 1.45;
+    overflow-x: clip;            /* niets mag de pagina breder maken dan het scherm */
+}
+@media (max-width: 767px) {
+    /* iOS zoomt in bij focus op velden < 16px en zoomt niet terug */
+    .band-agenda input,
+    .band-agenda select,
+    .band-agenda textarea {
+        font-size: 16px !important;
+    }
+}

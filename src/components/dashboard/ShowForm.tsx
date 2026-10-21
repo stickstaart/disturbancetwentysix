@@ -23,10 +23,10 @@ const TRANSPORT_OPTIONS = ["Busje", "Eigen auto", "Trein", "Vliegtuig"];
 const MEMBER_NAMES = BAND_MEMBERS.map(displayName);
 
 const INPUT =
-  "w-full px-3 py-2.5 rounded-lg bg-black/40 ring-1 ring-white/10 text-sm text-zinc-100 placeholder:text-zinc-600 " +
+  "w-full px-3 py-2.5 rounded-lg bg-black/40 ring-1 ring-white/10 text-base text-zinc-100 placeholder:text-zinc-500 " +
   "focus:outline-none focus:ring-2 focus:ring-white/30 transition";
-const LABEL = "block mb-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-400";
-const CHIP = "px-3 py-1.5 rounded-full text-xs font-medium ring-1 transition-colors cursor-pointer";
+const LABEL = "block mb-1.5 font-mono text-[13px] uppercase tracking-[0.06em] text-zinc-400";
+const CHIP = "px-3 py-1.5 rounded-full text-sm font-medium ring-1 transition-colors cursor-pointer";
 const chipClass = (on: boolean) =>
   `${CHIP} ${on ? "bg-white/15 text-white ring-white/40" : "text-zinc-400 ring-white/10 hover:text-white"}`;
 
@@ -44,7 +44,7 @@ const Field: React.FC<{ label: string; children: React.ReactNode; className?: st
 /** Bedragveld met € ervoor en cijfertoetsenbord op mobiel */
 const MoneyInput: React.FC<{ value: string; onChange: (v: string) => void; placeholder?: string }> = ({ value, onChange, placeholder }) => (
   <div className="relative">
-    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">€</span>
+    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-base">€</span>
     <input
       type="text"
       inputMode="decimal"
@@ -62,9 +62,9 @@ const Section: React.FC<{ title: string; summary?: string; open: boolean; onTogg
 }) => (
   <div className={`rounded-xl ring-1 transition-colors ${open ? "ring-white/12 bg-white/[0.02]" : "ring-white/[0.06]"}`}>
     <button type="button" onClick={onToggle} aria-expanded={open} className="w-full flex items-center gap-3 px-3.5 py-3 text-left cursor-pointer">
-      <span className="text-sm font-semibold text-zinc-100 shrink-0">{title}</span>
-      <span className="grow min-w-0 truncate text-right text-xs text-zinc-500">{!open && summary}</span>
-      <FiChevronDown className={`shrink-0 text-zinc-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+      <span className="text-base font-semibold text-zinc-100 shrink-0">{title}</span>
+      <span className="grow min-w-0 truncate text-right text-sm text-zinc-400">{!open && summary}</span>
+      <FiChevronDown className={`shrink-0 text-zinc-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
     </button>
     {open && <div className="px-3.5 pb-3.5 space-y-3">{children}</div>}
   </div>
@@ -87,7 +87,7 @@ const CountryPicker: React.FC<{ value: string; onChange: (code: string) => void;
   return (
     <div className="mt-2 rounded-xl bg-zinc-900 ring-1 ring-white/10 p-3 space-y-3">
       <div className="relative">
-        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+        <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
         <input
           type="text"
           value={q}
@@ -109,7 +109,7 @@ const CountryPicker: React.FC<{ value: string; onChange: (code: string) => void;
               key={code}
               type="button"
               onClick={() => pick(code)}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono ring-1 cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-mono ring-1 cursor-pointer ${
                 value === code ? "bg-white/15 text-white ring-white/40" : "text-zinc-300 ring-white/10 hover:ring-white/25"
               }`}
             >
@@ -128,18 +128,18 @@ const CountryPicker: React.FC<{ value: string; onChange: (code: string) => void;
               role="option"
               aria-selected={value === c.code}
               onClick={() => pick(c.code)}
-              className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-left cursor-pointer ${
+              className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg text-base text-left cursor-pointer ${
                 value === c.code ? "bg-white/10 text-white" : "text-zinc-300 hover:bg-white/5"
               }`}
             >
               <CountryFlag code={c.code} />
               <span className="grow">{c.name}</span>
-              <span className="font-mono text-[10px] text-zinc-500">{c.code}</span>
+              <span className="font-mono text-[13px] text-zinc-400">{c.code}</span>
               {value === c.code && <FiCheck className="text-zinc-300" />}
             </button>
           </li>
         ))}
-        {results.length === 0 && <li className="px-2 py-3 text-xs text-zinc-500">Geen land gevonden</li>}
+        {results.length === 0 && <li className="px-2 py-3 text-sm text-zinc-400">Geen land gevonden</li>}
       </ul>
     </div>
   );
@@ -264,10 +264,10 @@ export const ShowFormSheet: React.FC<ShowFormSheetProps> = ({ initial, defaultOw
         {/* Kop */}
         <div className="flex items-center gap-3 px-4 pt-3 pb-3 border-b border-white/[0.06]">
           <div className="grow min-w-0">
-            <h2 className="font-display text-2xl font-bold uppercase tracking-wide text-white leading-none">
+            <h2 className="font-display text-[28px] font-bold uppercase tracking-wide text-white leading-none">
               {initial ? "Show bewerken" : "Nieuwe show"}
             </h2>
-            <div className="mt-1 flex items-center gap-1 text-xs text-zinc-500">
+            <div className="mt-1 flex items-center gap-1 text-sm text-zinc-400">
               Eigenaar:
               {canChangeOwner ? (
                 <select
@@ -306,13 +306,13 @@ export const ShowFormSheet: React.FC<ShowFormSheetProps> = ({ initial, defaultOw
                   onClick={() => setIsCountryOpen((o) => !o)}
                   aria-expanded={isCountryOpen}
                   aria-label={`Land: ${COUNTRIES.find((c) => c.code === d.country)?.name ?? d.country}`}
-                  className={`shrink-0 flex items-center gap-1.5 px-3 rounded-lg bg-black/40 ring-1 text-sm text-zinc-200 cursor-pointer ${
+                  className={`shrink-0 flex items-center gap-1.5 px-3 rounded-lg bg-black/40 ring-1 text-base text-zinc-200 cursor-pointer ${
                     isCountryOpen ? "ring-white/30" : "ring-white/10"
                   }`}
                 >
                   <CountryFlag code={d.country} />
-                  <span className="font-mono text-xs">{d.country}</span>
-                  <FiChevronDown className={`text-zinc-500 text-xs transition-transform ${isCountryOpen ? "rotate-180" : ""}`} />
+                  <span className="font-mono text-sm">{d.country}</span>
+                  <FiChevronDown className={`text-zinc-400 text-sm transition-transform ${isCountryOpen ? "rotate-180" : ""}`} />
                 </button>
                 <input
                   type="text"
@@ -343,8 +343,8 @@ export const ShowFormSheet: React.FC<ShowFormSheetProps> = ({ initial, defaultOw
                     role="radio"
                     aria-checked={d.status === o.value}
                     onClick={() => set("status", o.value)}
-                    className={`py-2 rounded-md text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
-                      d.status === o.value ? `ring-1 ${o.active}` : "text-zinc-500 hover:text-zinc-200"
+                    className={`py-2 rounded-md text-sm font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
+                      d.status === o.value ? `ring-1 ${o.active}` : "text-zinc-400 hover:text-zinc-200"
                     }`}
                   >
                     {o.label}
@@ -363,10 +363,10 @@ export const ShowFormSheet: React.FC<ShowFormSheetProps> = ({ initial, defaultOw
                   d.isPublic ? "bg-sky-500/10 ring-sky-500/40" : "ring-white/10 hover:ring-white/20"
                 }`}
               >
-                <FiGlobe className={d.isPublic ? "text-sky-300" : "text-zinc-500"} />
+                <FiGlobe className={d.isPublic ? "text-sky-300" : "text-zinc-400"} />
                 <span className="grow">
-                  <span className={`block text-sm font-semibold ${d.isPublic ? "text-sky-200" : "text-zinc-200"}`}>Aankondigen op website</span>
-                  <span className="block text-xs text-zinc-500">Onder TOUR, na de datum vanzelf onder HISTORY. Zonder gage of contact.</span>
+                  <span className={`block text-base font-semibold ${d.isPublic ? "text-sky-200" : "text-zinc-200"}`}>Aankondigen op website</span>
+                  <span className="block text-sm text-zinc-400">Onder TOUR, na de datum vanzelf onder HISTORY. Zonder gage of contact.</span>
                 </span>
                 {/* Schakelaar */}
                 <span className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${d.isPublic ? "bg-sky-500" : "bg-zinc-700"}`}>
@@ -400,8 +400,8 @@ export const ShowFormSheet: React.FC<ShowFormSheetProps> = ({ initial, defaultOw
                         key={m}
                         type="button"
                         onClick={() => set("paymentMethod", m)}
-                        className={`py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
-                          d.paymentMethod === m ? "bg-white/15 text-white ring-1 ring-white/30" : "text-zinc-500 hover:text-zinc-200"
+                        className={`py-1.5 rounded-md text-sm font-semibold transition-colors cursor-pointer ${
+                          d.paymentMethod === m ? "bg-white/15 text-white ring-1 ring-white/30" : "text-zinc-400 hover:text-zinc-200"
                         }`}
                       >
                         {m === "cash" ? "Cash" : "Bank"}
@@ -411,8 +411,8 @@ export const ShowFormSheet: React.FC<ShowFormSheetProps> = ({ initial, defaultOw
                 </div>
               </div>
               {(d.guaranteedFee || d.transportCost) && (
-                <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-black/30 text-xs">
-                  <span className="text-zinc-500">
+                <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-black/30 text-sm">
+                  <span className="text-zinc-400">
                     Netto (gage − vervoer{d.transportCost ? ` ${euro(cost)}` : ""})
                   </span>
                   <span className={`font-mono tabular font-bold ${net >= 0 ? "text-emerald-300" : "text-red-300"}`}>
@@ -495,13 +495,13 @@ export const ShowFormSheet: React.FC<ShowFormSheetProps> = ({ initial, defaultOw
 
         {/* Voet: altijd in beeld */}
         <div className="flex gap-2 px-4 py-3 border-t border-white/[0.06] bg-zinc-950/95 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:rounded-b-2xl">
-          <button type="button" onClick={onClose} className="px-4 py-3 rounded-xl text-sm font-semibold text-zinc-300 ring-1 ring-white/10 hover:bg-white/5 cursor-pointer">
+          <button type="button" onClick={onClose} className="px-4 py-3 rounded-xl text-base font-semibold text-zinc-300 ring-1 ring-white/10 hover:bg-white/5 cursor-pointer">
             Annuleren
           </button>
           <button
             type="submit"
             disabled={!canSave}
-            className={`grow py-3 rounded-xl text-sm font-bold uppercase tracking-wider border transition-opacity ${saveButtonClass} ${
+            className={`grow py-3 rounded-xl text-base font-bold uppercase tracking-wider border transition-opacity ${saveButtonClass} ${
               canSave ? "cursor-pointer" : "opacity-40 cursor-not-allowed"
             }`}
           >
