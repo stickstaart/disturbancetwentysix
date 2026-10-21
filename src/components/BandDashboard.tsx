@@ -402,7 +402,7 @@ const BandDashboard: React.FC = () => {
         {/* COMPACTE KOP: titel + wie je bent + instellingen */}
         <header className={`relative flex items-center justify-between gap-3 border-b ${themeStyle.border} pb-3`}>
           <div className="min-w-0">
-            <h1 className="font-display text-[28px] font-bold uppercase tracking-wide leading-none">Band-agenda</h1>
+            <h1 className="font-display text-[28px] font-bold uppercase tracking-wide leading-none">super-secret-agenda</h1>
             <div className="mt-1 text-sm opacity-70">
               Ingelogd als <span className={`font-semibold ${themeStyle.accentText}`}>{displayName(currentUser)}</span>
             </div>
