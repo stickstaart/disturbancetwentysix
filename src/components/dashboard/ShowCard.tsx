@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { FiChevronDown, FiEdit2, FiGlobe, FiMail, FiPhone, FiTrash2 } from "react-icons/fi";
 import type { DateItem, ShowStatus } from "../BandDashboard";
 import { CountryFlag } from "./CountryFlag";
 import { parseLocalDate } from "./dateUtils";
@@ -22,35 +23,44 @@ function dateParts(dateString: string) {
   return { weekday: weekday.toUpperCase(), day: String(d.getDate()).padStart(2, "0"), week: isoWeek(d) };
 }
 
-const STATUS_STYLES: Record<ShowStatus, { accent: string; border: string; chip: string; label: string }> = {
+// Statuskleuren — zelfde betekenis als in het Google Doc: groen / oranje / rood
+const STATUS: Record<ShowStatus, { text: string; bar: string; tile: string; active: string; label: string }> = {
   confirmed: {
-    accent: "text-emerald-400",
-    border: "border-l-emerald-500",
-    chip: "bg-emerald-950 text-emerald-400 border-emerald-500",
-    label: "CONFIRMED",
+    text: "text-emerald-400",
+    bar: "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.55)]",
+    tile: "bg-emerald-500/10 ring-emerald-500/25",
+    active: "bg-emerald-500/15 text-emerald-300 ring-emerald-500/50",
+    label: "Bevestigd",
   },
   option: {
-    accent: "text-amber-400",
-    border: "border-l-amber-500",
-    chip: "bg-amber-950 text-amber-400 border-amber-500",
-    label: "OPTION",
+    text: "text-amber-400",
+    bar: "bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.5)]",
+    tile: "bg-amber-500/10 ring-amber-500/25",
+    active: "bg-amber-500/15 text-amber-300 ring-amber-500/50",
+    label: "Optie",
   },
   cancelled: {
-    accent: "text-red-500",
-    border: "border-l-red-500",
-    chip: "bg-red-950 text-red-500 border-red-500",
-    label: "CANCELLED",
+    text: "text-red-500",
+    bar: "bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.5)]",
+    tile: "bg-red-500/10 ring-red-500/25",
+    active: "bg-red-500/15 text-red-300 ring-red-500/50",
+    label: "Afgelast",
   },
 };
+const STATUS_ORDER: ShowStatus[] = ["option", "confirmed", "cancelled"];
 
-/** Datumblok links: weekdag kort, dagnummer groot, weeknummer klein */
-const DateBlock: React.FC<{ date: string; className?: string }> = ({ date, className = "" }) => {
+const CARD =
+  "relative overflow-hidden rounded-xl bg-gradient-to-b from-zinc-900 to-zinc-950 ring-1 ring-white/[0.06] " +
+  "shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_10px_30px_-15px_rgba(0,0,0,0.9)] transition-all duration-200";
+
+/** Datumtegel links: weekdag kort, dagnummer groot, weeknummer klein */
+const DateTile: React.FC<{ date: string; tone: string; tile: string }> = ({ date, tone, tile }) => {
   const { weekday, day, week } = dateParts(date);
   return (
-    <div className={`w-11 shrink-0 text-center font-mono leading-none ${className}`}>
-      <div className="text-[10px] font-bold opacity-70">{weekday}</div>
-      <div className="text-2xl font-extrabold my-0.5">{day}</div>
-      {week && <div className="text-[9px] text-zinc-500">WK{week}</div>}
+    <div className={`w-12 shrink-0 rounded-lg ring-1 py-1.5 text-center leading-none ${tile}`}>
+      <div className={`font-mono text-[9px] font-bold tracking-[0.15em] ${tone}`}>{weekday}</div>
+      <div className={`font-display text-[26px] font-extrabold tabular my-0.5 ${tone}`}>{day}</div>
+      {week && <div className="font-mono text-[8px] tracking-wider text-zinc-500">WK {week}</div>}
     </div>
   );
 };
@@ -61,160 +71,174 @@ interface ShowCardProps {
   onEdit: (show: DateItem) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, newStatus: ShowStatus) => void;
+  onTogglePublic: (id: string) => void;
 }
 
-export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit, onDelete, onStatusChange }) => {
+export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit, onDelete, onStatusChange, onTogglePublic }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
-  const pastStyle = isPast ? "opacity-50 hover:opacity-100 transition-opacity" : "";
+  const pastStyle = isPast ? "opacity-55 saturate-50 hover:opacity-100 hover:saturate-100" : "";
 
-  // Geblokkeerde datum: compacte rode regel
+  // ---------- Geblokkeerde datum ----------
   if (item.isBlocked) {
     return (
-      <div id={`show-${item.id}`} className={`flex items-center gap-3 p-2 rounded bg-zinc-950 border border-zinc-800 border-l-4 border-l-red-600 ${pastStyle}`}>
-        <DateBlock date={item.date} className="text-red-500" />
-        <div className="grow min-w-0 text-sm text-zinc-300 break-words">
-          <span className="font-mono text-[10px] font-bold text-red-400 block">🚫 GEBLOKKEERD</span>
-          {item.blockedBy}
+      <div id={`show-${item.id}`} className={`${CARD} stripes-blocked flex items-center gap-3 p-2.5 ${pastStyle}`}>
+        <span className="absolute left-0 inset-y-0 w-[3px] bg-red-600/80" />
+        <DateTile date={item.date} tone="text-red-400" tile="bg-red-500/5 ring-red-500/20" />
+        <div className="grow min-w-0">
+          <div className="font-mono text-[10px] font-bold tracking-[0.2em] text-red-400">GEBLOKKEERD</div>
+          <div className="text-sm text-zinc-300 break-words">{item.blockedBy}</div>
         </div>
         <button
           onClick={() => onDelete(item.id)}
-          className="text-xs text-zinc-500 hover:text-red-400 p-2 cursor-pointer"
+          className="p-2 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 cursor-pointer"
           title="Verwijder blokkade"
+          aria-label="Verwijder blokkade"
         >
-          🗑️
+          <FiTrash2 />
         </button>
       </div>
     );
   }
 
-  const styles = STATUS_STYLES[item.status] ?? STATUS_STYLES.option;
+  // ---------- Show ----------
+  const st = STATUS[item.status] ?? STATUS.option;
   const isCancelled = item.status === "cancelled";
+  const isOnWebsite = !!item.isPublic && item.status === "confirmed";
 
   const fee = parseFloat(item.guaranteedFee || "0") || 0;
   const cost = parseFloat(item.transportCost || "0") || 0;
-  const netResult = fee - cost;
+  const net = fee - cost;
   const hasFinancials = item.guaranteedFee || item.transportCost;
-  const hasDetails = item.owner || item.guaranteedFee || item.contact?.name || item.transportMethod || item.drivers || item.breakEvenInfo;
+
+  const details: [string, React.ReactNode][] = [];
+  if (item.tourName) details.push(["Event", item.tourName]);
+  if (item.owner) details.push(["Eigenaar", <span className="font-semibold text-white">{item.owner}</span>]);
+  if (item.guaranteedFee) details.push(["Gage", <span className="tabular">€{item.guaranteedFee}{item.paymentMethod ? ` · ${item.paymentMethod}` : ""}</span>]);
+  if (item.drivers) details.push(["Chauffeur", item.drivers]);
+  if (item.transportMethod) details.push(["Vervoer", <span className="tabular">{item.transportMethod}{item.transportCost ? ` · €${item.transportCost}` : ""}</span>]);
+  if (item.contact?.name || item.contact?.phone || item.contact?.email)
+    details.push([
+      "Contact",
+      <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        {item.contact?.name && <span>{item.contact.name}</span>}
+        {item.contact?.phone && (
+          <a href={`tel:${item.contact.phone}`} className="inline-flex items-center gap-1 text-zinc-200 hover:text-white underline decoration-zinc-600 underline-offset-2">
+            <FiPhone className="text-[11px]" />{item.contact.phone}
+          </a>
+        )}
+        {item.contact?.email && (
+          <a href={`mailto:${item.contact.email}`} className="inline-flex items-center gap-1 text-zinc-200 hover:text-white underline decoration-zinc-600 underline-offset-2 break-all">
+            <FiMail className="text-[11px]" />{item.contact.email}
+          </a>
+        )}
+      </span>,
+    ]);
+  if (item.breakEvenInfo) details.push(["Afspraken", item.breakEvenInfo]);
 
   return (
-    <div
-      id={`show-${item.id}`}
-      className={`rounded bg-zinc-900/90 border border-zinc-800 border-l-4 ${styles.border} ${pastStyle}`}
-    >
+    <div id={`show-${item.id}`} className={`${CARD} ${isOpen ? "ring-white/[0.12]" : "hover:ring-white/[0.1]"} ${pastStyle}`}>
+      <span className={`absolute left-0 inset-y-0 w-[3px] ${st.bar}`} />
+
       {/* COMPACTE REGEL — tik om open te klappen */}
       <button
         type="button"
         onClick={() => setIsOpen((o) => !o)}
         aria-expanded={isOpen}
-        className="w-full flex items-center gap-3 p-2 md:p-3 text-left cursor-pointer"
+        className="w-full flex items-center gap-3 p-2.5 pl-3.5 text-left cursor-pointer"
       >
-        <DateBlock date={item.date} className={styles.accent} />
+        <DateTile date={item.date} tone={st.text} tile={st.tile} />
 
         <div className="grow min-w-0">
-          <div className={`flex items-center gap-1 text-base md:text-lg font-extrabold uppercase leading-tight break-words ${styles.accent} ${isCancelled ? "line-through" : ""}`}>
+          <div className={`flex items-center gap-1.5 font-display text-xl md:text-2xl font-bold uppercase leading-none break-words ${st.text} ${isCancelled ? "line-through decoration-2" : ""}`}>
             <CountryFlag code={item.country} />
             <span className="min-w-0">{item.city}</span>
           </div>
-          <div className={`text-xs text-zinc-300 leading-snug break-words ${isCancelled ? "line-through opacity-70" : ""}`}>
-            @ {item.venue || "TBA"}
-            {item.otherbands && <span className="text-zinc-500"> /w {item.otherbands}</span>}
+          <div className={`mt-1 text-[13px] text-zinc-300 leading-snug break-words ${isCancelled ? "line-through opacity-60" : ""}`}>
+            <span className="text-zinc-500">@</span> {item.venue || "TBA"}
+            {item.otherbands && <span className="text-zinc-500"> · w/ {item.otherbands}</span>}
           </div>
         </div>
 
-        <div className="shrink-0 flex flex-col items-end gap-1">
+        <div className="shrink-0 flex flex-col items-end gap-1.5">
           {hasFinancials && !isCancelled && (
             <span
-              className={`font-mono text-xs font-extrabold px-1.5 py-0.5 rounded border ${
-                netResult >= 0
-                  ? "bg-emerald-950/80 text-emerald-400 border-emerald-600"
-                  : "bg-red-950/80 text-red-500 border-red-600"
+              className={`font-mono tabular text-[11px] font-bold px-2 py-0.5 rounded-full ring-1 ${
+                net >= 0 ? "bg-emerald-500/10 text-emerald-300 ring-emerald-500/30" : "bg-red-500/10 text-red-300 ring-red-500/30"
               }`}
             >
-              {netResult >= 0 ? `+€${netResult}` : `-€${Math.abs(netResult)}`}
+              {net >= 0 ? `+€${net}` : `−€${Math.abs(net)}`}
             </span>
           )}
-          <span className={`text-zinc-500 text-xs transition-transform ${isOpen ? "rotate-180" : ""}`}>▾</span>
+          <span className="flex items-center gap-1.5 text-zinc-500">
+            {isOnWebsite && <FiGlobe className="text-sky-400" title="Op de website" />}
+            <FiChevronDown className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+          </span>
         </div>
       </button>
 
-      {/* UITGEKLAPT: DETAILS + ACTIES */}
+      {/* UITGEKLAPT */}
       {isOpen && (
-        <div className="px-3 pb-3 space-y-3">
-          {hasDetails && (
-            <dl className="pt-2 border-t border-zinc-800 text-xs text-zinc-300 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
-              {item.owner && (<><dt className="font-mono text-zinc-500">Eigenaar</dt><dd className="font-bold text-white">{item.owner}</dd></>)}
-              {item.guaranteedFee && (
-                <><dt className="font-mono text-zinc-500">Gage</dt><dd>€{item.guaranteedFee}{item.paymentMethod ? ` (${item.paymentMethod})` : ""}</dd></>
-              )}
-              {item.drivers && (<><dt className="font-mono text-zinc-500">Chauffeur</dt><dd>{item.drivers}</dd></>)}
-              {item.transportMethod && (
-                <><dt className="font-mono text-zinc-500">Vervoer</dt><dd>{item.transportMethod}{item.transportCost ? ` (€${item.transportCost})` : ""}</dd></>
-              )}
-              {item.contact?.name && (
-                <>
-                  <dt className="font-mono text-zinc-500">Contact</dt>
-                  <dd className="break-words">
-                    {item.contact.name}
-                    {item.contact.phone && <> · <a href={`tel:${item.contact.phone}`} className="underline">{item.contact.phone}</a></>}
-                    {item.contact.email && <> · <a href={`mailto:${item.contact.email}`} className="underline">{item.contact.email}</a></>}
-                  </dd>
-                </>
-              )}
-              {item.breakEvenInfo && (<><dt className="font-mono text-zinc-500">Afspraken</dt><dd className="break-words">{item.breakEvenInfo}</dd></>)}
+        <div className="px-3.5 pb-3.5 space-y-3">
+          {details.length > 0 && (
+            <dl className="pt-3 border-t border-white/[0.06] grid grid-cols-[5.5rem_1fr] gap-x-3 gap-y-1.5 text-[13px] text-zinc-300">
+              {details.map(([label, value]) => (
+                <React.Fragment key={label}>
+                  <dt className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500 pt-[3px]">{label}</dt>
+                  <dd className="break-words min-w-0">{value}</dd>
+                </React.Fragment>
+              ))}
             </dl>
           )}
 
-          <div className="grid grid-cols-3 gap-2 font-mono">
+          {/* Status als segmented control: één tik, geen pop-up */}
+          <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-black/40 ring-1 ring-white/[0.06]" role="radiogroup" aria-label="Status">
+            {STATUS_ORDER.map((value) => (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={item.status === value}
+                onClick={() => item.status !== value && onStatusChange(item.id, value)}
+                className={`py-1.5 rounded-md text-[11px] font-semibold uppercase tracking-wider transition-colors cursor-pointer ${
+                  item.status === value ? `ring-1 ${STATUS[value].active}` : "text-zinc-500 hover:text-zinc-200"
+                }`}
+              >
+                {STATUS[value].label}
+              </button>
+            ))}
+          </div>
+
+          {/* Website + acties */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onTogglePublic(item.id)}
+              disabled={item.status !== "confirmed"}
+              title={item.status !== "confirmed" ? "Kan pas als de show bevestigd is" : undefined}
+              className={`grow flex items-center justify-center gap-1.5 py-2 rounded-lg text-[11px] font-semibold uppercase tracking-wider ring-1 transition-colors ${
+                item.status !== "confirmed"
+                  ? "text-zinc-600 ring-white/[0.05] cursor-not-allowed"
+                  : isOnWebsite
+                  ? "bg-sky-500/15 text-sky-300 ring-sky-500/40 cursor-pointer"
+                  : "text-zinc-400 ring-white/10 hover:text-white cursor-pointer"
+              }`}
+            >
+              <FiGlobe /> {isOnWebsite ? "Op website" : "Aankondigen"}
+            </button>
             <button
               onClick={() => onEdit(item)}
-              className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 text-[11px] py-2 rounded font-bold uppercase cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-[11px] font-semibold uppercase tracking-wider text-zinc-200 bg-white/[0.06] ring-1 ring-white/10 hover:bg-white/10 cursor-pointer"
             >
-              ✏️ Bewerk
+              <FiEdit2 /> Bewerk
             </button>
             <button
               onClick={() => onDelete(item.id)}
-              className="bg-red-950/50 hover:bg-red-900/60 text-red-300 border border-red-900/60 text-[11px] py-2 rounded font-bold uppercase cursor-pointer"
+              aria-label="Verwijderen"
+              title="Verwijderen"
+              className="p-2 rounded-lg text-red-400 ring-1 ring-red-500/25 hover:bg-red-500/10 cursor-pointer"
             >
-              🗑️ Wis
+              <FiTrash2 />
             </button>
-            <button
-              type="button"
-              onClick={() => setIsStatusModalOpen(true)}
-              className={`text-[11px] py-2 px-1 rounded font-bold uppercase cursor-pointer border ${styles.chip}`}
-            >
-              {styles.label} ▾
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* STATUS MODAL */}
-      {isStatusModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-zinc-900 border border-zinc-700 rounded-lg max-w-xs w-full p-5 space-y-4 shadow-2xl">
-            <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
-              <h3 className="text-sm font-bold uppercase text-zinc-200 font-mono">Kies Status</h3>
-              <button onClick={() => setIsStatusModalOpen(false)} className="text-zinc-400 hover:text-white text-base font-bold p-1">✕</button>
-            </div>
-            <div className="space-y-2 font-mono">
-              {([
-                ["option", "🟧 OPTION (In optie)"],
-                ["confirmed", "🟩 CONFIRMED (Bevestigd)"],
-                ["cancelled", "🟥 CANCELLED (Geannuleerd)"],
-              ] as [ShowStatus, string][]).map(([value, label]) => (
-                <button
-                  key={value}
-                  onClick={() => { onStatusChange(item.id, value); setIsStatusModalOpen(false); }}
-                  className={`w-full py-3 px-4 rounded text-xs font-bold uppercase text-left border flex justify-between items-center ${
-                    item.status === value ? STATUS_STYLES[value].chip : "bg-black/50 text-zinc-300 border-zinc-800"
-                  }`}
-                >
-                  <span>{label}</span>
-                  {item.status === value && <span>✓</span>}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       )}
