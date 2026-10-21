@@ -25,6 +25,8 @@ export function useSiteShows(): SiteShow[] {
 
   const merged = new Map<string, SiteShow>();
   archive.forEach((s) => merged.set(key(s), s));
-  live.forEach((s) => merged.set(key(s), s));
+  live
+    .filter((s) => !s.isDummy || import.meta.env.DEV) // testdata alleen lokaal, nooit op de live site
+    .forEach((s) => merged.set(key(s), s));
   return [...merged.values()];
 }

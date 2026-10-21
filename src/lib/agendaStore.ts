@@ -68,8 +68,10 @@ async function patch(name: string, id: string, fields: Record<string, unknown>, 
 // alleen datum/land/stad/venue/bands/tour — nooit gages, contacten of afspraken.
 const PUBLIC = "publicShows";
 
+// Testdata mag naar publicShows (met isDummy-vlag) zodat je TOUR/HISTORY lokaal kunt testen;
+// de live site filtert isDummy er altijd uit (zie useSiteShows).
 export const isPublishable = (s: Partial<DateItem>) =>
-  !!s.isPublic && s.status === "confirmed" && !s.isBlocked && !s.isDummy;
+  !!s.isPublic && s.status === "confirmed" && !s.isBlocked;
 
 const publicProjection = (s: DateItem) => ({
   date: s.date,
@@ -78,6 +80,7 @@ const publicProjection = (s: DateItem) => ({
   venue: s.venue || "",
   bands: (s.otherbands || "").split(",").map((b) => b.trim()).filter(Boolean),
   tour: s.tourName || null,
+  ...(s.isDummy ? { isDummy: true } : {}),
 });
 
 function syncPublic(batch: ReturnType<typeof writeBatch>, show: DateItem) {
@@ -120,6 +123,7 @@ export interface PublicShow {
   venue: string;
   bands: string[];
   tour: string | null;
+  isDummy?: boolean;
 }
 export const subscribePublicShows = (cb: (s: PublicShow[]) => void, onError?: (e: Error) => void) =>
   subscribe<PublicShow>(PUBLIC, cb, onError);
@@ -160,14 +164,18 @@ export async function migrateLocalStorage(actor: string) {
 export async function seedDummyData(actor: string) {
   const batch = writeBatch(db);
   const stamp = { isDummy: true, createdBy: actor, updatedBy: actor, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
-  dummyShows().forEach((s) => batch.set(doc(collection(db, SHOWS)), { ...clean(s), ...stamp }));
+  dummyShows().forEach((s) => {
+    const ref = doc(collection(db, SHOWS));
+    batch.set(ref, { ...clean(s), ...stamp });
+    syncPublic(batch, { ...s, id: ref.id, isDummy: true } as DateItem);
+  });
   dummyIdeas().forEach((i) => batch.set(doc(collection(db, IDEAS)), { ...clean(i), ...stamp }));
   await batch.commit();
 }
 
 export async function clearDummyData() {
   const batch = writeBatch(db);
-  for (const name of [SHOWS, IDEAS]) {
+  for (const name of [SHOWS, IDEAS, PUBLIC]) {
     const snap = await getDocs(query(collection(db, name), where("isDummy", "==", true)));
     snap.forEach((d) => batch.delete(d.ref));
   }
