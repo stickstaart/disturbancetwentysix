@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { CustomDatePicker } from "./dashboard/CustomDatePicker";
+import { ShowFormSheet, type ShowDraft } from "./dashboard/ShowForm";
 import { ShowCard } from "./dashboard/ShowCard";
 import { CountryFlag } from "./dashboard/CountryFlag";
 import * as store from "../lib/agendaStore";
+import { BAND_MEMBERS, COUNTRIES } from "./dashboard/constants";
 import { parseLocalDate, todayString } from "./dashboard/dateUtils";
 
 export type ShowStatus = "confirmed" | "option" | "cancelled";
@@ -60,24 +62,6 @@ export interface TourIdea {
 
 export type ThemeType = "ORIGINAL" | "80ies Miami" | "Horror" | "Superdark" | "Superlight" | "Lemon" | "Nerd";
 
-export const BAND_MEMBERS = ["Joz (Superadmin)", "Jona", "Rob", "Johnny"];
-
-export const COUNTRIES = [
-  { code: "AF", name: "Afghanistan" }, { code: "AL", name: "Albanië" }, { code: "DZ", name: "Algerije" },
-  { code: "AD", name: "Andorra" }, { code: "AO", name: "Angola" }, { code: "AR", name: "Argentinië" },
-  { code: "AM", name: "Armenië" }, { code: "AU", name: "Australië" }, { code: "AT", name: "Oostenrijk" },
-  { code: "AZ", name: "Azerbeidzjan" }, { code: "BE", name: "België" }, { code: "BR", name: "Brazilië" },
-  { code: "BG", name: "Bulgarije" }, { code: "CA", name: "Canada" }, { code: "CL", name: "Chili" },
-  { code: "CN", name: "China" }, { code: "CO", name: "Colombia" }, { code: "HR", name: "Kroatië" },
-  { code: "CY", name: "Cyprus" }, { code: "CZ", name: "Tsjechië" }, { code: "DK", name: "Denemarken" },
-  { code: "DE", name: "Duitsland" }, { code: "EE", name: "Estland" }, { code: "FI", name: "Finland" },
-  { code: "FR", name: "Frankrijk" }, { code: "GR", name: "Griekenland" }, { code: "HU", name: "Hongarije" },
-  { code: "IS", name: "IJsland" }, { code: "IE", name: "Ierland" }, { code: "IT", name: "Italië" },
-  { code: "JP", name: "Japan" }, { code: "MX", name: "Mexico" }, { code: "NL", name: "Nederland" },
-  { code: "NO", name: "Noorwegen" }, { code: "PL", name: "Polen" }, { code: "PT", name: "Portugal" },
-  { code: "RO", name: "Roemenië" }, { code: "ES", name: "Spanje" }, { code: "SE", name: "Zweden" },
-  { code: "CH", name: "Zwitserland" }, { code: "GB", name: "Verenigd Koninkrijk" }, { code: "US", name: "Verenigde Staten" }
-].sort((a, b) => a.name.localeCompare(b.name));
 
 // Thema Kleurenschema Definities (Zonder aanpassing van font-size of font-family)
 const THEME_CONFIGS: Record<ThemeType, { bg: string; cardBg: string; text: string; border: string; primaryBtn: string; accentText: string }> = {
@@ -159,7 +143,6 @@ const BandDashboard: React.FC = () => {
 
   const [isYearModalOpen, setIsYearModalOpen] = useState<boolean>(false);
   const [isCountryModalOpen, setIsCountryModalOpen] = useState<boolean>(false);
-  const [countryModalTarget, setCountryModalTarget] = useState<"show" | "idea">("show");
 
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [isIdeaFormOpen, setIsIdeaFormOpen] = useState<boolean>(false);
@@ -185,25 +168,6 @@ const BandDashboard: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingIdeaId, setEditingIdeaId] = useState<string | null>(null);
 
-  // Show Form State
-  const [date, setDate] = useState(getTodayString());
-  const [country, setCountry] = useState("NL");
-  const [city, setCity] = useState("");
-  const [venue, setVenue] = useState("");
-  const [otherbands, setOtherbands] = useState("");
-  const [status, setStatus] = useState<ShowStatus>("option");
-  const [contactName, setContactName] = useState("");
-  const [contactEmail, setContactEmail] = useState("");
-  const [contactPhone, setContactPhone] = useState("");
-  const [guaranteedFee, setGuaranteedFee] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"cash" | "wire">("cash");
-  const [breakEvenInfo, setBreakEvenInfo] = useState("");
-  const [owner, setOwner] = useState(currentUser);
-  const [drivers, setDrivers] = useState("");
-  const [transportMethod, setTransportMethod] = useState("");
-  const [transportCost, setTransportCost] = useState("");
-  const [isPublic, setIsPublic] = useState(false);
-  const [tourName, setTourName] = useState("");
 
   // Idea Form State
   const [newTitle, setNewTitle] = useState("");
@@ -247,7 +211,6 @@ const BandDashboard: React.FC = () => {
 
   const handleUserChange = (newUser: string) => {
     setCurrentUser(newUser);
-    if (!editingId) setOwner(newUser);
     if (!editingIdeaId) setIdeaOwner(newUser);
     localStorage.setItem("band_active_user", newUser);
   };
@@ -283,24 +246,6 @@ const BandDashboard: React.FC = () => {
 
   const resetShowForm = () => {
     setEditingId(null);
-    setDate(getTodayString());
-    setCountry("NL");
-    setCity("");
-    setVenue("");
-    setOtherbands("");
-    setStatus("option");
-    setContactName("");
-    setContactEmail("");
-    setContactPhone("");
-    setGuaranteedFee("");
-    setPaymentMethod("cash");
-    setBreakEvenInfo("");
-    setOwner(currentUser);
-    setDrivers("");
-    setTransportMethod("");
-    setTransportCost("");
-    setIsPublic(false);
-    setTourName("");
     setIsFormOpen(false);
   };
 
@@ -340,37 +285,9 @@ const BandDashboard: React.FC = () => {
     }
   };
 
-  const handleSaveShow = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!date || !city) return;
-
-    const showData: DateItem = {
-      id: editingId || store.newId(),
-      date,
-      country,
-      city,
-      venue,
-      otherbands: otherbands || undefined,
-      status,
-      contact: {
-        name: contactName || undefined,
-        email: contactEmail || undefined,
-        phone: contactPhone || undefined,
-      },
-      guaranteedFee: guaranteedFee || undefined,
-      paymentMethod,
-      breakEvenInfo: breakEvenInfo || undefined,
-      owner,
-      drivers: drivers || undefined,
-      transportMethod: transportMethod || undefined,
-      transportCost: transportCost || undefined,
-      isPublic,
-      tourName: tourName || undefined,
-    };
-
+  const handleSaveShow = (draft: ShowDraft) => {
     const original = editingId ? shows.find((s) => s.id === editingId) : undefined;
-    run(store.saveShow({ ...original, ...showData }, currentUser, !editingId));
-
+    run(store.saveShow({ ...original, ...draft, id: editingId || store.newId() }, currentUser, !editingId));
     resetShowForm();
   };
 
@@ -460,28 +377,9 @@ const BandDashboard: React.FC = () => {
   };
 
   const handleEditClick = (show: DateItem) => {
+    setIsBlockModalOpen(false);
     setEditingId(show.id);
-    setDate(show.date || getTodayString());
-    setCountry(show.country || "NL");
-    setCity(show.city || "");
-    setVenue(show.venue || "");
-    setOtherbands(show.otherbands || "");
-    setStatus(show.status);
-    setContactName(show.contact?.name || "");
-    setContactEmail(show.contact?.email || "");
-    setContactPhone(show.contact?.phone || "");
-    setGuaranteedFee(show.guaranteedFee || "");
-    setPaymentMethod(show.paymentMethod || "cash");
-    setBreakEvenInfo(show.breakEvenInfo || "");
-    setOwner(show.owner || currentUser);
-    setDrivers(show.drivers || "");
-    setTransportMethod(show.transportMethod || "");
-    setTransportCost(show.transportCost || "");
-    setIsPublic(!!show.isPublic);
-    setTourName(show.tourName || "");
-
     setIsFormOpen(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleDelete = (id: string) => {
@@ -662,7 +560,7 @@ const BandDashboard: React.FC = () => {
                   isFormOpen ? "bg-zinc-800 border-zinc-600 text-zinc-300" : themeStyle.primaryBtn
                 }`}
               >
-                {isFormOpen ? "✕ SLUIT FORMULIER" : "+ NIEUWE SHOW TOEVOEGEN"}
+                + NIEUWE SHOW
               </button>
               <button
                 type="button"
@@ -676,226 +574,15 @@ const BandDashboard: React.FC = () => {
             </div>
 
             {isFormOpen && (
-              <form onSubmit={handleSaveShow} className={`p-4 ${themeStyle.cardBg} rounded-lg border ${themeStyle.border} space-y-4 font-mono`}>
-                <div className={`flex justify-between items-center border-b ${themeStyle.border} pb-2`}>
-                  <h3 className={`text-sm font-bold uppercase ${themeStyle.accentText} tracking-wider`}>
-                    {editingId ? "✏️ Show Bewerken" : "+ Nieuwe Show Toevoegen"}
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={resetShowForm}
-                    className="w-7 h-7 flex items-center justify-center rounded-full bg-red-950 border border-red-600 text-red-500 text-xs font-bold"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <div>
-                    <label className="text-[10px] opacity-70 uppercase block mb-1">Datum</label>
-                    <CustomDatePicker value={date} onChange={(newDate) => setDate(newDate)} />
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] opacity-70 uppercase block mb-1">Land</label>
-                    <button
-                      type="button"
-                      onClick={() => { setCountryModalTarget("show"); setIsCountryModalOpen(true); }}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs text-left flex items-center justify-between"
-                    >
-                      <span className="flex items-center gap-1.5">
-                        <CountryFlag code={country} />
-                        {COUNTRIES.find((c) => c.code === country)?.name || country}
-                      </span>
-                      <span className="text-[10px] opacity-50">▼</span>
-                    </button>
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] opacity-70 uppercase block mb-1">Stad</label>
-                    <input
-                      type="text"
-                      placeholder="Stadnaam..."
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] opacity-70 uppercase block mb-1">Zaal / Venue</label>
-                    <input
-                      type="text"
-                      placeholder="Zaalnaam..."
-                      value={venue}
-                      onChange={(e) => setVenue(e.target.value)}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] opacity-70 uppercase block mb-1">Andere Bands</label>
-                    <input
-                      type="text"
-                      placeholder="Support / Co-headliners..."
-                      value={otherbands}
-                      onChange={(e) => setOtherbands(e.target.value)}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] opacity-70 uppercase block mb-1">Status</label>
-                    <select
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value as ShowStatus)}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
-                    >
-                      <option value="option" className="bg-black text-white">In Optie (Oranje)</option>
-                      <option value="confirmed" className="bg-black text-white">Bevestigd (Groen)</option>
-                      <option value="cancelled" className="bg-black text-white">Geannuleerd (Rood)</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* WEBSITE */}
-                <div className={`border-t ${themeStyle.border} pt-3 grid grid-cols-1 md:grid-cols-2 gap-2 items-end`}>
-                  <div>
-                    <label className="text-[10px] opacity-70 uppercase block mb-1">Festival / tournaam (optioneel)</label>
-                    <input
-                      type="text"
-                      placeholder="Bijv. Baroeg Open Air"
-                      value={tourName}
-                      onChange={(e) => setTourName(e.target.value)}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
-                    />
-                  </div>
-                  <label className={`flex items-start gap-2 p-2 rounded-lg border text-xs cursor-pointer ${
-                    status === "confirmed" ? "border-zinc-700" : "border-zinc-800 opacity-50 cursor-not-allowed"
-                  }`}>
-                    <input
-                      type="checkbox"
-                      checked={isPublic && status === "confirmed"}
-                      disabled={status !== "confirmed"}
-                      onChange={(e) => setIsPublic(e.target.checked)}
-                      className="mt-0.5 accent-emerald-500"
-                    />
-                    <span>
-                      <span className="font-bold uppercase">🌐 Aankondigen op website</span>
-                      <span className="block opacity-60 text-[10px]">
-                        {status === "confirmed"
-                          ? "Verschijnt onder TOUR, na de datum vanzelf onder HISTORY. Zonder gage of contact."
-                          : "Kan pas als de show bevestigd is."}
-                      </span>
-                    </span>
-                  </label>
-                </div>
-
-                <div className={`border-t ${themeStyle.border} pt-3`}>
-                  <span className="text-[11px] font-bold opacity-70 uppercase block mb-2">👤 Contactpersoon Show</span>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    <input
-                      type="text"
-                      placeholder="Naam contactpersoon"
-                      value={contactName}
-                      onChange={(e) => setContactName(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
-                    />
-                    <input
-                      type="email"
-                      placeholder="E-mailadres"
-                      value={contactEmail}
-                      onChange={(e) => setContactEmail(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Telefoonnummer"
-                      value={contactPhone}
-                      onChange={(e) => setContactPhone(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
-                    />
-                  </div>
-                </div>
-
-                <div className={`border-t ${themeStyle.border} pt-3`}>
-                  <span className="text-[11px] font-bold opacity-70 uppercase block mb-2">💰 Financiën & Gage</span>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    <input
-                      type="number"
-                      placeholder="Gage Bedrag (€)"
-                      value={guaranteedFee}
-                      onChange={(e) => setGuaranteedFee(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
-                    />
-                    <select
-                      value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value as "cash" | "wire")}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
-                    >
-                      <option value="cash" className="bg-black text-white">💵 Cash (Contant)</option>
-                      <option value="wire" className="bg-black text-white">🏛️ Wire (Bankoverschrijving)</option>
-                    </select>
-
-                    {isSuperadmin ? (
-                      <select
-                        value={owner}
-                        onChange={(e) => setOwner(e.target.value)}
-                        className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
-                      >
-                        {BAND_MEMBERS.map((m) => (
-                          <option key={m} value={m} className="bg-black text-white">Eigenaar: {m}</option>
-                        ))}
-                      </select>
-                    ) : (
-                      <div className="p-2 bg-black/40 border border-zinc-800 rounded-lg text-xs opacity-70 flex items-center">
-                        Eigenaar: <strong className="ml-1">{owner}</strong>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className={`border-t ${themeStyle.border} pt-3`}>
-                  <span className="text-[11px] font-bold opacity-70 uppercase block mb-2">🚗 Vervoer & Kosten</span>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
-                    <input
-                      type="text"
-                      placeholder="Chauffeur(s)..."
-                      value={drivers}
-                      onChange={(e) => setDrivers(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Vervoer (Bus, Vliegtuig...)"
-                      value={transportMethod}
-                      onChange={(e) => setTransportMethod(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
-                    />
-                    <input
-                      type="number"
-                      placeholder="Totale Vervoerskosten (€)"
-                      value={transportCost}
-                      onChange={(e) => setTransportCost(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs"
-                    />
-                  </div>
-                  <textarea
-                    placeholder="Break-even afspraken / Bijzonderheden..."
-                    value={breakEvenInfo}
-                    onChange={(e) => setBreakEvenInfo(e.target.value)}
-                    className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs h-14"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className={`w-full py-3 ${themeStyle.primaryBtn} font-bold uppercase text-xs tracking-widest rounded-lg transition-all cursor-pointer`}
-                >
-                  OPSLAAN
-                </button>
-              </form>
+              <ShowFormSheet
+                key={editingId ?? "new"}
+                initial={editingId ? shows.find((s) => s.id === editingId) ?? null : null}
+                defaultOwner={currentUser}
+                canChangeOwner={isSuperadmin}
+                saveButtonClass={themeStyle.primaryBtn}
+                onSave={handleSaveShow}
+                onClose={resetShowForm}
+              />
             )}
 
             {isBlockModalOpen && (
@@ -1042,7 +729,7 @@ const BandDashboard: React.FC = () => {
                     <label className="text-[10px] opacity-70 uppercase block mb-1">Land</label>
                     <button
                       type="button"
-                      onClick={() => { setCountryModalTarget("idea"); setIsCountryModalOpen(true); }}
+                      onClick={() => { setIsCountryModalOpen(true); }}
                       className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-xs text-left flex items-center justify-between"
                     >
                       <span className="flex items-center gap-1.5">
@@ -1235,17 +922,13 @@ const BandDashboard: React.FC = () => {
               </div>
               <div className="max-h-60 overflow-y-auto space-y-1 pr-1">
                 {COUNTRIES.map((item) => {
-                  const isSelected = countryModalTarget === "show" ? country === item.code : newIdeaCountry === item.code;
+                  const isSelected = newIdeaCountry === item.code;
                   return (
                     <button
                       key={item.code}
                       type="button"
                       onClick={() => {
-                        if (countryModalTarget === "show") {
-                          setCountry(item.code);
-                        } else {
-                          setNewIdeaCountry(item.code);
-                        }
+                        setNewIdeaCountry(item.code);
                         setIsCountryModalOpen(false);
                       }}
                       className={`w-full p-2 rounded-lg text-xs font-bold text-left border flex justify-between items-center cursor-pointer ${
