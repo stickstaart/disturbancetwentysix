@@ -6,6 +6,7 @@ import { CountryFlag } from "./dashboard/CountryFlag";
 import * as store from "../lib/agendaStore";
 import { FiChevronDown, FiLogOut, FiPlus, FiSettings, FiSlash } from "react-icons/fi";
 import { useSnapZoom } from "../lib/useSnapZoom";
+import { isTestMode } from "../lib/testMode";
 import { BAND_MEMBERS, COUNTRIES, displayName } from "./dashboard/constants";
 import { parseLocalDate, todayString } from "./dashboard/dateUtils";
 
@@ -515,7 +516,7 @@ const BandDashboard: React.FC = () => {
                 </div>
 
                 {/* TESTDATA — alleen zichtbaar bij `npm run dev`, nooit op de live site */}
-                {import.meta.env.DEV && isSuperadmin && (
+                {isTestMode && isSuperadmin && (
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"

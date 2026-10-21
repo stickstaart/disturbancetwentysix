@@ -8,29 +8,23 @@ interface Show {
   bands?: string[];
 }
 
-import { nieuweData } from '../../SHOWS/dates';
+import { useSiteShows } from '../lib/useSiteShows';
+import { parseLocalDate, todayString } from './dashboard/dateUtils';
 
 const Hero: React.FC = () => {
-// Pak de huidige tijd en zet deze op het begin van de dag (00:00:00)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Zelfde bron als TOUR/HISTORY: archief + aangekondigde shows uit de agenda
+  const shows = useSiteShows() as Show[];
+  const today = todayString();
 
-  const shows = nieuweData as Show[];
-
-  // 1. Zoek de eerstvolgende show
+  // Eerstvolgende show (vandaag telt mee); alleen volledige datums (archief heeft soms alleen een jaartal)
   const nextShow = shows
-    .map(show => ({
-      ...show,
-      // Gebruik de slash-methode voor stabiliteit
-      parsedDate: new Date(show.date.replace(/-/g, "/"))
-    }))
-    // Filter nu op 'today' in plaats van 'now'
-    .filter(show => show.parsedDate >= today)
-    .sort((a, b) => a.parsedDate.getTime() - b.parsedDate.getTime())[0];
-  const formattedHeroDate = new Date(nextShow.date).toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-  });
+    .filter((show) => /^\d{4}-\d{2}-\d{2}$/.test(show.date) && show.date >= today)
+    .sort((a, b) => a.date.localeCompare(b.date))[0];
+
+  const heroDate = nextShow ? parseLocalDate(nextShow.date) : null;
+  const formattedHeroDate = heroDate
+    ? heroDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })
+    : '';
 
   return (
     <section
@@ -53,7 +47,7 @@ const Hero: React.FC = () => {
             className="mb-8 animate-fade-up delay-200 bg-white/5 backdrop-blur-sm border border-white/10 p-4 rounded-lg inline-block">
             <p className="text-xs uppercase tracking-widest text-gray-400 mb-1">Next Show</p>
             <p className="text-lg font-bold">
-              {formattedHeroDate.toUpperCase()} — {nextShow.venue.toUpperCase()}
+              {formattedHeroDate.toUpperCase()} — {(nextShow.venue || 'TBA').toUpperCase()}
             </p>
             <div>
               <p className="text-sm text-gray-300">{nextShow.city}</p>
