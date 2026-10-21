@@ -1,13 +1,9 @@
 import React, { useState } from "react";
 import type { DateItem, ShowStatus } from "../BandDashboard";
 import { CountryFlag } from "./CountryFlag";
+import { parseLocalDate } from "./dateUtils";
 
-function formatShowDate(dateString: string): { formatted: string; weekNum: number | null } {
-  if (!dateString) return { formatted: "", weekNum: null };
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return { formatted: dateString, weekNum: null };
-
-  // ISO Weeknummer
+function isoWeek(date: Date): number {
   const target = new Date(date.valueOf());
   const dayNumber = (date.getDay() + 6) % 7;
   target.setDate(target.getDate() - dayNumber + 3);
@@ -16,193 +12,182 @@ function formatShowDate(dateString: string): { formatted: string; weekNum: numbe
   if (target.getDay() !== 4) {
     target.setMonth(0, 1 + ((4 - target.getDay() + 7) % 7));
   }
-  const weekNum = 1 + Math.round((firstThursday - target.valueOf()) / 604800000);
-
-  const formatted = new Intl.DateTimeFormat("nl-NL", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  })
-    .format(date)
-    .toUpperCase();
-
-  return { formatted, weekNum };
+  return 1 + Math.round((firstThursday - target.valueOf()) / 604800000);
 }
+
+function dateParts(dateString: string) {
+  const d = parseLocalDate(dateString);
+  if (!d) return { weekday: "", day: dateString, week: null as number | null };
+  const weekday = new Intl.DateTimeFormat("nl-NL", { weekday: "short" }).format(d).replace(".", "");
+  return { weekday: weekday.toUpperCase(), day: String(d.getDate()).padStart(2, "0"), week: isoWeek(d) };
+}
+
+const STATUS_STYLES: Record<ShowStatus, { accent: string; border: string; chip: string; label: string }> = {
+  confirmed: {
+    accent: "text-emerald-400",
+    border: "border-l-emerald-500",
+    chip: "bg-emerald-950 text-emerald-400 border-emerald-500",
+    label: "CONFIRMED",
+  },
+  option: {
+    accent: "text-amber-400",
+    border: "border-l-amber-500",
+    chip: "bg-amber-950 text-amber-400 border-amber-500",
+    label: "OPTION",
+  },
+  cancelled: {
+    accent: "text-red-500",
+    border: "border-l-red-500",
+    chip: "bg-red-950 text-red-500 border-red-500",
+    label: "CANCELLED",
+  },
+};
+
+/** Datumblok links: weekdag kort, dagnummer groot, weeknummer klein */
+const DateBlock: React.FC<{ date: string; className?: string }> = ({ date, className = "" }) => {
+  const { weekday, day, week } = dateParts(date);
+  return (
+    <div className={`w-11 shrink-0 text-center font-mono leading-none ${className}`}>
+      <div className="text-[10px] font-bold opacity-70">{weekday}</div>
+      <div className="text-2xl font-extrabold my-0.5">{day}</div>
+      {week && <div className="text-[9px] text-zinc-500">WK{week}</div>}
+    </div>
+  );
+};
 
 interface ShowCardProps {
   item: DateItem;
+  isPast?: boolean;
   onEdit: (show: DateItem) => void;
   onDelete: (id: string) => void;
   onStatusChange: (id: string, newStatus: ShowStatus) => void;
 }
 
-export const ShowCard: React.FC<ShowCardProps> = ({ item, onEdit, onDelete, onStatusChange }) => {
+export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit, onDelete, onStatusChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const pastStyle = isPast ? "opacity-50 hover:opacity-100 transition-opacity" : "";
 
-  // Als dit een geblokkeerde datum is:
+  // Geblokkeerde datum: compacte rode regel
   if (item.isBlocked) {
-    const { formatted, weekNum } = formatShowDate(item.date);
     return (
-      <div className="w-full p-3 rounded bg-zinc-950 border-l-4 border-l-red-600 border border-zinc-800 font-mono space-y-1">
-        <div className="flex justify-between items-center">
-          <div className="text-sm font-bold text-red-500">
-            {weekNum && <span className="text-zinc-500 text-xs mr-2">WK {weekNum}</span>}
-            {formatted}
-          </div>
-          <button
-            onClick={() => onDelete(item.id)}
-            className="text-xs text-zinc-500 hover:text-red-400 p-1 cursor-pointer"
-            title="Verwijder blokkade"
-          >
-            🗑️
-          </button>
+      <div id={`show-${item.id}`} className={`flex items-center gap-3 p-2 rounded bg-zinc-950 border border-zinc-800 border-l-4 border-l-red-600 ${pastStyle}`}>
+        <DateBlock date={item.date} className="text-red-500" />
+        <div className="grow min-w-0 text-sm text-zinc-300 break-words">
+          <span className="font-mono text-[10px] font-bold text-red-400 block">🚫 GEBLOKKEERD</span>
+          {item.blockedBy}
         </div>
-        <div className="text-xs text-zinc-300">
-          <span className="text-red-400 font-bold">🚫 GEBLOKKEERD DOOR:</span> {item.blockedBy}
-        </div>
+        <button
+          onClick={() => onDelete(item.id)}
+          className="text-xs text-zinc-500 hover:text-red-400 p-2 cursor-pointer"
+          title="Verwijder blokkade"
+        >
+          🗑️
+        </button>
       </div>
     );
   }
 
-  const getStatusStyles = (status: ShowStatus) => {
-    switch (status) {
-      case "confirmed":
-        return {
-          titleColor: "text-emerald-400 font-extrabold",
-          locationColor: "text-white font-bold",
-          borderColor: "border-l-4 border-l-emerald-500",
-          selectStyle: "bg-emerald-950 text-emerald-400 border-emerald-500 font-bold",
-          label: "CONFIRMED",
-          isCancelled: false,
-        };
-      case "cancelled":
-        return {
-          titleColor: "text-red-500 font-extrabold",
-          locationColor: "text-red-500 font-bold",
-          borderColor: "border-l-4 border-l-red-500",
-          selectStyle: "bg-red-950 text-red-500 border-red-500 font-bold",
-          label: "CANCELLED",
-          isCancelled: true,
-        };
-      case "option":
-      default:
-        return {
-          titleColor: "text-amber-500 font-extrabold",
-          locationColor: "text-white font-bold",
-          borderColor: "border-l-4 border-l-amber-500",
-          selectStyle: "bg-amber-950 text-amber-500 border-amber-500 font-bold",
-          label: "OPTION",
-          isCancelled: false,
-        };
-    }
-  };
+  const styles = STATUS_STYLES[item.status] ?? STATUS_STYLES.option;
+  const isCancelled = item.status === "cancelled";
 
-  const styles = getStatusStyles(item.status);
-  const { formatted, weekNum } = formatShowDate(item.date);
-
-  // Bereken netto resultaat
   const fee = parseFloat(item.guaranteedFee || "0") || 0;
   const cost = parseFloat(item.transportCost || "0") || 0;
   const netResult = fee - cost;
   const hasFinancials = item.guaranteedFee || item.transportCost;
+  const hasDetails = item.owner || item.guaranteedFee || item.contact?.name || item.transportMethod || item.drivers || item.breakEvenInfo;
 
   return (
-    <div id={`show-${item.id}`} className={`w-full p-3 md:p-4 rounded bg-zinc-900/90 border border-zinc-800 font-mono space-y-2.5 ${styles.borderColor}`}>
+    <div
+      id={`show-${item.id}`}
+      className={`rounded bg-zinc-900/90 border border-zinc-800 border-l-4 ${styles.border} ${pastStyle}`}
+    >
+      {/* COMPACTE REGEL — tik om open te klappen */}
+      <button
+        type="button"
+        onClick={() => setIsOpen((o) => !o)}
+        aria-expanded={isOpen}
+        className="w-full flex items-center gap-3 p-2 md:p-3 text-left cursor-pointer"
+      >
+        <DateBlock date={item.date} className={styles.accent} />
 
-      {/* REGEL 1: DATUM + NETTO FINANCIEEL RESULTAAT */}
-      <div className="w-full flex justify-between items-start">
-        <div className={`text-xl md:text-sm tracking-wide leading-snug break-all ${styles.titleColor} ${styles.isCancelled ? "line-through" : ""}`}>
-          {weekNum && <span className="text-zinc-500 text-xs font-normal mr-2">WK {weekNum}</span>}
-          {formatted}
-        </div>
-
-        {/* NETTO GAGE WEERGAVE RECHTSBOVEN */}
-        {hasFinancials && !styles.isCancelled && (
-          <div
-            className={`text-sm font-extrabold px-2 py-0.5 rounded border ${
-              netResult >= 0
-                ? "bg-emerald-950/80 text-emerald-400 border-emerald-500"
-                : "bg-red-950/80 text-red-500 border-red-500"
-            }`}
-          >
-            {netResult >= 0 ? `+€${netResult}` : `-€${Math.abs(netResult)}`}
+        <div className="grow min-w-0">
+          <div className={`flex items-center gap-1 text-base md:text-lg font-extrabold uppercase leading-tight break-words ${styles.accent} ${isCancelled ? "line-through" : ""}`}>
+            <CountryFlag code={item.country} />
+            <span className="min-w-0">{item.city}</span>
           </div>
-        )}
-      </div>
-
-      {/* REGEL 2: VLAG + LAND + LOCATIE */}
-      <div className="w-full relative">
-        <div className={`w-full text-m uppercase leading-snug break-all flex flex-wrap items-center gap-1.5 ${styles.locationColor} ${styles.isCancelled ? "line-through" : ""}`}>
-          <CountryFlag code={item.country} />
-          <span className="shrink-0">({item.country})</span>
-          <span className="grow min-w-0">{item.city} @ {item.venue || "TBA"}</span>
+          <div className={`text-xs text-zinc-300 leading-snug break-words ${isCancelled ? "line-through opacity-70" : ""}`}>
+            @ {item.venue || "TBA"}
+            {item.otherbands && <span className="text-zinc-500"> /w {item.otherbands}</span>}
+          </div>
         </div>
-      </div>
 
-      {/* REGEL 3: BANDS */}
-      {item.otherbands && (
-        <div className="w-full px-1 pt-1">
-          <p className="text-xs text-zinc-300 break-words leading-snug">
-            <span className="text-zinc-500">Bands:</span> {item.otherbands}
-          </p>
+        <div className="shrink-0 flex flex-col items-end gap-1">
+          {hasFinancials && !isCancelled && (
+            <span
+              className={`font-mono text-xs font-extrabold px-1.5 py-0.5 rounded border ${
+                netResult >= 0
+                  ? "bg-emerald-950/80 text-emerald-400 border-emerald-600"
+                  : "bg-red-950/80 text-red-500 border-red-600"
+              }`}
+            >
+              {netResult >= 0 ? `+€${netResult}` : `-€${Math.abs(netResult)}`}
+            </span>
+          )}
+          <span className={`text-zinc-500 text-xs transition-transform ${isOpen ? "rotate-180" : ""}`}>▾</span>
+        </div>
+      </button>
+
+      {/* UITGEKLAPT: DETAILS + ACTIES */}
+      {isOpen && (
+        <div className="px-3 pb-3 space-y-3">
+          {hasDetails && (
+            <dl className="pt-2 border-t border-zinc-800 text-xs text-zinc-300 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
+              {item.owner && (<><dt className="font-mono text-zinc-500">Eigenaar</dt><dd className="font-bold text-white">{item.owner}</dd></>)}
+              {item.guaranteedFee && (
+                <><dt className="font-mono text-zinc-500">Gage</dt><dd>€{item.guaranteedFee}{item.paymentMethod ? ` (${item.paymentMethod})` : ""}</dd></>
+              )}
+              {item.drivers && (<><dt className="font-mono text-zinc-500">Chauffeur</dt><dd>{item.drivers}</dd></>)}
+              {item.transportMethod && (
+                <><dt className="font-mono text-zinc-500">Vervoer</dt><dd>{item.transportMethod}{item.transportCost ? ` (€${item.transportCost})` : ""}</dd></>
+              )}
+              {item.contact?.name && (
+                <>
+                  <dt className="font-mono text-zinc-500">Contact</dt>
+                  <dd className="break-words">
+                    {item.contact.name}
+                    {item.contact.phone && <> · <a href={`tel:${item.contact.phone}`} className="underline">{item.contact.phone}</a></>}
+                    {item.contact.email && <> · <a href={`mailto:${item.contact.email}`} className="underline">{item.contact.email}</a></>}
+                  </dd>
+                </>
+              )}
+              {item.breakEvenInfo && (<><dt className="font-mono text-zinc-500">Afspraken</dt><dd className="break-words">{item.breakEvenInfo}</dd></>)}
+            </dl>
+          )}
+
+          <div className="grid grid-cols-3 gap-2 font-mono">
+            <button
+              onClick={() => onEdit(item)}
+              className="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 text-[11px] py-2 rounded font-bold uppercase cursor-pointer"
+            >
+              ✏️ Bewerk
+            </button>
+            <button
+              onClick={() => onDelete(item.id)}
+              className="bg-red-950/50 hover:bg-red-900/60 text-red-300 border border-red-900/60 text-[11px] py-2 rounded font-bold uppercase cursor-pointer"
+            >
+              🗑️ Wis
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsStatusModalOpen(true)}
+              className={`text-[11px] py-2 px-1 rounded font-bold uppercase cursor-pointer border ${styles.chip}`}
+            >
+              {styles.label} ▾
+            </button>
+          </div>
         </div>
       )}
-
-      {/* DETAILS / INFORMATIE */}
-      {(item.owner || item.guaranteedFee || item.contact?.name || item.transportMethod || item.drivers || item.breakEvenInfo) && (
-        <div className="w-full pt-2 border-t border-zinc-800/80 text-[11px] text-zinc-400 space-y-1 px-1">
-          {item.owner && (
-            <div><span className="text-zinc-500">Band Eigenaar:</span> <span className="text-white font-bold">{item.owner}</span></div>
-          )}
-          {item.guaranteedFee && (
-            <div>
-              <span className="text-zinc-500">Gage:</span> €{item.guaranteedFee} {item.paymentMethod ? `(${item.paymentMethod.toUpperCase()})` : ""}
-            </div>
-          )}
-          {item.drivers && (
-            <div><span className="text-zinc-500">Chauffeur(s):</span> {item.drivers}</div>
-          )}
-          {item.transportMethod && (
-            <div><span className="text-zinc-500">Vervoer:</span> {item.transportMethod} {item.transportCost ? `(€${item.transportCost})` : ""}</div>
-          )}
-          {item.contact?.name && (
-            <div>
-              <span className="text-zinc-500">Contact:</span> {item.contact.name}
-              {item.contact.phone && ` (${item.contact.phone})`}
-            </div>
-          )}
-          {item.breakEvenInfo && (
-            <div><span className="text-zinc-500">Afspraken:</span> {item.breakEvenInfo}</div>
-          )}
-        </div>
-      )}
-
-      {/* ONDERAAN: KNOPPEN */}
-      <div className="w-full pt-1 grid grid-cols-3 gap-2">
-        <button
-          onClick={() => onEdit(item)}
-          className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 text-xs py-2 rounded font-bold uppercase transition-colors flex items-center justify-center gap-1 cursor-pointer"
-        >
-          ✏️ BEWERKEN
-        </button>
-
-        <button
-          onClick={() => onDelete(item.id)}
-          className="w-full bg-red-950/50 hover:bg-red-900/60 text-red-300 border border-red-900/60 text-xs py-2 rounded font-bold uppercase transition-colors flex items-center justify-center gap-1 cursor-pointer"
-        >
-          🗑️ VERWIJDER
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setIsStatusModalOpen(true)}
-          className={`w-full text-xs py-2 px-1 rounded font-bold uppercase cursor-pointer border flex items-center justify-center gap-1 ${styles.selectStyle}`}
-        >
-          <span>{styles.label}</span>
-          <span className="text-[10px]">▼</span>
-        </button>
-      </div>
 
       {/* STATUS MODAL */}
       {isStatusModalOpen && (
@@ -213,33 +198,22 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, onEdit, onDelete, onSt
               <button onClick={() => setIsStatusModalOpen(false)} className="text-zinc-400 hover:text-white text-base font-bold p-1">✕</button>
             </div>
             <div className="space-y-2 font-mono">
-              <button
-                onClick={() => { onStatusChange(item.id, "option"); setIsStatusModalOpen(false); }}
-                className={`w-full py-3 px-4 rounded text-xs font-bold uppercase text-left border flex justify-between items-center ${
-                  item.status === "option" ? "bg-amber-950 text-amber-400 border-amber-500" : "bg-black/50 text-zinc-300 border-zinc-800"
-                }`}
-              >
-                <span>🟧 OPTION (In optie)</span>
-                {item.status === "option" && <span>✓</span>}
-              </button>
-              <button
-                onClick={() => { onStatusChange(item.id, "confirmed"); setIsStatusModalOpen(false); }}
-                className={`w-full py-3 px-4 rounded text-xs font-bold uppercase text-left border flex justify-between items-center ${
-                  item.status === "confirmed" ? "bg-emerald-950 text-emerald-400 border-emerald-500" : "bg-black/50 text-zinc-300 border-zinc-800"
-                }`}
-              >
-                <span>🟩 CONFIRMED (Bevestigd)</span>
-                {item.status === "confirmed" && <span>✓</span>}
-              </button>
-              <button
-                onClick={() => { onStatusChange(item.id, "cancelled"); setIsStatusModalOpen(false); }}
-                className={`w-full py-3 px-4 rounded text-xs font-bold uppercase text-left border flex justify-between items-center ${
-                  item.status === "cancelled" ? "bg-red-950 text-red-500 border-red-500" : "bg-black/50 text-zinc-300 border-zinc-800"
-                }`}
-              >
-                <span>🟥 CANCELLED (Geannuleerd)</span>
-                {item.status === "cancelled" && <span>✓</span>}
-              </button>
+              {([
+                ["option", "🟧 OPTION (In optie)"],
+                ["confirmed", "🟩 CONFIRMED (Bevestigd)"],
+                ["cancelled", "🟥 CANCELLED (Geannuleerd)"],
+              ] as [ShowStatus, string][]).map(([value, label]) => (
+                <button
+                  key={value}
+                  onClick={() => { onStatusChange(item.id, value); setIsStatusModalOpen(false); }}
+                  className={`w-full py-3 px-4 rounded text-xs font-bold uppercase text-left border flex justify-between items-center ${
+                    item.status === value ? STATUS_STYLES[value].chip : "bg-black/50 text-zinc-300 border-zinc-800"
+                  }`}
+                >
+                  <span>{label}</span>
+                  {item.status === value && <span>✓</span>}
+                </button>
+              ))}
             </div>
           </div>
         </div>

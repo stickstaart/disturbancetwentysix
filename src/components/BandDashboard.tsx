@@ -3,6 +3,7 @@ import { CustomDatePicker } from "./dashboard/CustomDatePicker";
 import { ShowCard } from "./dashboard/ShowCard";
 import { CountryFlag } from "./dashboard/CountryFlag";
 import * as store from "../lib/agendaStore";
+import { parseLocalDate, todayString } from "./dashboard/dateUtils";
 
 export type ShowStatus = "confirmed" | "option" | "cancelled";
 
@@ -133,7 +134,7 @@ const THEME_CONFIGS: Record<ThemeType, { bg: string; cardBg: string; text: strin
   },
 };
 
-const getTodayString = () => new Date().toISOString().split("T")[0];
+const getTodayString = todayString;
 
 const BandDashboard: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => localStorage.getItem("band_auth") === "true");
@@ -237,6 +238,32 @@ const BandDashboard: React.FC = () => {
 
   const sortedShows = [...shows].sort((a, b) => a.date.localeCompare(b.date));
   const filteredShows = sortedShows.filter((s) => s.date && s.date.startsWith(selectedYear));
+
+  // Groeperen per maand (zoals de kopjes in het Google Doc)
+  const today = todayString();
+  const nextShowId = filteredShows.find((s) => s.date >= today)?.id;
+  const showsByMonth = filteredShows.reduce<{ key: string; label: string; items: DateItem[] }[]>((groups, item) => {
+    const key = item.date.substring(0, 7);
+    let group = groups.find((g) => g.key === key);
+    if (!group) {
+      const d = parseLocalDate(item.date);
+      const label = d
+        ? new Intl.DateTimeFormat("nl-NL", { month: "long", year: "numeric" }).format(d).toUpperCase()
+        : key;
+      group = { key, label, items: [] };
+      groups.push(group);
+    }
+    group.items.push(item);
+    return groups;
+  }, []);
+
+  // Bij openen (en jaarwissel) naar de eerstvolgende afspraak scrollen
+  const scrolledFor = React.useRef<string | null>(null);
+  useEffect(() => {
+    if (isLoading || !nextShowId || scrolledFor.current === selectedYear) return;
+    scrolledFor.current = selectedYear;
+    document.getElementById("today-marker")?.scrollIntoView({ block: "start", behavior: "smooth" });
+  }, [isLoading, nextShowId, selectedYear]);
 
   const resetShowForm = () => {
     setEditingId(null);
@@ -814,22 +841,39 @@ const BandDashboard: React.FC = () => {
               </div>
             )}
 
-            <div className="space-y-3 font-mono">
-              <h2 className="text-xs font-bold uppercase opacity-70 tracking-wider">
+            <div className="space-y-3">
+              <h2 className="font-mono text-xs font-bold uppercase opacity-70 tracking-wider">
                 AGENDA {selectedYear} ({filteredShows.length})
               </h2>
 
               {filteredShows.length === 0 ? (
                 <p className="text-xs opacity-50 italic">Geen optredens of blokkades gevonden voor {selectedYear}.</p>
               ) : (
-                filteredShows.map((item) => (
-                  <ShowCard
-                    key={item.id}
-                    item={item}
-                    onEdit={handleEditClick}
-                    onDelete={handleDelete}
-                    onStatusChange={handleStatusChange}
-                  />
+                showsByMonth.map((group) => (
+                  <section key={group.key} className="space-y-2">
+                    {/* Sticky maandkopje */}
+                    <h3 className={`sticky top-0 z-10 ${themeStyle.bg} py-2 font-mono text-sm font-extrabold tracking-widest ${themeStyle.accentText} border-b ${themeStyle.border}`}>
+                      {group.label}
+                    </h3>
+                    {group.items.map((item) => (
+                      <React.Fragment key={item.id}>
+                        {item.id === nextShowId && (
+                          <div id="today-marker" className="scroll-mt-12 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-widest opacity-80">
+                            <span className={`h-px grow ${themeStyle.border} border-t`} />
+                            <span className={themeStyle.accentText}>▼ Vandaag / Hierna</span>
+                            <span className={`h-px grow ${themeStyle.border} border-t`} />
+                          </div>
+                        )}
+                        <ShowCard
+                          item={item}
+                          isPast={item.date < today}
+                          onEdit={handleEditClick}
+                          onDelete={handleDelete}
+                          onStatusChange={handleStatusChange}
+                        />
+                      </React.Fragment>
+                    ))}
+                  </section>
                 ))
               )}
             </div>
