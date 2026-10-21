@@ -3,6 +3,7 @@ import { FiChevronDown, FiEdit2, FiGlobe, FiMail, FiPhone, FiTrash2 } from "reac
 import type { DateItem, ShowStatus } from "../BandDashboard";
 import { CountryFlag } from "./CountryFlag";
 import { parseLocalDate } from "./dateUtils";
+import { displayName } from "./constants";
 
 function isoWeek(date: Date): number {
   const target = new Date(date.valueOf());
@@ -112,8 +113,8 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
 
   const details: [string, React.ReactNode][] = [];
   if (item.tourName) details.push(["Event", item.tourName]);
-  if (item.owner) details.push(["Eigenaar", <span className="font-semibold text-white">{item.owner}</span>]);
-  if (item.guaranteedFee) details.push(["Gage", <span className="tabular">€{item.guaranteedFee}{item.paymentMethod ? ` · ${item.paymentMethod}` : ""}</span>]);
+  if (item.owner) details.push(["Eigenaar", <span className="font-semibold text-white">{displayName(item.owner)}</span>]);
+  if (item.guaranteedFee) details.push(["Gage", <span className="tabular">€{item.guaranteedFee}{item.paymentMethod ? ` · ${item.paymentMethod === "wire" ? "bank" : "cash"}` : ""}</span>]);
   if (item.drivers) details.push(["Chauffeur", item.drivers]);
   if (item.transportMethod) details.push(["Vervoer", <span className="tabular">{item.transportMethod}{item.transportCost ? ` · €${item.transportCost}` : ""}</span>]);
   if (item.contact?.name || item.contact?.phone || item.contact?.email)

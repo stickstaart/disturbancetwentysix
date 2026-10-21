@@ -4,8 +4,9 @@ import { ShowFormSheet, type ShowDraft } from "./dashboard/ShowForm";
 import { ShowCard } from "./dashboard/ShowCard";
 import { CountryFlag } from "./dashboard/CountryFlag";
 import * as store from "../lib/agendaStore";
+import { FiChevronDown, FiLogOut, FiPlus, FiSettings, FiSlash } from "react-icons/fi";
 import { useSnapZoom } from "../lib/useSnapZoom";
-import { BAND_MEMBERS, COUNTRIES } from "./dashboard/constants";
+import { BAND_MEMBERS, COUNTRIES, displayName } from "./dashboard/constants";
 import { parseLocalDate, todayString } from "./dashboard/dateUtils";
 
 export type ShowStatus = "confirmed" | "option" | "cancelled";
@@ -152,6 +153,7 @@ const BandDashboard: React.FC = () => {
   const [blockDate, setBlockDate] = useState(getTodayString());
 
   useSnapZoom();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Data komt live uit Firestore (zie src/lib/agendaStore.ts)
   const [shows, setShows] = useState<DateItem[]>([]);
@@ -441,70 +443,87 @@ const BandDashboard: React.FC = () => {
     <div className={`min-h-screen ${themeStyle.bg} ${themeStyle.text} p-3 md:p-8 band-agenda transition-colors duration-200`}>
       <div className="max-w-4xl mx-auto space-y-6">
 
-        {/* HEADER MET SUPERADMIN ACCOUNT SWITCHER + THEME SELECTOR */}
-        <div className={`flex flex-wrap items-center justify-between gap-3 border-b ${themeStyle.border} pb-3 font-mono`}>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="text-[13px] md:text-xs opacity-70 uppercase font-bold">Account:</span>
-              <select
-                value={currentUser}
-                onChange={(e) => handleUserChange(e.target.value)}
-                className={`bg-black/40 border ${themeStyle.border} ${themeStyle.accentText} text-sm font-bold py-1 px-2 rounded-lg focus:outline-none cursor-pointer`}
-              >
-                {BAND_MEMBERS.map((member) => (
-                  <option key={member} value={member} className="bg-black text-white">
-                    {member}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* THEMA KIEZER */}
-            <div className="flex items-center gap-2">
-              <span className="text-[13px] md:text-xs opacity-70 uppercase font-bold">🎨 Thema:</span>
-              <select
-                value={theme}
-                onChange={(e) => handleThemeChange(e.target.value as ThemeType)}
-                className={`bg-black/40 border ${themeStyle.border} ${themeStyle.accentText} text-sm font-bold py-1 px-2 rounded-lg focus:outline-none cursor-pointer`}
-              >
-                <option value="ORIGINAL" className="bg-black text-white">ORIGINAL</option>
-                <option value="80ies Miami" className="bg-black text-white">80ies Miami</option>
-                <option value="Horror" className="bg-black text-white">Horror</option>
-                <option value="Superdark" className="bg-black text-white">Superdark</option>
-                <option value="Superlight" className="bg-white text-black">Superlight</option>
-                <option value="Lemon" className="bg-black text-white">Lemon</option>
-                <option value="Nerd" className="bg-black text-white">Nerd</option>
-              </select>
+        {/* COMPACTE KOP: titel + wie je bent + instellingen */}
+        <header className={`relative flex items-center justify-between gap-3 border-b ${themeStyle.border} pb-3`}>
+          <div className="min-w-0">
+            <h1 className="font-display text-[28px] font-bold uppercase tracking-wide leading-none">Band-agenda</h1>
+            <div className="mt-1 text-sm opacity-70">
+              Ingelogd als <span className={`font-semibold ${themeStyle.accentText}`}>{displayName(currentUser)}</span>
             </div>
           </div>
-
-          {/* TESTDATA — alleen zichtbaar bij `npm run dev`, nooit op de live site */}
-          {import.meta.env.DEV && isSuperadmin && (
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => run(store.seedDummyData(currentUser))}
-                className="text-[13px] px-2 py-1 rounded-lg border border-dashed border-sky-600 text-sky-400 cursor-pointer"
-              >
-                🧪 Testdata laden
-              </button>
-              <button
-                type="button"
-                onClick={() => { if (confirm("Alle testdata (isDummy) verwijderen?")) run(store.clearDummyData()); }}
-                className="text-[13px] px-2 py-1 rounded-lg border border-dashed border-zinc-600 text-zinc-400 cursor-pointer"
-              >
-                🧹 Wis testdata
-              </button>
-            </div>
-          )}
-
           <button
-            onClick={() => { setIsAuthenticated(false); localStorage.removeItem("band_auth"); }}
-            className={`text-sm ${themeStyle.accentText} hover:underline cursor-pointer`}
+            type="button"
+            onClick={() => setIsSettingsOpen((o) => !o)}
+            aria-expanded={isSettingsOpen}
+            aria-label="Instellingen"
+            className={`shrink-0 p-3 rounded-xl border ${themeStyle.border} ${isSettingsOpen ? "bg-white/10" : "bg-black/30"} cursor-pointer`}
           >
-            Uitloggen 🔒
+            <FiSettings className="text-xl" />
           </button>
-        </div>
+
+          {/* INSTELLINGEN-PANEEL */}
+          {isSettingsOpen && (
+            <>
+              <div className="fixed inset-0 z-30" onClick={() => setIsSettingsOpen(false)} />
+              <div className={`absolute right-0 top-full mt-2 z-40 w-[min(20rem,calc(100vw-1.5rem))] p-4 space-y-4 rounded-2xl ${themeStyle.cardBg} border ${themeStyle.border} shadow-[0_20px_50px_-15px_rgba(0,0,0,0.9)]`}>
+                {/* Account wisselen: tijdelijk (testen) en straks alleen voor de superadmin */}
+                <label className="block">
+                  <span className="block mb-1.5 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70">Account (testen / corrigeren)</span>
+                  <select
+                    value={currentUser}
+                    onChange={(e) => handleUserChange(e.target.value)}
+                    className={`w-full bg-black/40 border ${themeStyle.border} text-base py-2.5 px-3 rounded-lg focus:outline-none cursor-pointer`}
+                  >
+                    {BAND_MEMBERS.map((member) => (
+                      <option key={member} value={member} className="bg-black text-white">{member}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="block mb-1.5 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70">Thema</span>
+                  <select
+                    value={theme}
+                    onChange={(e) => handleThemeChange(e.target.value as ThemeType)}
+                    className={`w-full bg-black/40 border ${themeStyle.border} text-base py-2.5 px-3 rounded-lg focus:outline-none cursor-pointer`}
+                  >
+                    {(["ORIGINAL", "80ies Miami", "Horror", "Superdark", "Superlight", "Lemon", "Nerd"] as ThemeType[]).map((t) => (
+                      <option key={t} value={t} className="bg-black text-white">{t}</option>
+                    ))}
+                  </select>
+                </label>
+
+                {/* TESTDATA — alleen zichtbaar bij `npm run dev`, nooit op de live site */}
+                {import.meta.env.DEV && isSuperadmin && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { run(store.seedDummyData(currentUser)); setIsSettingsOpen(false); }}
+                      className="py-2.5 rounded-lg border border-dashed border-sky-600 text-sky-400 text-sm cursor-pointer"
+                    >
+                      🧪 Testdata
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { if (confirm("Alle testdata (isDummy) verwijderen?")) { run(store.clearDummyData()); setIsSettingsOpen(false); } }}
+                      className="py-2.5 rounded-lg border border-dashed border-zinc-600 text-zinc-400 text-sm cursor-pointer"
+                    >
+                      🧹 Wis test
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => { setIsAuthenticated(false); localStorage.removeItem("band_auth"); }}
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border ${themeStyle.border} ${themeStyle.accentText} text-base font-semibold cursor-pointer`}
+                >
+                  <FiLogOut /> Uitloggen
+                </button>
+              </div>
+            </>
+          )}
+        </header>
 
         {/* SYNC-STATUS (Firestore) */}
         {syncError && (
@@ -543,36 +562,38 @@ const BandDashboard: React.FC = () => {
         {/* TAB 1: AGENDA */}
         {activeTab === "agenda" && (
           <div className="space-y-4 md:space-y-6">
-            <div className={`flex items-center justify-between ${themeStyle.cardBg} p-3 rounded-lg border ${themeStyle.border} font-mono`}>
-              <span className="text-sm font-bold uppercase opacity-70 tracking-wider">SELECTEER JAAR:</span>
+            {/* Jaar (tik om te wisselen) + aantal */}
+            <div className="flex items-end justify-between gap-3">
               <button
                 type="button"
                 onClick={() => setIsYearModalOpen(true)}
-                className={`bg-black/50 border ${themeStyle.border} rounded-lg px-4 py-2 text-base font-extrabold flex items-center gap-2 cursor-pointer`}
+                aria-label="Kies jaar"
+                className="flex items-center gap-2 cursor-pointer"
               >
-                <span>{selectedYear}</span>
-                <span className="text-sm opacity-50">▼</span>
+                <span className="font-display text-5xl font-bold leading-none tabular">{selectedYear}</span>
+                <FiChevronDown className="text-2xl opacity-60 mb-1" />
               </button>
+              <span className="font-mono text-sm opacity-70 pb-1">
+                {filteredShows.filter((s) => !s.isBlocked).length} shows · {filteredShows.filter((s) => s.isBlocked).length} geblokt
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 font-mono">
+            <div className="grid grid-cols-[1fr_auto] gap-2">
               <button
                 type="button"
                 onClick={toggleShowForm}
-                className={`w-full py-3 font-bold uppercase text-sm tracking-wider rounded-lg transition-all cursor-pointer shadow border ${
-                  isFormOpen ? "bg-zinc-800 border-zinc-600 text-zinc-300" : themeStyle.primaryBtn
-                }`}
+                className={`flex items-center justify-center gap-2 py-3.5 font-bold uppercase text-base tracking-wider rounded-xl cursor-pointer shadow border ${themeStyle.primaryBtn}`}
               >
-                + NIEUWE SHOW
+                <FiPlus className="text-lg" /> Nieuwe show
               </button>
               <button
                 type="button"
                 onClick={toggleBlockModal}
-                className={`w-full py-3 font-bold uppercase text-sm tracking-wider rounded-lg transition-all cursor-pointer shadow border ${
-                  isBlockModalOpen ? "bg-zinc-800 border-zinc-600 text-zinc-300" : `${themeStyle.cardBg} ${themeStyle.border} ${themeStyle.accentText}`
+                className={`flex items-center justify-center gap-2 px-4 py-3.5 font-semibold text-base rounded-xl cursor-pointer border ${
+                  isBlockModalOpen ? "bg-white/10 border-white/20" : `${themeStyle.cardBg} ${themeStyle.border}`
                 }`}
               >
-                {isBlockModalOpen ? "✕ SLUIT BLOKKEREN" : "+ DATUM BLOKKEN 🚫"}
+                <FiSlash /> Blokkeer
               </button>
             </div>
 
@@ -613,9 +634,6 @@ const BandDashboard: React.FC = () => {
             )}
 
             <div className="space-y-3">
-              <h2 className="font-mono text-[13px] font-bold uppercase opacity-70 tracking-[0.08em]">
-                Agenda {selectedYear} · {filteredShows.length} items
-              </h2>
 
               {filteredShows.length === 0 ? (
                 <p className="text-sm opacity-70 italic">Geen optredens of blokkades gevonden voor {selectedYear}.</p>
@@ -641,14 +659,14 @@ const BandDashboard: React.FC = () => {
                             {group.label}
                           </span>
                           <span className="flex items-center gap-2 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70 group-hover:opacity-90">
-                            {showCount} shows
+                            {showCount} {showCount === 1 ? "show" : "shows"}
                             <span className={`inline-block transition-transform duration-200 ${isCollapsed ? "" : "rotate-180"}`}>▾</span>
                           </span>
                         </button>
                       ) : (
                         <div className="pt-4 pb-2 flex items-baseline justify-between">
                           <span className={`font-display text-[28px] font-bold uppercase tracking-wide ${monthColor}`}>{group.label}</span>
-                          <span className="font-mono text-[13px] uppercase tracking-[0.06em] opacity-50">{showCount} shows</span>
+                          <span className="font-mono text-[13px] uppercase tracking-[0.06em] opacity-50">{showCount} {showCount === 1 ? "show" : "shows"}</span>
                         </div>
                       )}
                     </h3>
