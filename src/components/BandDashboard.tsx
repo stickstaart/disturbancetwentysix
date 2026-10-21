@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { CustomDatePicker } from "./dashboard/CustomDatePicker";
 import { ShowFormSheet, type ShowDraft } from "./dashboard/ShowForm";
+import { IdeaFormSheet, type IdeaDraft } from "./dashboard/IdeaForm";
+import { IdeaCard } from "./dashboard/IdeaCard";
 import { ShowCard } from "./dashboard/ShowCard";
-import { CountryFlag } from "./dashboard/CountryFlag";
 import * as store from "../lib/agendaStore";
 import { FiChevronDown, FiLogOut, FiPlus, FiSettings, FiSlash } from "react-icons/fi";
 import { useSnapZoom } from "../lib/useSnapZoom";
 import { isTestMode } from "../lib/testMode";
-import { BAND_MEMBERS, COUNTRIES, displayName } from "./dashboard/constants";
+import { BAND_MEMBERS, displayName } from "./dashboard/constants";
 import { parseLocalDate, todayString } from "./dashboard/dateUtils";
 
 export type ShowStatus = "confirmed" | "option" | "cancelled";
@@ -153,7 +154,6 @@ const BandDashboard: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
 
   const [isYearModalOpen, setIsYearModalOpen] = useState<boolean>(false);
-  const [isCountryModalOpen, setIsCountryModalOpen] = useState<boolean>(false);
 
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [isIdeaFormOpen, setIsIdeaFormOpen] = useState<boolean>(false);
@@ -184,15 +184,8 @@ const BandDashboard: React.FC = () => {
 
 
   // Idea Form State
-  const [newTitle, setNewTitle] = useState("");
-  const [newIdeaCountry, setNewIdeaCountry] = useState("NL");
-  const [newBands, setNewBands] = useState("");
-  const [newPeriod, setNewPeriod] = useState("");
-  const [newIdeaContactPerson, setNewIdeaContactPerson] = useState("");
-  const [newIdeaContactEmail, setNewIdeaContactEmail] = useState("");
-  const [newIdeaContactPhone, setNewIdeaContactPhone] = useState("");
-  const [newIdeaNotes, setNewIdeaNotes] = useState("");
-  const [ideaOwner, setIdeaOwner] = useState(currentUser);
+  // Doorgestreepte ideeën staan ingeklapt onderaan
+  const [showScratched, setShowScratched] = useState(false);
 
   const isSuperadmin = currentUser === "Joz (Superadmin)";
   const themeStyle = THEME_CONFIGS[theme] || THEME_CONFIGS.ORIGINAL;
@@ -225,7 +218,6 @@ const BandDashboard: React.FC = () => {
 
   const handleUserChange = (newUser: string) => {
     setCurrentUser(newUser);
-    if (!editingIdeaId) setIdeaOwner(newUser);
     localStorage.setItem("band_active_user", newUser);
   };
 
@@ -265,15 +257,6 @@ const BandDashboard: React.FC = () => {
 
   const resetIdeaForm = () => {
     setEditingIdeaId(null);
-    setNewTitle("");
-    setNewIdeaCountry("NL");
-    setNewBands("");
-    setNewPeriod("");
-    setNewIdeaContactPerson("");
-    setNewIdeaContactEmail("");
-    setNewIdeaContactPhone("");
-    setNewIdeaNotes("");
-    setIdeaOwner(currentUser);
     setIsIdeaFormOpen(false);
   };
 
@@ -291,13 +274,6 @@ const BandDashboard: React.FC = () => {
     setIsBlockModalOpen((prev) => !prev);
   };
 
-  const toggleIdeaForm = () => {
-    if (isIdeaFormOpen) {
-      resetIdeaForm();
-    } else {
-      setIsIdeaFormOpen(true);
-    }
-  };
 
   const handleSaveShow = (draft: ShowDraft) => {
     const original = editingId ? shows.find((s) => s.id === editingId) : undefined;
@@ -335,48 +311,19 @@ const BandDashboard: React.FC = () => {
     setIsBlockModalOpen(false);
   };
 
-  const handleSaveIdea = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle) return;
-
-    const ideaData: TourIdea = {
-      id: editingIdeaId || store.newId(),
-      title: newTitle,
-      country: newIdeaCountry,
-      supportBands: newBands || undefined,
-      targetPeriod: newPeriod || undefined,
-      contactPerson: newIdeaContactPerson || undefined,
-      contactEmail: newIdeaContactEmail || undefined,
-      contactPhone: newIdeaContactPhone || undefined,
-      notes: newIdeaNotes || undefined,
-      isScratched: false,
-      owner: ideaOwner,
-    };
-
-    const originalIdea = editingIdeaId ? tourIdeas.find((i) => i.id === editingIdeaId) : undefined;
+  const handleSaveIdea = (draft: IdeaDraft) => {
+    const original = editingIdeaId ? tourIdeas.find((i) => i.id === editingIdeaId) : undefined;
     run(store.saveIdea(
-      { ...originalIdea, ...ideaData, isScratched: originalIdea?.isScratched ?? false },
+      { ...original, ...draft, id: editingIdeaId || store.newId(), isScratched: original?.isScratched ?? false },
       currentUser,
       !editingIdeaId,
     ));
-
     resetIdeaForm();
   };
 
   const handleEditIdeaClick = (idea: TourIdea) => {
     setEditingIdeaId(idea.id);
-    setNewTitle(idea.title);
-    setNewIdeaCountry(idea.country || "NL");
-    setNewBands(idea.supportBands || "");
-    setNewPeriod(idea.targetPeriod || "");
-    setNewIdeaContactPerson(idea.contactPerson || "");
-    setNewIdeaContactEmail(idea.contactEmail || "");
-    setNewIdeaContactPhone(idea.contactPhone || "");
-    setNewIdeaNotes(idea.notes || "");
-    setIdeaOwner(idea.owner || currentUser);
-
     setIsIdeaFormOpen(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleToggleScratchIdea = (id: string) => {
@@ -721,275 +668,82 @@ const BandDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 2: TOUR IDEAS & CONCEPTS */}
-        {activeTab === "ideas" && (
-          <div className="space-y-4 md:space-y-6 font-mono">
-            <button
-              type="button"
-              onClick={toggleIdeaForm}
-              className={`w-full py-3 font-bold uppercase text-sm tracking-wider rounded-lg transition-all cursor-pointer shadow border ${
-                isIdeaFormOpen
-                  ? "bg-zinc-800 border-zinc-600 text-zinc-300"
-                  : themeStyle.primaryBtn
-              }`}
-            >
-              {isIdeaFormOpen
-                ? "✕ SLUIT FORMULIER"
-                : editingIdeaId
-                  ? "✏️ TOUR IDEE BEWERKEN"
-                  : "+ NIEUW TOUR IDEE TOEVOEGEN"}
-            </button>
+        {/* TAB 2: TOUR-IDEEËN — zelfde opbouw als de agenda */}
+        {activeTab === "ideas" && (() => {
+          const activeIdeas = tourIdeas.filter((i) => !i.isScratched).sort((a, b) => a.title.localeCompare(b.title));
+          const scratchedIdeas = tourIdeas.filter((i) => i.isScratched).sort((a, b) => a.title.localeCompare(b.title));
+          const ideaCard = (idea: TourIdea) => (
+            <IdeaCard
+              key={idea.id}
+              idea={idea}
+              accentText={theme === "ORIGINAL" ? "text-white" : themeStyle.accentText}
+              onEdit={handleEditIdeaClick}
+              onDelete={handleDeleteIdea}
+              onToggleScratch={handleToggleScratchIdea}
+            />
+          );
+          return (
+            <div className="space-y-4 md:space-y-6">
+              {/* Titel + aantallen */}
+              <div className="flex items-end justify-between gap-3">
+                <span className="font-display text-5xl font-bold leading-none uppercase">Ideeën</span>
+                <span className="font-mono text-sm opacity-70 pb-1">
+                  {activeIdeas.length} actief · {scratchedIdeas.length} geschrapt
+                </span>
+              </div>
 
-            {isIdeaFormOpen && (
-              <form onSubmit={handleSaveIdea} className={`p-4 ${themeStyle.cardBg} rounded-lg border ${themeStyle.border} space-y-4`}>
-                <div className={`flex justify-between items-center border-b ${themeStyle.border} pb-2`}>
-                  <h3 className={`text-base font-bold uppercase ${themeStyle.accentText} tracking-wider`}>
-                    {editingIdeaId ? "✏️ Tour Idee Bewerken" : "+ Nieuw Tour Idee Toevoegen"}
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={resetIdeaForm}
-                    className="w-7 h-7 flex items-center justify-center rounded-full bg-red-950 border border-red-600 text-red-500 text-sm font-bold"
-                  >
-                    ✕
-                  </button>
-                </div>
+              <button
+                type="button"
+                onClick={() => { setEditingIdeaId(null); setIsIdeaFormOpen(true); }}
+                className={`w-full flex items-center justify-center gap-2 py-3.5 font-bold uppercase text-base tracking-wider rounded-xl cursor-pointer shadow border ${themeStyle.primaryBtn}`}
+              >
+                <FiPlus className="text-lg" /> Nieuw idee
+              </button>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <div>
-                    <label className="text-[13px] opacity-70 uppercase block mb-1">Titel / Tour Concept</label>
-                    <input
-                      type="text"
-                      placeholder="Bijv. UK Tour, Japan Run..."
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-sm"
-                      required
-                    />
-                  </div>
+              {isIdeaFormOpen && (
+                <IdeaFormSheet
+                  key={editingIdeaId ?? "new"}
+                  initial={editingIdeaId ? tourIdeas.find((i) => i.id === editingIdeaId) ?? null : null}
+                  defaultOwner={currentUser}
+                  canChangeOwner={isSuperadmin}
+                  saveButtonClass={themeStyle.primaryBtn}
+                  onSave={handleSaveIdea}
+                  onClose={resetIdeaForm}
+                />
+              )}
 
-                  <div>
-                    <label className="text-[13px] opacity-70 uppercase block mb-1">Land</label>
+              <div className="space-y-2">
+                {activeIdeas.length === 0 && scratchedIdeas.length === 0 && (
+                  <p className="text-base opacity-60 italic">Nog geen tour-ideeën. Begin met “Nieuw idee”.</p>
+                )}
+                {activeIdeas.map(ideaCard)}
+              </div>
+
+              {/* Doorgestreept: ingeklapt, zoals voorbije maanden */}
+              {scratchedIdeas.length > 0 && (
+                <section className="space-y-2">
+                  <h3 className={`border-b ${themeStyle.border}`}>
                     <button
                       type="button"
-                      onClick={() => { setIsCountryModalOpen(true); }}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-sm text-left flex items-center justify-between"
+                      onClick={() => setShowScratched((v) => !v)}
+                      aria-expanded={showScratched}
+                      className="w-full pt-4 pb-2 flex items-baseline justify-between text-left cursor-pointer group"
                     >
-                      <span className="flex items-center gap-1.5">
-                        <CountryFlag code={newIdeaCountry} />
-                        {COUNTRIES.find((c) => c.code === newIdeaCountry)?.name || newIdeaCountry}
+                      <span className="font-display text-[28px] font-bold uppercase tracking-wide opacity-60 group-hover:opacity-100 transition-opacity">
+                        Geschrapt
                       </span>
-                      <span className="text-[13px] opacity-50">▼</span>
+                      <span className="flex items-center gap-2 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70">
+                        {scratchedIdeas.length} {scratchedIdeas.length === 1 ? "idee" : "ideeën"}
+                        <span className={`inline-block transition-transform duration-200 ${showScratched ? "rotate-180" : ""}`}>▾</span>
+                      </span>
                     </button>
-                  </div>
-
-                  <div>
-                    <label className="text-[13px] opacity-70 uppercase block mb-1">Doelperiode</label>
-                    <input
-                      type="text"
-                      placeholder="Bijv. Najaar 2027..."
-                      value={newPeriod}
-                      onChange={(e) => setNewPeriod(e.target.value)}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[13px] opacity-70 uppercase block mb-1">Samen met bands</label>
-                    <input
-                      type="text"
-                      placeholder="Co-headliners..."
-                      value={newBands}
-                      onChange={(e) => setNewBands(e.target.value)}
-                      className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-sm"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[13px] opacity-70 uppercase block mb-1">Tour-eigenaar</label>
-                    {isSuperadmin ? (
-                      <select
-                        value={ideaOwner}
-                        onChange={(e) => setIdeaOwner(e.target.value)}
-                        className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-sm"
-                      >
-                        {BAND_MEMBERS.map((m) => (
-                          <option key={m} value={m} className="bg-black text-white">
-                            Eigenaar: {m}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <div className="w-full p-2 bg-black/40 border border-zinc-800 rounded-lg text-sm opacity-80">
-                        {ideaOwner}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className={`border-t ${themeStyle.border} pt-3`}>
-                  <span className="text-sm font-bold opacity-70 uppercase block mb-2">👤 Contactpersoon / Agent</span>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    <input
-                      type="text"
-                      placeholder="Naam contactpersoon"
-                      value={newIdeaContactPerson}
-                      onChange={(e) => setNewIdeaContactPerson(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-sm"
-                    />
-                    <input
-                      type="email"
-                      placeholder="E-mailadres"
-                      value={newIdeaContactEmail}
-                      onChange={(e) => setNewIdeaContactEmail(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-sm"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Telefoonnummer"
-                      value={newIdeaContactPhone}
-                      onChange={(e) => setNewIdeaContactPhone(e.target.value)}
-                      className="p-2 bg-black/40 border border-zinc-700 rounded-lg text-sm"
-                    />
-                  </div>
-                </div>
-
-                <div className={`border-t ${themeStyle.border} pt-3`}>
-                  <label className="text-sm font-bold opacity-70 uppercase block mb-1">📝 Opmerkingen & Notities</label>
-                  <textarea
-                    placeholder="Bijzonderheden..."
-                    value={newIdeaNotes}
-                    onChange={(e) => setNewIdeaNotes(e.target.value)}
-                    className="w-full p-2 bg-black/40 border border-zinc-700 rounded-lg text-sm h-16"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className={`w-full py-2.5 ${themeStyle.primaryBtn} font-bold uppercase text-sm rounded-lg transition-all cursor-pointer`}
-                >
-                  {editingIdeaId ? "BEWERKING OPSLAAN" : "IDEE TOEVOEGEN"}
-                </button>
-              </form>
-            )}
-
-            {/* IDEEËN LIJST WEERGAVE */}
-            <div className="space-y-3">
-              <h2 className="text-sm font-bold uppercase opacity-70 tracking-wider">
-                TOUR CONCEPTEN & IDEEËN ({tourIdeas.length})
-              </h2>
-
-              {tourIdeas.length === 0 ? (
-                <p className="text-sm opacity-70 italic">Nog geen tour concepten ingevoerd.</p>
-              ) : (
-                tourIdeas.map((idea) => (
-                  <div
-                    key={idea.id}
-                    className={`p-4 ${themeStyle.cardBg} border rounded-lg space-y-2 ${
-                      idea.isScratched ? "border-zinc-800 opacity-50" : themeStyle.border
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <h3 className={`text-base font-bold flex items-center gap-2 ${idea.isScratched ? "line-through opacity-50" : ""}`}>
-                        <span>{idea.title}</span>
-                        {idea.country && <CountryFlag code={idea.country} />}
-                      </h3>
-
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEditIdeaClick(idea)}
-                          className="px-2 py-1 bg-black/40 hover:bg-black/60 border border-zinc-700 text-sm rounded-lg uppercase cursor-pointer"
-                        >
-                          ✏️ Bewerken
-                        </button>
-                        <button
-                          onClick={() => handleToggleScratchIdea(idea.id)}
-                          className="px-2 py-1 bg-black/40 hover:bg-black/60 border border-zinc-700 text-sm rounded-lg uppercase cursor-pointer"
-                        >
-                          {idea.isScratched ? "Herstellen" : "Doorstrepen"}
-                        </button>
-                        <button
-                          onClick={() => handleDeleteIdea(idea.id)}
-                          className="px-2 py-1 bg-red-950/60 hover:bg-red-900 text-red-400 border border-red-900 text-sm rounded-lg uppercase cursor-pointer"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className={`text-sm ${themeStyle.accentText} font-bold`}>
-                      <span className="opacity-70 font-normal">Tour-eigenaar:</span> {idea.owner || "Onbekend"}
-                    </div>
-
-                    {idea.supportBands && (
-                      <p className="text-sm">
-                        <span className="opacity-70">Bands:</span> ({idea.supportBands})
-                      </p>
-                    )}
-                    {idea.targetPeriod && (
-                      <p className={`text-sm ${themeStyle.accentText} font-bold`}>
-                        <span className="opacity-70 font-normal">Periode:</span> {idea.targetPeriod}
-                      </p>
-                    )}
-
-                    {(idea.contactPerson || idea.contactEmail || idea.contactPhone) && (
-                      <div className={`text-sm opacity-80 pt-1 border-t ${themeStyle.border}`}>
-                        <span className="opacity-70">Contact:</span> {idea.contactPerson || "Onbekend"}
-                        {idea.contactEmail && ` (${idea.contactEmail})`}
-                        {idea.contactPhone && ` - ${idea.contactPhone}`}
-                      </div>
-                    )}
-
-                    {idea.notes && (
-                      <div className={`text-sm opacity-80 pt-1 border-t ${themeStyle.border}`}>
-                        <span className="opacity-70 block mb-0.5">Opmerkingen:</span>
-                        <p className="whitespace-pre-line">{idea.notes}</p>
-                      </div>
-                    )}
-                  </div>
-                ))
+                  </h3>
+                  {showScratched && scratchedIdeas.map(ideaCard)}
+                </section>
               )}
             </div>
-          </div>
-        )}
-
-        {/* MODAL VOOR LAND KEUZE */}
-        {isCountryModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm font-mono">
-            <div className={`${themeStyle.panelBg} border ${themeStyle.border} rounded-lg max-w-xs w-full p-4 space-y-3 shadow-2xl`}>
-              <div className={`flex justify-between items-center border-b ${themeStyle.border} pb-2`}>
-                <h3 className="text-base font-bold uppercase">Kies Land</h3>
-                <button type="button" onClick={() => setIsCountryModalOpen(false)} className="opacity-70 hover:opacity-100">✕</button>
-              </div>
-              <div className="max-h-60 overflow-y-auto space-y-1 pr-1">
-                {COUNTRIES.map((item) => {
-                  const isSelected = newIdeaCountry === item.code;
-                  return (
-                    <button
-                      key={item.code}
-                      type="button"
-                      onClick={() => {
-                        setNewIdeaCountry(item.code);
-                        setIsCountryModalOpen(false);
-                      }}
-                      className={`w-full p-2 rounded-lg text-sm font-bold text-left border flex justify-between items-center cursor-pointer ${
-                        isSelected ? `${themeStyle.cardBg} ${themeStyle.accentText} ${themeStyle.border}` : "bg-black/40 border-zinc-800"
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
-                        <CountryFlag code={item.code} />
-                        {item.name} ({item.code})
-                      </span>
-                      {isSelected && <span>✓</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* MODAL VOOR JAAR KEUZE */}
         {isYearModalOpen && (
