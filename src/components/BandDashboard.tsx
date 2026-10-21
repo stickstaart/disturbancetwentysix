@@ -66,10 +66,12 @@ export type ThemeType = "ORIGINAL" | "80ies Miami" | "Horror" | "Superdark" | "S
 
 
 // Thema Kleurenschema Definities (Zonder aanpassing van font-size of font-family)
-const THEME_CONFIGS: Record<ThemeType, { bg: string; cardBg: string; text: string; border: string; primaryBtn: string; accentText: string }> = {
+// panelBg = dekkende kleur voor pop-ups en panelen (cardBg is bij veel thema's half-transparant)
+const THEME_CONFIGS: Record<ThemeType, { bg: string; cardBg: string; panelBg: string; text: string; border: string; primaryBtn: string; accentText: string }> = {
   ORIGINAL: {
     bg: "bg-black",
     cardBg: "bg-zinc-900",
+    panelBg: "bg-zinc-900",
     text: "text-gray-100",
     border: "border-zinc-800",
     primaryBtn: "bg-red-600 hover:bg-red-700 border-red-600 text-white",
@@ -78,6 +80,7 @@ const THEME_CONFIGS: Record<ThemeType, { bg: string; cardBg: string; text: strin
   "80ies Miami": {
     bg: "bg-slate-950",
     cardBg: "bg-fuchsia-950/40",
+    panelBg: "bg-[#1e0a26]",
     text: "text-cyan-200",
     border: "border-pink-500/40",
     primaryBtn: "bg-pink-600 hover:bg-pink-500 border-pink-400 text-white font-bold",
@@ -86,6 +89,7 @@ const THEME_CONFIGS: Record<ThemeType, { bg: string; cardBg: string; text: strin
   Horror: {
     bg: "bg-stone-950",
     cardBg: "bg-red-950/20",
+    panelBg: "bg-[#1f0e0c]",
     text: "text-stone-300",
     border: "border-red-900/60",
     primaryBtn: "bg-red-900 hover:bg-red-800 border-red-700 text-red-100",
@@ -94,6 +98,7 @@ const THEME_CONFIGS: Record<ThemeType, { bg: string; cardBg: string; text: strin
   Superdark: {
     bg: "bg-black",
     cardBg: "bg-zinc-950",
+    panelBg: "bg-zinc-950",
     text: "text-zinc-400",
     border: "border-zinc-900",
     primaryBtn: "bg-zinc-800 hover:bg-zinc-700 border-zinc-700 text-zinc-200",
@@ -102,6 +107,7 @@ const THEME_CONFIGS: Record<ThemeType, { bg: string; cardBg: string; text: strin
   Superlight: {
     bg: "bg-gray-100",
     cardBg: "bg-white",
+    panelBg: "bg-white",
     text: "text-gray-900",
     border: "border-gray-300",
     primaryBtn: "bg-blue-600 hover:bg-blue-700 border-blue-600 text-white",
@@ -110,6 +116,7 @@ const THEME_CONFIGS: Record<ThemeType, { bg: string; cardBg: string; text: strin
   Lemon: {
     bg: "bg-zinc-950",
     cardBg: "bg-zinc-900",
+    panelBg: "bg-zinc-900",
     text: "text-yellow-100",
     border: "border-yellow-500/30",
     primaryBtn: "bg-yellow-500 hover:bg-yellow-400 text-black font-bold border-yellow-400",
@@ -118,6 +125,7 @@ const THEME_CONFIGS: Record<ThemeType, { bg: string; cardBg: string; text: strin
   Nerd: {
     bg: "bg-black",
     cardBg: "bg-black",
+    panelBg: "bg-black",
     text: "text-green-500",
     border: "border-green-600/60",
     primaryBtn: "bg-green-950 hover:bg-green-900 border-green-500 text-green-400",
@@ -465,7 +473,7 @@ const BandDashboard: React.FC = () => {
           {isSettingsOpen && (
             <>
               <div className="fixed inset-0 z-30" onClick={() => setIsSettingsOpen(false)} />
-              <div className={`absolute right-0 top-full mt-2 z-40 w-[min(20rem,calc(100vw-1.5rem))] p-4 space-y-4 rounded-2xl ${themeStyle.cardBg} border ${themeStyle.border} shadow-[0_20px_50px_-15px_rgba(0,0,0,0.9)]`}>
+              <div className={`absolute right-0 top-full mt-2 z-40 w-[min(20rem,calc(100vw-1.5rem))] p-4 space-y-4 rounded-2xl ${themeStyle.panelBg} border ${themeStyle.border} shadow-[0_20px_50px_-15px_rgba(0,0,0,0.9)] max-h-[calc(100dvh-8rem)] overflow-y-auto`}>
                 {/* Account wisselen: tijdelijk (testen) en straks alleen voor de superadmin */}
                 <label className="block">
                   <span className="block mb-1.5 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70">Account (testen / corrigeren)</span>
@@ -480,18 +488,39 @@ const BandDashboard: React.FC = () => {
                   </select>
                 </label>
 
-                <label className="block">
+                {/* Thema: tegels met voorbeeld (een native keuzelijst kan geen kleuren tonen op iOS) */}
+                <div>
                   <span className="block mb-1.5 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70">Thema</span>
-                  <select
-                    value={theme}
-                    onChange={(e) => handleThemeChange(e.target.value as ThemeType)}
-                    className={`w-full bg-black/40 border ${themeStyle.border} text-base py-2.5 px-3 rounded-lg focus:outline-none cursor-pointer`}
-                  >
-                    {(["ORIGINAL", "80ies Miami", "Horror", "Superdark", "Superlight", "Lemon", "Nerd"] as ThemeType[]).map((t) => (
-                      <option key={t} value={t} className="bg-black text-white">{t}</option>
-                    ))}
-                  </select>
-                </label>
+                  <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Thema">
+                    {(Object.keys(THEME_CONFIGS) as ThemeType[]).map((t) => {
+                      const c = THEME_CONFIGS[t];
+                      const isActive = theme === t;
+                      return (
+                        <button
+                          key={t}
+                          type="button"
+                          role="radio"
+                          aria-checked={isActive}
+                          onClick={() => handleThemeChange(t)}
+                          className={`text-left rounded-xl p-1.5 cursor-pointer transition ring-2 ${isActive ? "ring-white/70" : "ring-transparent hover:ring-white/20"}`}
+                        >
+                          {/* Mini-voorbeeld: achtergrond, kaart met accenttekst en knop */}
+                          <div className={`${c.bg} rounded-lg p-2 border ${c.border}`} aria-hidden="true">
+                            <div className={`${c.cardBg} rounded-md border ${c.border} px-2 py-1.5 space-y-1.5`}>
+                              <div className={`font-display text-lg font-bold leading-none ${c.accentText}`}>ARNHEM</div>
+                              <div className={`h-1.5 w-3/4 rounded-full ${c.text} bg-current opacity-40`} />
+                              <div className={`h-3 w-1/2 rounded border ${c.primaryBtn}`} />
+                            </div>
+                          </div>
+                          <div className="mt-1 px-0.5 flex items-center justify-between text-sm">
+                            <span className={isActive ? "font-semibold" : "opacity-80"}>{t}</span>
+                            {isActive && <span aria-hidden="true">✓</span>}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
                 {/* TESTDATA — alleen zichtbaar bij `npm run dev`, nooit op de live site */}
                 {import.meta.env.DEV && isSuperadmin && (
@@ -611,7 +640,7 @@ const BandDashboard: React.FC = () => {
 
             {isBlockModalOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm font-mono">
-                <form onSubmit={handleSaveBlockDate} className={`${themeStyle.cardBg} border ${themeStyle.border} rounded-lg max-w-xs w-full p-5 space-y-4 shadow-2xl`}>
+                <form onSubmit={handleSaveBlockDate} className={`${themeStyle.panelBg} border ${themeStyle.border} rounded-lg max-w-xs w-full p-5 space-y-4 shadow-2xl`}>
                   <div className={`flex justify-between items-center border-b ${themeStyle.border} pb-2`}>
                     <h3 className={`text-base font-bold uppercase ${themeStyle.accentText}`}>🚫 Datum Blokken</h3>
                     <button type="button" onClick={() => setIsBlockModalOpen(false)} className="opacity-70 hover:opacity-100">✕</button>
@@ -936,7 +965,7 @@ const BandDashboard: React.FC = () => {
         {/* MODAL VOOR LAND KEUZE */}
         {isCountryModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm font-mono">
-            <div className={`${themeStyle.cardBg} border ${themeStyle.border} rounded-lg max-w-xs w-full p-4 space-y-3 shadow-2xl`}>
+            <div className={`${themeStyle.panelBg} border ${themeStyle.border} rounded-lg max-w-xs w-full p-4 space-y-3 shadow-2xl`}>
               <div className={`flex justify-between items-center border-b ${themeStyle.border} pb-2`}>
                 <h3 className="text-base font-bold uppercase">Kies Land</h3>
                 <button type="button" onClick={() => setIsCountryModalOpen(false)} className="opacity-70 hover:opacity-100">✕</button>
@@ -972,7 +1001,7 @@ const BandDashboard: React.FC = () => {
         {/* MODAL VOOR JAAR KEUZE */}
         {isYearModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm font-mono">
-            <div className={`${themeStyle.cardBg} border ${themeStyle.border} rounded-lg max-w-xs w-full p-4 space-y-3 shadow-2xl`}>
+            <div className={`${themeStyle.panelBg} border ${themeStyle.border} rounded-lg max-w-xs w-full p-4 space-y-3 shadow-2xl`}>
               <div className={`flex justify-between items-center border-b ${themeStyle.border} pb-2`}>
                 <h3 className="text-base font-bold uppercase">Kies Jaar</h3>
                 <button type="button" onClick={() => setIsYearModalOpen(false)} className="opacity-70 hover:opacity-100">✕</button>
