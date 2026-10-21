@@ -79,15 +79,24 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
   const [isOpen, setIsOpen] = useState(false);
   const pastStyle = isPast ? "opacity-55 saturate-50 hover:opacity-100 hover:saturate-100" : "";
 
-  // ---------- Geblokkeerde datum ----------
+  // ---------- Geblokkeerde datum / periode ----------
   if (item.isBlocked) {
+    const end = item.endDate ? parseLocalDate(item.endDate) : null;
+    const endLabel = end
+      ? new Intl.DateTimeFormat("nl-NL", { weekday: "short", day: "numeric", month: "short" }).format(end).replace(/\./g, "")
+      : "";
     return (
       <div id={`show-${item.id}`} className={`${CARD} stripes-blocked flex items-center gap-3 p-2.5 ${pastStyle}`}>
         <span className="absolute left-0 inset-y-0 w-[3px] bg-red-600/80" />
         <DateTile date={item.date} tone="text-red-400" tile="bg-red-500/5 ring-red-500/20" />
         <div className="grow min-w-0">
-          <div className="font-mono text-[13px] font-bold tracking-[0.08em] text-red-400">GEBLOKKEERD</div>
-          <div className="text-base text-zinc-300 break-words">{item.blockedBy}</div>
+          <div className="font-mono text-[13px] font-bold tracking-[0.08em] text-red-400">
+            {end ? `GEBLOKKEERD T/M ${endLabel.toUpperCase()}` : "GEBLOKKEERD"}
+          </div>
+          <div className="text-base text-zinc-200 break-words">
+            <span className="font-semibold">{item.blockedBy}</span>
+            {item.reason && <span className="text-zinc-400"> · {item.reason}</span>}
+          </div>
         </div>
         <button
           onClick={() => onDelete(item.id)}

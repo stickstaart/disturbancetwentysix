@@ -37,6 +37,10 @@ export interface DateItem {
   transportCost?: string;
   isBlocked?: boolean;
   blockedBy?: string;
+  /** Blokkade over meerdere dagen: laatste dag (t/m), YYYY-MM-DD */
+  endDate?: string;
+  /** Blokkade: reden (vakantie, andere band, studio, ...) */
+  reason?: string;
   // Website (TOUR/HISTORY)
   isPublic?: boolean;
   tourName?: string;
@@ -160,6 +164,9 @@ const BandDashboard: React.FC = () => {
   const [isBlockModalOpen, setIsBlockModalOpen] = useState<boolean>(false);
 
   const [blockDate, setBlockDate] = useState(getTodayString());
+  const [blockEndDate, setBlockEndDate] = useState("");
+  const [blockReason, setBlockReason] = useState("");
+  const [blockFor, setBlockFor] = useState("");
 
   useSnapZoom();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -226,7 +233,7 @@ const BandDashboard: React.FC = () => {
 
   // Groeperen per maand (zoals de kopjes in het Google Doc)
   const today = todayString();
-  const nextShowId = filteredShows.find((s) => s.date >= today)?.id;
+  const nextShowId = filteredShows.find((s) => (s.endDate || s.date) >= today)?.id;
   const showsByMonth = filteredShows.reduce<{ key: string; label: string; items: DateItem[] }[]>((groups, item) => {
     const key = item.date.substring(0, 7);
     let group = groups.find((g) => g.key === key);
@@ -285,29 +292,38 @@ const BandDashboard: React.FC = () => {
     e.preventDefault();
     if (!blockDate) return;
 
-    const displayName = currentUser.replace(" (Superadmin)", "");
-    const existingIndex = shows.findIndex((s) => s.date === blockDate && s.isBlocked);
+    const who = blockFor || displayName(currentUser);
+    const endDate = blockEndDate && blockEndDate > blockDate ? blockEndDate : undefined;
+    const reason = blockReason.trim() || undefined;
 
-    if (existingIndex !== -1) {
-      const existing = shows[existingIndex];
+    // Losse dag zonder reden: samenvoegen met een bestaande blokkade op die dag ("Joz, Rob")
+    const existing = !endDate && !reason
+      ? shows.find((s) => s.isBlocked && s.date === blockDate && !s.endDate && !s.reason)
+      : undefined;
+
+    if (existing) {
       const names = existing.blockedBy ? existing.blockedBy.split(", ").map((n) => n.trim()) : [];
-      if (!names.includes(displayName)) names.push(displayName);
-
+      if (!names.includes(who)) names.push(who);
       run(store.patchShow(existing, { blockedBy: names.join(", ") }, currentUser));
     } else {
       const blockData: DateItem = {
         id: store.newId(),
         date: blockDate,
+        endDate,
+        reason,
         country: "NL",
         city: "GEBLOKKEERD",
         venue: "",
         status: "cancelled",
         isBlocked: true,
-        blockedBy: displayName,
+        blockedBy: who,
       };
       run(store.saveShow(blockData, currentUser, true));
     }
 
+    setBlockEndDate("");
+    setBlockReason("");
+    setBlockFor("");
     setIsBlockModalOpen(false);
   };
 
@@ -579,24 +595,71 @@ const BandDashboard: React.FC = () => {
             )}
 
             {isBlockModalOpen && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm font-mono">
-                <form onSubmit={handleSaveBlockDate} className={`${themeStyle.panelBg} border ${themeStyle.border} rounded-lg max-w-xs w-full p-5 space-y-4 shadow-2xl`}>
-                  <div className={`flex justify-between items-center border-b ${themeStyle.border} pb-2`}>
-                    <h3 className={`text-base font-bold uppercase ${themeStyle.accentText}`}>🚫 Datum Blokken</h3>
-                    <button type="button" onClick={() => setIsBlockModalOpen(false)} className="opacity-70 hover:opacity-100">✕</button>
+              <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center md:p-4 bg-black/70 backdrop-blur-sm" onClick={() => setIsBlockModalOpen(false)}>
+                <form
+                  onSubmit={handleSaveBlockDate}
+                  onClick={(e) => e.stopPropagation()}
+                  className={`${themeStyle.panelBg} border ${themeStyle.border} w-full md:max-w-sm rounded-t-2xl md:rounded-2xl p-5 space-y-4 shadow-2xl pb-[max(1.25rem,env(safe-area-inset-bottom))]`}
+                >
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-display text-[28px] font-bold uppercase tracking-wide leading-none">Blokkeren</h3>
+                    <button type="button" onClick={() => setIsBlockModalOpen(false)} aria-label="Sluiten" className="p-2 rounded-full opacity-70 hover:opacity-100 hover:bg-white/10 cursor-pointer">✕</button>
                   </div>
-                  <div>
-                    <label className="text-[13px] opacity-70 uppercase block mb-1">Datum om te blokkeren</label>
-                    <CustomDatePicker value={blockDate} onChange={(d) => setBlockDate(d)} />
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="block mb-1.5 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70">Van</span>
+                      <CustomDatePicker value={blockDate} onChange={(d) => setBlockDate(d)} />
+                    </div>
+                    <div>
+                      <span className="block mb-1.5 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70">T/m (optioneel)</span>
+                      {blockEndDate ? (
+                        <div className="flex gap-1">
+                          <div className="grow"><CustomDatePicker value={blockEndDate} onChange={(d) => setBlockEndDate(d)} /></div>
+                          <button type="button" onClick={() => setBlockEndDate("")} aria-label="Eén dag" className="px-2 rounded-lg opacity-70 hover:opacity-100 cursor-pointer">✕</button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setBlockEndDate(blockDate)}
+                          className="w-full py-2.5 rounded-lg border border-dashed border-white/20 text-base opacity-80 hover:opacity-100 cursor-pointer"
+                        >
+                          + Periode
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="p-2.5 bg-black/40 border border-zinc-800 rounded-lg text-sm opacity-70">
-                    Blokkade op naam van: <strong className={themeStyle.accentText}>{currentUser}</strong>
-                  </div>
+
+                  <label className="block">
+                    <span className="block mb-1.5 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70">Reden (optioneel)</span>
+                    <input
+                      type="text"
+                      value={blockReason}
+                      onChange={(e) => setBlockReason(e.target.value)}
+                      placeholder="Vakantie, andere band, studio…"
+                      className="w-full px-3 py-2.5 rounded-lg bg-black/40 ring-1 ring-white/10 text-base placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/30"
+                    />
+                  </label>
+
+                  <label className="block">
+                    <span className="block mb-1.5 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70">Wie kan niet</span>
+                    <select
+                      value={blockFor || displayName(currentUser)}
+                      onChange={(e) => setBlockFor(e.target.value)}
+                      disabled={!isSuperadmin}
+                      className="w-full px-3 py-2.5 rounded-lg bg-black/40 ring-1 ring-white/10 text-base focus:outline-none cursor-pointer disabled:cursor-default"
+                    >
+                      {[...BAND_MEMBERS.map(displayName), "Hele band"].map((n) => (
+                        <option key={n} value={n} className="bg-zinc-900">{n}</option>
+                      ))}
+                    </select>
+                  </label>
+
                   <button
                     type="submit"
-                    className={`w-full py-2.5 ${themeStyle.primaryBtn} font-bold uppercase text-sm rounded-lg transition-all cursor-pointer`}
+                    className={`w-full py-3 ${themeStyle.primaryBtn} font-bold uppercase text-base tracking-wider rounded-xl border cursor-pointer`}
                   >
-                    BLOKKADE OPSLAAN
+                    Blokkade opslaan
                   </button>
                 </form>
               </div>
@@ -652,7 +715,7 @@ const BandDashboard: React.FC = () => {
                         )}
                         <ShowCard
                           item={item}
-                          isPast={item.date < today}
+                          isPast={(item.endDate || item.date) < today}
                           onEdit={handleEditClick}
                           onDelete={handleDelete}
                           onStatusChange={handleStatusChange}
