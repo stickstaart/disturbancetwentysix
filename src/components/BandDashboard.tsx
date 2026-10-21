@@ -31,6 +31,7 @@ export interface DateItem {
   transportCost?: string;
   isBlocked?: boolean;
   blockedBy?: string;
+  isDummy?: boolean;
   // Audit (gezet door agendaStore)
   createdBy?: string;
   updatedBy?: string;
@@ -48,6 +49,7 @@ export interface TourIdea {
   notes?: string;
   isScratched?: boolean;
   owner?: string;
+  isDummy?: boolean;
   // Audit (gezet door agendaStore)
   createdBy?: string;
   updatedBy?: string;
@@ -548,6 +550,26 @@ const BandDashboard: React.FC = () => {
               </select>
             </div>
           </div>
+
+          {/* TESTDATA — alleen zichtbaar bij `npm run dev`, nooit op de live site */}
+          {import.meta.env.DEV && isSuperadmin && (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => run(store.seedDummyData(currentUser))}
+                className="text-[10px] px-2 py-1 rounded border border-dashed border-sky-600 text-sky-400 cursor-pointer"
+              >
+                🧪 Testdata laden
+              </button>
+              <button
+                type="button"
+                onClick={() => { if (confirm("Alle testdata (isDummy) verwijderen?")) run(store.clearDummyData()); }}
+                className="text-[10px] px-2 py-1 rounded border border-dashed border-zinc-600 text-zinc-400 cursor-pointer"
+              >
+                🧹 Wis testdata
+              </button>
+            </div>
+          )}
 
           <button
             onClick={() => { setIsAuthenticated(false); localStorage.removeItem("band_auth"); }}

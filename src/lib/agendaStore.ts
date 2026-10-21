@@ -12,8 +12,11 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  where,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "../firebase";
+import { dummyIdeas, dummyShows } from "./dummyData";
 import type { DateItem, TourIdea } from "../components/BandDashboard";
 
 const SHOWS = "shows";
@@ -92,4 +95,23 @@ export async function migrateLocalStorage(actor: string) {
   } catch (err) {
     console.error("[agendaStore] migratie mislukt:", err);
   }
+}
+
+// --- Testdata (alleen development) ---
+
+export async function seedDummyData(actor: string) {
+  const batch = writeBatch(db);
+  const stamp = { isDummy: true, createdBy: actor, updatedBy: actor, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
+  dummyShows().forEach((s) => batch.set(doc(collection(db, SHOWS)), { ...clean(s), ...stamp }));
+  dummyIdeas().forEach((i) => batch.set(doc(collection(db, IDEAS)), { ...clean(i), ...stamp }));
+  await batch.commit();
+}
+
+export async function clearDummyData() {
+  const batch = writeBatch(db);
+  for (const name of [SHOWS, IDEAS]) {
+    const snap = await getDocs(query(collection(db, name), where("isDummy", "==", true)));
+    snap.forEach((d) => batch.delete(d.ref));
+  }
+  await batch.commit();
 }
