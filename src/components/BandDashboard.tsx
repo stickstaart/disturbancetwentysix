@@ -172,6 +172,15 @@ const BandDashboard: React.FC = () => {
   const [tourIdeas, setTourIdeas] = useState<TourIdea[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [syncError, setSyncError] = useState<string | null>(null);
+  // Voorbije maanden zijn standaard dichtgeklapt; hier staan de maanden die je zelf openklapt ("YYYY-MM")
+  const [openPastMonths, setOpenPastMonths] = useState<Set<string>>(new Set());
+  const togglePastMonth = (key: string) =>
+    setOpenPastMonths((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingIdeaId, setEditingIdeaId] = useState<string | null>(null);
@@ -921,16 +930,39 @@ const BandDashboard: React.FC = () => {
               {filteredShows.length === 0 ? (
                 <p className="text-xs opacity-50 italic">Geen optredens of blokkades gevonden voor {selectedYear}.</p>
               ) : (
-                showsByMonth.map((group) => (
+                showsByMonth.map((group) => {
+                  const isPastMonth = group.key < today.substring(0, 7);
+                  const isCollapsed = isPastMonth && !openPastMonths.has(group.key);
+                  const showCount = group.items.filter((i) => !i.isBlocked).length;
+                  // ORIGINAL: maandkoppen wit; andere thema's in hun accentkleur
+                  const monthColor = theme === "ORIGINAL" ? "text-white" : themeStyle.accentText;
+                  return (
                   <section key={group.key} className="space-y-2">
                     {/* Sticky maandkopje */}
-                    <h3 className={`sticky top-0 z-10 ${themeStyle.bg} pt-4 pb-2 flex items-baseline justify-between border-b ${themeStyle.border}`}>
-                      <span className={`font-display text-2xl font-bold uppercase tracking-wide ${themeStyle.accentText}`}>{group.label}</span>
-                      <span className="font-mono text-[10px] uppercase tracking-[0.15em] opacity-50">
-                        {group.items.filter((i) => !i.isBlocked).length} shows
-                      </span>
+                    <h3 className={`sticky top-0 z-10 ${themeStyle.bg} border-b ${themeStyle.border}`}>
+                      {isPastMonth ? (
+                        <button
+                          type="button"
+                          onClick={() => togglePastMonth(group.key)}
+                          aria-expanded={!isCollapsed}
+                          className="w-full pt-4 pb-2 flex items-baseline justify-between text-left cursor-pointer group"
+                        >
+                          <span className={`font-display text-2xl font-bold uppercase tracking-wide opacity-60 group-hover:opacity-100 transition-opacity ${monthColor}`}>
+                            {group.label}
+                          </span>
+                          <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.15em] opacity-50 group-hover:opacity-90">
+                            {showCount} shows
+                            <span className={`inline-block transition-transform duration-200 ${isCollapsed ? "" : "rotate-180"}`}>▾</span>
+                          </span>
+                        </button>
+                      ) : (
+                        <div className="pt-4 pb-2 flex items-baseline justify-between">
+                          <span className={`font-display text-2xl font-bold uppercase tracking-wide ${monthColor}`}>{group.label}</span>
+                          <span className="font-mono text-[10px] uppercase tracking-[0.15em] opacity-50">{showCount} shows</span>
+                        </div>
+                      )}
                     </h3>
-                    {group.items.map((item) => (
+                    {!isCollapsed && group.items.map((item) => (
                       <React.Fragment key={item.id}>
                         {item.id === nextShowId && (
                           <div id="today-marker" className="scroll-mt-16 flex items-center gap-3 py-1">
@@ -952,7 +984,8 @@ const BandDashboard: React.FC = () => {
                       </React.Fragment>
                     ))}
                   </section>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
