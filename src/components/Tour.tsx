@@ -69,8 +69,9 @@ const Tour: React.FC = () => {
         <div className="hidden md:block">
           <div className="flex flex-col">
             {upcomingShows.map((t, i) => (
+              // Gifgroene lijn (glow-line in index.css): opent vanuit het midden, fadet langzaam uit naar de zijkanten
               <div key={i}
-                   className="group relative flex items-center justify-between p-5 bg-black/40 border-b border-gray-800 hover:bg-black/60 hover:border-white transition-all duration-300">
+                   className="glow-line group relative flex items-center justify-between p-5 bg-black/40 border-b border-gray-800 hover:bg-black/60 transition-colors duration-300">
 
                 {/* Datum links */}
                 <div className="w-1/4 text-left font-mono text-gray-400 group-hover:text-white transition-colors">
@@ -89,7 +90,7 @@ const Tour: React.FC = () => {
                   {/* Bands (Alleen zichtbaar bij hover) */}
                   <div
                     className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                    <p className="text-xs text-gray-400 uppercase tracking-widest">
+                    <p className="text-xs text-[#84ff00] uppercase tracking-widest [text-shadow:0_0_10px_rgba(132,255,0,0.45)]">
                       {t.bands && t.bands.length > 0
                         ? `with ${t.bands.join(', ')}`
                         : 'Headline Show'}
