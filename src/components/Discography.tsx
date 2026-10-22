@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 const mainReleases = [
   {
@@ -95,6 +95,9 @@ const compilations = [
 ];
 
 const Discography: React.FC = () => {
+  // Compilaties standaard verborgen; tonen via knop
+  const [showCompilations, setShowCompilations] = useState(false);
+
   return (
     <section id="music" className="py-20 bg-black text-white">
       <div className="max-w-7xl mx-auto px-6">
@@ -155,11 +158,24 @@ const Discography: React.FC = () => {
 
         {/* COMPILATIONS LIST */}
         <div className="mt-24 pt-12 border-t border-gray-800 text-left max-w-3xl mx-auto">
-          <h3 className="text-sm font-bold uppercase tracking-[0.3em] text-gray-500 mb-10 text-center">
+          <h3 className="text-sm font-bold uppercase tracking-[0.3em] text-gray-500 mb-6 text-center">
             Also featured on various compilations
           </h3>
 
-          <div className="flex flex-col space-y-3">
+          <div className="flex justify-center mb-10">
+            <button
+              type="button"
+              onClick={() => setShowCompilations((v) => !v)}
+              aria-expanded={showCompilations}
+              aria-controls="compilations-list"
+              className="border border-white text-white px-6 py-3 text-xs font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all cursor-pointer"
+            >
+              {showCompilations ? "Hide compilations" : "Click for a list of featured compilations"}
+            </button>
+          </div>
+
+          {showCompilations && (
+          <div id="compilations-list" className="flex flex-col space-y-3 animate-fade-in">
             {compilations.map((item, index) => {
               // Split de string op de '||'
               const [title, details] = item.split(" || ");
@@ -184,6 +200,7 @@ const Discography: React.FC = () => {
               );
             })}
           </div>
+          )}
         </div>
       </div>
     </section>
