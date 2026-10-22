@@ -73,9 +73,10 @@ interface ShowCardProps {
   onDelete: (id: string) => void;
   onStatusChange: (id: string, newStatus: ShowStatus) => void;
   onTogglePublic: (id: string) => void;
+  onEditBlock: (block: DateItem) => void;
 }
 
-export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit, onDelete, onStatusChange, onTogglePublic }) => {
+export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit, onDelete, onStatusChange, onTogglePublic, onEditBlock }) => {
   const [isOpen, setIsOpen] = useState(false);
   const pastStyle = isPast ? "opacity-55 saturate-50 hover:opacity-100 hover:saturate-100" : "";
 
@@ -98,14 +99,24 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
             {item.reason && <span className="text-zinc-400"> · {item.reason}</span>}
           </div>
         </div>
-        <button
-          onClick={() => onDelete(item.id)}
-          className="p-2 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10 cursor-pointer"
-          title="Verwijder blokkade"
-          aria-label="Verwijder blokkade"
-        >
-          <FiTrash2 />
-        </button>
+        <div className="shrink-0 flex items-center gap-1">
+          <button
+            onClick={() => onEditBlock(item)}
+            className="p-2.5 rounded-lg text-zinc-300 hover:text-white hover:bg-white/10 cursor-pointer"
+            title="Bewerk blokkade"
+            aria-label="Bewerk blokkade"
+          >
+            <FiEdit2 />
+          </button>
+          <button
+            onClick={() => onDelete(item.id)}
+            className="p-2.5 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10 cursor-pointer"
+            title="Verwijder blokkade"
+            aria-label="Verwijder blokkade"
+          >
+            <FiTrash2 />
+          </button>
+        </div>
       </div>
     );
   }

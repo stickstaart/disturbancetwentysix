@@ -167,6 +167,7 @@ const BandDashboard: React.FC = () => {
   const [blockEndDate, setBlockEndDate] = useState("");
   const [blockReason, setBlockReason] = useState("");
   const [blockFor, setBlockFor] = useState("");
+  const [editingBlockId, setEditingBlockId] = useState<string | null>(null);
 
   useSnapZoom();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -276,9 +277,33 @@ const BandDashboard: React.FC = () => {
     }
   };
 
+  const closeBlockModal = () => {
+    setEditingBlockId(null);
+    setBlockEndDate("");
+    setBlockReason("");
+    setBlockFor("");
+    setIsBlockModalOpen(false);
+  };
+
   const toggleBlockModal = () => {
     setIsFormOpen(false);
-    setIsBlockModalOpen((prev) => !prev);
+    if (isBlockModalOpen) closeBlockModal();
+    else {
+      setEditingBlockId(null);
+      setBlockDate(getTodayString());
+      setIsBlockModalOpen(true);
+    }
+  };
+
+  /** Bestaande blokkade openen in hetzelfde scherm, ingevuld */
+  const handleEditBlock = (block: DateItem) => {
+    setIsFormOpen(false);
+    setEditingBlockId(block.id);
+    setBlockDate(block.date);
+    setBlockEndDate(block.endDate || "");
+    setBlockReason(block.reason || "");
+    setBlockFor(block.blockedBy || "");
+    setIsBlockModalOpen(true);
   };
 
 
@@ -295,6 +320,18 @@ const BandDashboard: React.FC = () => {
     const who = blockFor || displayName(currentUser);
     const endDate = blockEndDate && blockEndDate > blockDate ? blockEndDate : undefined;
     const reason = blockReason.trim() || undefined;
+
+    if (editingBlockId) {
+      const original = shows.find((s) => s.id === editingBlockId);
+      if (original) {
+        // saveShow (volledig opslaan) zodat gewiste velden (t/m, reden) ook echt verdwijnen
+        const { endDate: _e, reason: _r, ...rest } = original;
+        void _e; void _r;
+        run(store.saveShow({ ...rest, date: blockDate, endDate, reason, blockedBy: who }, currentUser, false));
+      }
+      closeBlockModal();
+      return;
+    }
 
     // Losse dag zonder reden: samenvoegen met een bestaande blokkade op die dag ("Joz, Rob")
     const existing = !endDate && !reason
@@ -321,10 +358,7 @@ const BandDashboard: React.FC = () => {
       run(store.saveShow(blockData, currentUser, true));
     }
 
-    setBlockEndDate("");
-    setBlockReason("");
-    setBlockFor("");
-    setIsBlockModalOpen(false);
+    closeBlockModal();
   };
 
   const handleSaveIdea = (draft: IdeaDraft) => {
@@ -595,15 +629,15 @@ const BandDashboard: React.FC = () => {
             )}
 
             {isBlockModalOpen && (
-              <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center md:p-4 bg-black/70 backdrop-blur-sm" onClick={() => setIsBlockModalOpen(false)}>
+              <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center md:p-4 bg-black/70 backdrop-blur-sm" onClick={closeBlockModal}>
                 <form
                   onSubmit={handleSaveBlockDate}
                   onClick={(e) => e.stopPropagation()}
                   className={`${themeStyle.panelBg} border ${themeStyle.border} w-full md:max-w-sm rounded-t-2xl md:rounded-2xl p-5 space-y-4 shadow-2xl pb-[max(1.25rem,env(safe-area-inset-bottom))]`}
                 >
                   <div className="flex justify-between items-center">
-                    <h3 className="font-display text-[28px] font-bold uppercase tracking-wide leading-none">Blokkeren</h3>
-                    <button type="button" onClick={() => setIsBlockModalOpen(false)} aria-label="Sluiten" className="p-2 rounded-full opacity-70 hover:opacity-100 hover:bg-white/10 cursor-pointer">✕</button>
+                    <h3 className="font-display text-[28px] font-bold uppercase tracking-wide leading-none">{editingBlockId ? "Blokkade bewerken" : "Blokkeren"}</h3>
+                    <button type="button" onClick={closeBlockModal} aria-label="Sluiten" className="p-2 rounded-full opacity-70 hover:opacity-100 hover:bg-white/10 cursor-pointer">✕</button>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
@@ -649,7 +683,7 @@ const BandDashboard: React.FC = () => {
                       disabled={!isSuperadmin}
                       className="w-full px-3 py-2.5 rounded-lg bg-black/40 ring-1 ring-white/10 text-base focus:outline-none cursor-pointer disabled:cursor-default"
                     >
-                      {[...BAND_MEMBERS.map(displayName), "Hele band"].map((n) => (
+                      {[...new Set([...BAND_MEMBERS.map(displayName), "Hele band", ...(blockFor ? [blockFor] : [])])].map((n) => (
                         <option key={n} value={n} className="bg-zinc-900">{n}</option>
                       ))}
                     </select>
@@ -659,7 +693,7 @@ const BandDashboard: React.FC = () => {
                     type="submit"
                     className={`w-full py-3 ${themeStyle.primaryBtn} font-bold uppercase text-base tracking-wider rounded-xl border cursor-pointer`}
                   >
-                    Blokkade opslaan
+                    {editingBlockId ? "Wijzigingen opslaan" : "Blokkade opslaan"}
                   </button>
                 </form>
               </div>
@@ -720,6 +754,7 @@ const BandDashboard: React.FC = () => {
                           onDelete={handleDelete}
                           onStatusChange={handleStatusChange}
                           onTogglePublic={handleTogglePublic}
+                          onEditBlock={handleEditBlock}
                         />
                       </React.Fragment>
                     ))}
