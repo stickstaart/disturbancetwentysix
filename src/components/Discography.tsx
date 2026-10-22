@@ -99,7 +99,7 @@ const Discography: React.FC = () => {
   const [showCompilations, setShowCompilations] = useState(false);
 
   return (
-    <section id="music" className="py-20 bg-black text-white">
+    <section id="music" className="py-20 bg-black text-white overflow-clip">
       <div className="max-w-7xl mx-auto px-6">
         <h2 className="text-4xl font-bold mb-12 uppercase text-center tracking-tighter">
           Releases
@@ -157,7 +157,19 @@ const Discography: React.FC = () => {
         </div>
 
         {/* COMPILATIONS LIST */}
-        <div className="mt-24 pt-12 border-t border-gray-800 text-left max-w-3xl mx-auto">
+        <div className="relative mt-24">
+          {/* Achtergrond van de homepage, heel licht: vaste band bovenaan over de volle schermbreedte,
+              boven en onder uitfadend. Vaste hoogte = niets verspringt bij open/dicht; lijst eronder blijft op zwart. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-screen h-64 bg-[url('/src/assets/BG_Tox_Website.png')] bg-cover bg-center opacity-[0.12]"
+            style={{
+              maskImage: "linear-gradient(to bottom, transparent 0%, #000 22%, #000 55%, transparent 100%)",
+              WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, #000 22%, #000 55%, transparent 100%)",
+            }}
+          />
+
+        <div className="relative pt-12 border-t border-gray-800 text-left max-w-3xl mx-auto">
           <h3 className="text-sm font-bold uppercase tracking-[0.3em] text-gray-500 mb-6 text-center">
             Also featured on various compilations
           </h3>
@@ -201,6 +213,7 @@ const Discography: React.FC = () => {
             })}
           </div>
           )}
+        </div>
         </div>
       </div>
     </section>
