@@ -124,7 +124,7 @@ export const ShowFormSheet: React.FC<ShowFormSheetProps> = ({ initial, defaultOw
           {/* ---- BASIS ---- */}
           <div className="space-y-3">
             <Field label="Datum">
-              <CustomDatePicker value={d.date} onChange={(v) => set("date", v)} />
+              <CustomDatePicker label="Datum van de show" value={d.date} onChange={(v) => set("date", v)} />
             </Field>
 
             <div>
