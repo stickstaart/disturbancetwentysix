@@ -10,8 +10,12 @@ import Footer from "./components/Footer";
 import History from "./components/History";
 import { Analytics } from "@vercel/analytics/react"; // <--- Regel 1: Import
 import { SpeedInsights } from "@vercel/speed-insights/react"
+import { useScrollGlow } from "./lib/useScrollGlow";
 
 function App() {
+  // Mobiel: groene lijnen lichten op tijdens scrollen (desktop gebruikt hover)
+  useScrollGlow();
+
   return (
     <div className="bg-black text-white">
       <Nav />

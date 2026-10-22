@@ -46,7 +46,7 @@ const Tour: React.FC = () => {
         <div className="grid gap-6 sm:grid-cols-2 md:hidden">
           {upcomingShows.map((t, i) => (
             <div key={i}
-                 className="group relative bg-black p-6 rounded-lg border border-gray-700 overflow-hidden min-h-[160px] flex flex-col justify-center">
+                 className="glow-line glow-line-inset group relative bg-black p-6 rounded-lg border border-gray-700 overflow-hidden min-h-[160px] flex flex-col justify-center">
               <div className="absolute inset-0 bg-black/80 z-0"></div>
               <div className="relative z-10">
                 <p className="font-semibold text-accent">{formatDate(t.date)}</p>

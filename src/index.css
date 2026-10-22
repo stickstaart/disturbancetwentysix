@@ -52,6 +52,19 @@ html {
     height: 14px;
     background: radial-gradient(50% 100% at 50% 100%, rgba(132, 255, 0, 0.35), transparent 100%);
 }
+/* Mobiel: dezelfde staat, gezet door useScrollGlow als de regel door het midden van het scherm schuift */
+.glow-line.is-glowing::before,
+.glow-line.is-glowing::after {
+    opacity: 1;
+    transform: scaleX(1);
+    transition: opacity 150ms ease-out, transform 450ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* Variant voor kaarten met overflow-hidden/afgeronde hoeken: lijn net binnen de onderrand, boven de inhoud */
+.glow-line-inset::before,
+.glow-line-inset::after {
+    bottom: 0;
+    z-index: 20;
+}
 @media (hover: hover) {
     .glow-line:hover::before,
     .glow-line:hover::after {
