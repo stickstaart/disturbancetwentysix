@@ -162,7 +162,7 @@ const Discography: React.FC = () => {
               boven en onder uitfadend. Vaste hoogte = niets verspringt bij open/dicht; lijst eronder blijft op zwart. */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-screen h-64 bg-[url('/src/assets/BG_Tox_Website.png')] bg-cover bg-center opacity-[0.12]"
+            className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-screen h-64 bg-[url('/src/assets/BG_Tox_Website.webp')] bg-cover bg-center opacity-[0.12]"
             style={{
               maskImage: "linear-gradient(to bottom, transparent 0%, #000 22%, #000 55%, transparent 100%)",
               WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, #000 22%, #000 55%, transparent 100%)",
