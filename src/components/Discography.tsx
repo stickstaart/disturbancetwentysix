@@ -193,10 +193,10 @@ const Discography: React.FC = () => {
               const [title, details] = item.split(" || ");
 
               return (
-                // Lijn licht felgroen op bij hover (alleen apparaten met een muis) en fadet langzaam terug
+                // Gifgroene lijn (glow-line in index.css): opent vanuit het midden, fadet langzaam uit naar de zijkanten
                 <div
                   key={index}
-                  className="group border-b border-gray-900 pb-2 flex flex-col md:flex-row md:justify-between md:items-baseline transition-[border-color,box-shadow] duration-[1800ms] ease-out hover:duration-150 hover:border-[#84ff00] hover:shadow-[0_8px_18px_-10px_rgba(132,255,0,0.9)]"
+                  className="glow-line group relative border-b border-gray-900 pb-2 flex flex-col md:flex-row md:justify-between md:items-baseline"
                 >
                   {/* Titel van de compilatie */}
                   <strong className="text-white font-bold uppercase tracking-tight text-base group-hover:text-accent">
