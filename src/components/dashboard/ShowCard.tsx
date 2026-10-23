@@ -81,28 +81,31 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
   const pastStyle = isPast ? "opacity-55 saturate-50 hover:opacity-100 hover:saturate-100" : "";
 
   // ---------- Geblokkeerde datum / periode ----------
+  // Zelfde opbouw als een show (datumtegel + grote titel) zodat het ritme van de lijst rustig blijft,
+  // maar in gedempte kleuren zodat blokkades niet harder roepen dan de optredens.
   if (item.isBlocked) {
     const end = item.endDate ? parseLocalDate(item.endDate) : null;
     const endLabel = end
       ? new Intl.DateTimeFormat("nl-NL", { weekday: "short", day: "numeric", month: "short" }).format(end).replace(/\./g, "")
       : "";
     return (
-      <div id={`show-${item.id}`} className={`${CARD} stripes-blocked flex items-center gap-3 p-2.5 ${pastStyle}`}>
-        <span className="absolute left-0 inset-y-0 w-[3px] bg-red-600/80" />
-        <DateTile date={item.date} tone="text-red-400" tile="bg-red-500/5 ring-red-500/20" />
+      <div id={`show-${item.id}`} className={`${CARD} flex items-center gap-3 p-2.5 pl-3.5 ${pastStyle}`}>
+        <span className="absolute left-0 inset-y-0 w-[3px] bg-red-900/80" />
+        <DateTile date={item.date} tone="text-red-300/60" tile="bg-red-500/5 ring-red-500/15" />
         <div className="grow min-w-0">
-          <div className="font-mono text-[13px] font-bold tracking-[0.08em] text-red-400">
-            {end ? `GEBLOKKEERD T/M ${endLabel.toUpperCase()}` : "GEBLOKKEERD"}
+          <div className="font-display text-[26px] md:text-3xl font-bold uppercase leading-none text-red-400/55">
+            Geblokkeerd
           </div>
-          <div className="text-base text-zinc-200 break-words">
-            <span className="font-semibold">{item.blockedBy}</span>
-            {item.reason && <span className="text-zinc-400"> · {item.reason}</span>}
+          <div className="mt-1 text-base text-zinc-400 leading-snug break-words">
+            <span className="text-zinc-300">{item.blockedBy}</span>
+            {item.reason && <> · {item.reason}</>}
+            {end && <> · t/m {endLabel}</>}
           </div>
         </div>
         <div className="shrink-0 flex items-center gap-1">
           <button
             onClick={() => onEditBlock(item)}
-            className="p-2.5 rounded-lg text-zinc-300 hover:text-white hover:bg-white/10 cursor-pointer"
+            className="p-2.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 cursor-pointer"
             title="Bewerk blokkade"
             aria-label="Bewerk blokkade"
           >
@@ -110,7 +113,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
           </button>
           <button
             onClick={() => onDelete(item.id)}
-            className="p-2.5 rounded-lg text-zinc-400 hover:text-red-400 hover:bg-red-500/10 cursor-pointer"
+            className="p-2.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 cursor-pointer"
             title="Verwijder blokkade"
             aria-label="Verwijder blokkade"
           >
