@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FiChevronDown, FiEdit2, FiGlobe, FiMail, FiPhone, FiTrash2 } from "react-icons/fi";
 import type { DateItem, ShowStatus } from "../BandDashboard";
-import { CountryFlag } from "./CountryFlag";
+import { CountryFlag, UnavailableFlag } from "./CountryFlag";
 import { parseLocalDate } from "./dateUtils";
 import { displayName } from "./constants";
 
@@ -93,8 +93,9 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
         <span className="absolute left-0 inset-y-0 w-[3px] bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.5)]" />
         <DateTile date={item.date} tone="text-red-400" tile="bg-red-500/10 ring-red-500/25" />
         <div className="grow min-w-0">
-          <div className="font-display text-[26px] md:text-3xl font-bold uppercase leading-none text-red-400">
-            Niet beschikbaar
+          <div className="flex items-center gap-1.5 font-display text-[26px] md:text-3xl font-bold uppercase leading-none text-red-400">
+            <UnavailableFlag />
+            <span className="min-w-0">Niet beschikbaar</span>
           </div>
           <div className="mt-1 text-base text-zinc-300 leading-snug break-words">
             <span>{item.blockedBy}</span>
