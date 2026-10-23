@@ -20,14 +20,14 @@ export const CountryFlag: React.FC<CountryFlagProps> = ({ code }) => {
   );
 };
 
-/** "Niet beschikbaar"-vlag: Zwitserse vlag met het kruis 45° gedraaid (wit ✕ op rood).
+/** "Afwezig"-vlag: Zwitserse vlag met het kruis 45° gedraaid (wit ✕ op rood).
  *  Zelfde formaat (4:3, w-4 h-3) als de landvlaggen, zodat hij er netjes tussen past. */
 export const UnavailableFlag: React.FC = () => (
   <svg
     viewBox="0 0 32 24"
     className="w-4 h-3 inline-block shrink-0 rounded-[1px] shadow-sm mr-1.5 align-middle"
     role="img"
-    aria-label="Niet beschikbaar"
+    aria-label="Afwezig"
   >
     <rect width="32" height="24" fill="#da291c" />
     <g transform="rotate(45 16 12)" fill="#fff">

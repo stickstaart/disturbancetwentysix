@@ -95,7 +95,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
         <div className="grow min-w-0">
           <div className="flex items-center gap-1.5 font-display text-[26px] md:text-3xl font-bold uppercase leading-none text-red-400">
             <UnavailableFlag />
-            <span className="min-w-0">Niet beschikbaar</span>
+            <span className="min-w-0">Afwezig</span>
           </div>
           <div className="mt-1 text-base text-zinc-300 leading-snug break-words">
             <span>{item.blockedBy}</span>

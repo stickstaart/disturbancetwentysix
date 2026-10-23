@@ -643,13 +643,13 @@ const BandDashboard: React.FC = () => {
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <span className="block mb-1.5 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70">Van</span>
-                      <CustomDatePicker label="Niet beschikbaar vanaf" value={blockDate} onChange={(d) => { setBlockDate(d); if (blockEndDate && blockEndDate < d) setBlockEndDate(d); }} />
+                      <CustomDatePicker label="Afwezig vanaf" value={blockDate} onChange={(d) => { setBlockDate(d); if (blockEndDate && blockEndDate < d) setBlockEndDate(d); }} />
                     </div>
                     <div>
                       <span className="block mb-1.5 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70">T/m (optioneel)</span>
                       {blockEndDate ? (
                         <div className="flex gap-1">
-                          <div className="grow min-w-0"><CustomDatePicker label="Niet beschikbaar t/m" min={blockDate} value={blockEndDate} onChange={(d) => setBlockEndDate(d)} /></div>
+                          <div className="grow min-w-0"><CustomDatePicker label="Afwezig t/m" min={blockDate} value={blockEndDate} onChange={(d) => setBlockEndDate(d)} /></div>
                           <button type="button" onClick={() => setBlockEndDate("")} aria-label="Eén dag" className="px-2 rounded-lg opacity-70 hover:opacity-100 cursor-pointer">✕</button>
                         </div>
                       ) : (
