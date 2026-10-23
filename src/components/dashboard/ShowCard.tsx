@@ -82,7 +82,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
 
   // ---------- Geblokkeerde datum / periode ----------
   // Zelfde opbouw als een show (datumtegel + grote titel) zodat het ritme van de lijst rustig blijft,
-  // maar in gedempte kleuren zodat blokkades niet harder roepen dan de optredens.
+  // titel gedempt zodat blokkades niet harder roepen dan de optredens; datumtegel even sterk als bij shows.
   if (item.isBlocked) {
     const end = item.endDate ? parseLocalDate(item.endDate) : null;
     const endLabel = end
@@ -91,10 +91,10 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
     return (
       <div id={`show-${item.id}`} className={`${CARD} flex items-center gap-3 p-2.5 pl-3.5 ${pastStyle}`}>
         <span className="absolute left-0 inset-y-0 w-[3px] bg-red-900/80" />
-        <DateTile date={item.date} tone="text-red-300/60" tile="bg-red-500/5 ring-red-500/15" />
+        <DateTile date={item.date} tone="text-red-400" tile="bg-red-500/10 ring-red-500/25" />
         <div className="grow min-w-0">
           <div className="font-display text-[26px] md:text-3xl font-bold uppercase leading-none text-red-400/55">
-            Geblokkeerd
+            Niet beschikbaar
           </div>
           <div className="mt-1 text-base text-zinc-400 leading-snug break-words">
             <span className="text-zinc-300">{item.blockedBy}</span>
