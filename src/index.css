@@ -56,3 +56,52 @@ html {
         font-size: 16px !important;
     }
 }
+
+/* ---------- Gifgroene hover-lijn ----------
+   Lijn en gloed starten in het midden en lopen uit naar links/rechts.
+   Hover: schuift vanuit het midden open (snel). Verlaten: fadet langzaam weg (1,8 s).
+   Alleen op apparaten met een muis. Element heeft position: relative nodig. */
+.glow-line::before,
+.glow-line::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+    opacity: 0;
+    transform: scaleX(0.2);
+    transform-origin: center;
+    /* uitfaden langzaam; breedte pas terugzetten als hij onzichtbaar is */
+    transition: opacity 1800ms ease-out, transform 0ms linear 1800ms;
+}
+.glow-line::after {            /* de lijn zelf */
+    bottom: -1px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, #84ff00 50%, transparent 100%);
+}
+.glow-line::before {           /* zachte gloed onder de lijn */
+    bottom: -1px;
+    height: 14px;
+    background: radial-gradient(50% 100% at 50% 100%, rgba(132, 255, 0, 0.35), transparent 100%);
+}
+/* Mobiel: dezelfde staat, gezet door useScrollGlow als de regel door het midden van het scherm schuift */
+.glow-line.is-glowing::before,
+.glow-line.is-glowing::after {
+    opacity: 1;
+    transform: scaleX(1);
+    transition: opacity 150ms ease-out, transform 450ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* Variant voor kaarten met overflow-hidden/afgeronde hoeken: lijn net binnen de onderrand, boven de inhoud */
+.glow-line-inset::before,
+.glow-line-inset::after {
+    bottom: 0;
+    z-index: 20;
+}
+@media (hover: hover) {
+    .glow-line:hover::before,
+    .glow-line:hover::after {
+        opacity: 1;
+        transform: scaleX(1);
+        transition: opacity 150ms ease-out, transform 450ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+}

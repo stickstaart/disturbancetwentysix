@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 const mainReleases = [
   {
@@ -95,8 +95,11 @@ const compilations = [
 ];
 
 const Discography: React.FC = () => {
+  // Compilaties standaard verborgen; tonen via knop
+  const [showCompilations, setShowCompilations] = useState(false);
+
   return (
-    <section id="music" className="py-20 bg-black text-white">
+    <section id="music" className="py-20 bg-black text-white overflow-clip">
       <div className="max-w-7xl mx-auto px-6">
         <h2 className="text-4xl font-bold mb-12 uppercase text-center tracking-tighter">
           Releases
@@ -154,20 +157,46 @@ const Discography: React.FC = () => {
         </div>
 
         {/* COMPILATIONS LIST */}
-        <div className="mt-24 pt-12 border-t border-gray-800 text-left max-w-3xl mx-auto">
-          <h3 className="text-sm font-bold uppercase tracking-[0.3em] text-gray-500 mb-10 text-center">
+        <div className="relative mt-24">
+          {/* Achtergrond van de homepage, heel licht: vaste band bovenaan over de volle schermbreedte,
+              boven en onder uitfadend. Vaste hoogte = niets verspringt bij open/dicht; lijst eronder blijft op zwart. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 w-screen h-64 bg-[url('/src/assets/BG_Tox_Website.webp')] bg-cover bg-center opacity-[0.12]"
+            style={{
+              maskImage: "linear-gradient(to bottom, transparent 0%, #000 22%, #000 55%, transparent 100%)",
+              WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, #000 22%, #000 55%, transparent 100%)",
+            }}
+          />
+
+        <div className="relative pt-12 border-t border-gray-800 text-left max-w-3xl mx-auto">
+          <h3 className="text-sm font-bold uppercase tracking-[0.3em] text-gray-500 mb-6 text-center">
             Also featured on various compilations
           </h3>
 
-          <div className="flex flex-col space-y-3">
+          <div className="flex justify-center mb-10">
+            <button
+              type="button"
+              onClick={() => setShowCompilations((v) => !v)}
+              aria-expanded={showCompilations}
+              aria-controls="compilations-list"
+              className="border border-white text-white px-6 py-3 text-xs font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all cursor-pointer"
+            >
+              {showCompilations ? "Hide compilations" : "Click for a list of featured compilations"}
+            </button>
+          </div>
+
+          {showCompilations && (
+          <div id="compilations-list" className="flex flex-col space-y-3 animate-fade-in">
             {compilations.map((item, index) => {
               // Split de string op de '||'
               const [title, details] = item.split(" || ");
 
               return (
+                // Gifgroene lijn (glow-line in index.css): opent vanuit het midden, fadet langzaam uit naar de zijkanten
                 <div
                   key={index}
-                  className="group border-b border-gray-900 pb-2 flex flex-col md:flex-row md:justify-between md:items-baseline transition-all duration-300 hover:border-white/20"
+                  className="glow-line group relative border-b border-gray-900 pb-2 flex flex-col md:flex-row md:justify-between md:items-baseline"
                 >
                   {/* Titel van de compilatie */}
                   <strong className="text-white font-bold uppercase tracking-tight text-base group-hover:text-accent">
@@ -184,6 +213,8 @@ const Discography: React.FC = () => {
               );
             })}
           </div>
+          )}
+        </div>
         </div>
       </div>
     </section>

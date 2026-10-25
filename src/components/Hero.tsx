@@ -83,7 +83,7 @@ const Hero: React.FC = () => {
       {/* Subtle animated achtergrond */}
       <div className="absolute inset-0 -z-0">
         <div
-          className="w-full h-full bg-[url('/src/assets/BG_Tox_Website.png')] bg-cover opacity-20 animate-pulse [animation-duration:5s]"
+          className="w-full h-full bg-[url('/src/assets/BG_Tox_Website.webp')] bg-cover opacity-20 animate-pulse [animation-duration:5s]"
         ></div>
       </div>
     </section>

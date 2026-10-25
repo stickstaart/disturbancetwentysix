@@ -46,7 +46,7 @@ const Tour: React.FC = () => {
         <div className="grid gap-6 sm:grid-cols-2 md:hidden">
           {upcomingShows.map((t, i) => (
             <div key={i}
-                 className="group relative bg-black p-6 rounded-lg border border-gray-700 overflow-hidden min-h-[160px] flex flex-col justify-center">
+                 className="glow-line glow-line-inset group relative bg-black p-6 rounded-lg border border-gray-700 overflow-hidden min-h-[160px] flex flex-col justify-center">
               <div className="absolute inset-0 bg-black/80 z-0"></div>
               <div className="relative z-10">
                 <p className="font-semibold text-accent">{formatDate(t.date)}</p>
@@ -69,8 +69,9 @@ const Tour: React.FC = () => {
         <div className="hidden md:block">
           <div className="flex flex-col">
             {upcomingShows.map((t, i) => (
+              // Gifgroene lijn (glow-line in index.css): opent vanuit het midden, fadet langzaam uit naar de zijkanten
               <div key={i}
-                   className="group relative flex items-center justify-between p-5 bg-black/40 border-b border-gray-800 hover:bg-black/60 hover:border-white transition-all duration-300">
+                   className="glow-line group relative flex items-center justify-between p-5 bg-black/40 border-b border-gray-800 hover:bg-black/60 transition-colors duration-300">
 
                 {/* Datum links */}
                 <div className="w-1/4 text-left font-mono text-gray-400 group-hover:text-white transition-colors">
@@ -89,7 +90,7 @@ const Tour: React.FC = () => {
                   {/* Bands (Alleen zichtbaar bij hover) */}
                   <div
                     className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                    <p className="text-xs text-gray-400 uppercase tracking-widest">
+                    <p className="text-xs text-[#84ff00] uppercase tracking-widest [text-shadow:0_0_10px_rgba(132,255,0,0.45)]">
                       {t.bands && t.bands.length > 0
                         ? `with ${t.bands.join(', ')}`
                         : 'Headline Show'}
