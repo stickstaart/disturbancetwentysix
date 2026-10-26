@@ -1,38 +1,15 @@
 // Serverfunctie voor de Stats-tab in de band-agenda.
-// Haalt de websitecijfers van de laatste 30 dagen op bij Vercel Web Analytics.
-// De Vercel-token staat alleen hier (server), nooit in de website zelf.
+//   ?range=30d (standaard) → live uit Vercel Web Analytics
+//   ?range=12m / ?range=all → opgetelde dagcijfers uit Firestore (bewaard door /api/stats-snapshot)
+// De tokens staan alleen hier (server), nooit in de website zelf.
 //
-// Benodigde Environment Variables in Vercel (Production + Preview):
-//   STATS_VERCEL_TOKEN  – Vercel access token (Account Settings → Tokens)
-//   STATS_TEAM_ID       – team_… (Team Settings → General → Team ID)
-// Het project-ID komt automatisch uit VERCEL_PROJECT_ID (systeemvariabele van
-// de deployment zelf); STATS_PROJECT_ID is alleen een reserve.
-
-const API = "https://api.vercel.com/v1/query/web-analytics";
-const DAYS = 30;
-
-// Bezoeken aan de site zelf: zonder de agenda en zonder doorklik-tussenpagina's
-const SITE_FILTER = "not startswith(requestPath, '/go/') and not startswith(requestPath, '/agenda')";
-const CLICK_FILTER = "startswith(requestPath, '/go/')";
-
-type Row = Record<string, string | number | undefined> & { pageviews?: number; visitors?: number };
-
-const projectId = () => process.env.VERCEL_PROJECT_ID || process.env.STATS_PROJECT_ID || "";
-
-async function query(path: string, params: Record<string, string | string[]>) {
-  const url = new URL(`${API}/${path}`);
-  url.searchParams.set("projectId", projectId());
-  if (process.env.STATS_TEAM_ID) url.searchParams.set("teamId", process.env.STATS_TEAM_ID);
-  for (const [k, v] of Object.entries(params)) {
-    for (const val of Array.isArray(v) ? v : [v]) url.searchParams.append(k, val);
-  }
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${process.env.STATS_VERCEL_TOKEN}` } });
-  if (!res.ok) {
-    const who = `project ${projectId()}, team ${process.env.STATS_TEAM_ID || "(geen)"}`;
-    throw new Error(`Vercel ${path} ${res.status} (${who}): ${(await res.text()).slice(0, 200)}`);
-  }
-  return (await res.json()) as { data: unknown };
-}
+// Environment Variables in Vercel (Production + Preview):
+//   STATS_VERCEL_TOKEN        – Vercel access token
+//   STATS_TEAM_ID             – team_… (Team Settings → General → Team ID)
+//   FIREBASE_SERVICE_ACCOUNT  – service-account JSON (alleen nodig voor 12m / all)
+// Het project-ID komt automatisch uit VERCEL_PROJECT_ID.
+import { analyticsConfigured, fetchPeriod, isoDay, type ClickRow, type DayRow, type KeyCount, type PeriodStats } from "./_lib/analytics.js";
+import { firestoreConfigured, loadDays } from "./_lib/firestore.js";
 
 const json = (body: unknown, status = 200, cache = false) =>
   new Response(JSON.stringify(body), {
@@ -44,43 +21,79 @@ const json = (body: unknown, status = 200, cache = false) =>
     },
   });
 
-export async function GET() {
-  if (!process.env.STATS_VERCEL_TOKEN || !projectId()) {
-    return json({ error: "not_configured", message: "STATS_VERCEL_TOKEN ontbreekt in Vercel (of er is geen project-ID)." }, 503);
+type DaySnapshot = Omit<PeriodStats, "perDay">;
+
+function mergeKeys(list: KeyCount[][], top: number): KeyCount[] {
+  const acc = new Map<string, number>();
+  for (const rows of list) for (const r of rows) acc.set(r.key, (acc.get(r.key) ?? 0) + r.visitors);
+  const others = acc.get("Others") ?? 0;
+  acc.delete("Others");
+  const sorted = [...acc.entries()].map(([key, visitors]) => ({ key, visitors })).sort((a, b) => b.visitors - a.visitors);
+  const head = sorted.slice(0, top - 1);
+  const rest = others + sorted.slice(top - 1).reduce((s, r) => s + r.visitors, 0);
+  return rest > 0 ? [...head, { key: "Others", visitors: rest }] : head;
+}
+
+function fromHistory(days: Map<string, DaySnapshot>, sinceDay: string) {
+  const picked = [...days.entries()].filter(([d]) => d >= sinceDay).sort(([a], [b]) => a.localeCompare(b));
+  const snaps = picked.map(([, s]) => s);
+  // Per maand bundelen voor de grafiek
+  const months = new Map<string, DayRow>();
+  for (const [day, s] of picked) {
+    const m = day.slice(0, 7);
+    const row = months.get(m) ?? { date: m, visitors: 0, pageviews: 0 };
+    row.visitors += s.totals.visitors;
+    row.pageviews += s.totals.pageviews;
+    months.set(m, row);
+  }
+  const clicks = new Map<string, ClickRow>();
+  for (const s of snaps)
+    for (const c of s.clicks) {
+      const k = `${c.path}|${c.country}`;
+      const row = clicks.get(k) ?? { ...c, clicks: 0 };
+      row.clicks += c.clicks;
+      clicks.set(k, row);
+    }
+  return {
+    since: picked[0]?.[0] ?? sinceDay,
+    until: picked.at(-1)?.[0] ?? isoDay(new Date()),
+    days: picked.length,
+    totals: {
+      visitors: snaps.reduce((s, x) => s + x.totals.visitors, 0),
+      pageviews: snaps.reduce((s, x) => s + x.totals.pageviews, 0),
+    },
+    perDay: [...months.values()],
+    countries: mergeKeys(snaps.map((s) => s.countries), 10),
+    referrers: mergeKeys(snaps.map((s) => s.referrers), 8),
+    devices: mergeKeys(snaps.map((s) => s.devices), 5),
+    clicks: [...clicks.values()].sort((a, b) => b.clicks - a.clicks),
+  };
+}
+
+export async function GET(request: Request) {
+  const range = new URL(request.url).searchParams.get("range") ?? "30d";
+
+  if (range === "12m" || range === "all") {
+    if (!firestoreConfigured()) {
+      return json({ error: "not_configured", message: "FIREBASE_SERVICE_ACCOUNT ontbreekt in Vercel." }, 503);
+    }
+    try {
+      const days = await loadDays<DaySnapshot>();
+      const sinceDay = range === "all" ? "0000-00-00" : isoDay(new Date(Date.now() - 365 * 864e5));
+      return json({ range, granularity: "month", ...fromHistory(days, sinceDay) }, 200, true);
+    } catch (err) {
+      return json({ error: "firestore", message: (err as Error).message }, 502);
+    }
   }
 
+  if (!analyticsConfigured()) {
+    return json({ error: "not_configured", message: "STATS_VERCEL_TOKEN ontbreekt in Vercel (of er is geen project-ID)." }, 503);
+  }
   const until = new Date();
-  const since = new Date(until.getTime() - DAYS * 24 * 60 * 60 * 1000);
-  const range = { since: since.toISOString(), until: until.toISOString() };
-
+  const since = new Date(until.getTime() - 30 * 864e5);
   try {
-    const [total, perDay, countries, referrers, devices, clicks] = await Promise.all([
-      query("visits/count", { ...range, filter: SITE_FILTER }),
-      query("visits/aggregate", { ...range, by: "day", filter: SITE_FILTER, limit: "100" }),
-      query("visits/aggregate", { ...range, by: "country", filter: SITE_FILTER, limit: "10" }),
-      query("visits/aggregate", { ...range, by: "referrerHostname", filter: SITE_FILTER, limit: "8" }),
-      query("visits/aggregate", { ...range, by: "deviceType", filter: SITE_FILTER, limit: "5" }),
-      // Doorkliks: per tussenpagina én per land
-      query("visits/aggregate", { ...range, by: ["requestPath", "country"], filter: CLICK_FILTER, limit: "100" }),
-    ]);
-
-    const t = total.data as { pageviews?: number; visitors?: number };
-    const rows = (q: { data: unknown }) => (q.data as Row[]) ?? [];
-
-    return json(
-      {
-        since: range.since,
-        until: range.until,
-        totals: { visitors: t.visitors ?? 0, pageviews: t.pageviews ?? 0 },
-        perDay: rows(perDay).map((r) => ({ date: String(r.timestamp).slice(0, 10), visitors: r.visitors ?? 0, pageviews: r.pageviews ?? 0 })),
-        countries: rows(countries).map((r) => ({ key: String(r.country ?? "Others"), visitors: r.visitors ?? 0 })),
-        referrers: rows(referrers).map((r) => ({ key: String(r.referrerHostname || "Direct"), visitors: r.visitors ?? 0 })),
-        devices: rows(devices).map((r) => ({ key: String(r.deviceType ?? "Others"), visitors: r.visitors ?? 0 })),
-        clicks: rows(clicks).map((r) => ({ path: String(r.requestPath ?? ""), country: String(r.country ?? "Others"), clicks: r.pageviews ?? 0 })),
-      },
-      200,
-      true,
-    );
+    const stats = await fetchPeriod(since, until, { withDays: true });
+    return json({ range: "30d", granularity: "day", since: since.toISOString(), until: until.toISOString(), ...stats }, 200, true);
   } catch (err) {
     return json({ error: "vercel_api", message: (err as Error).message }, 502);
   }
