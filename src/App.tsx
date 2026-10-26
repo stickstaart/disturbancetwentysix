@@ -8,6 +8,7 @@ import "./index.css";
 // Documentatie: Importeer de hoofdpagina en de agenda uit de components map
 import Home from "./components/Home";
 import BandDashboard from "./components/BandDashboard";
+import GoRedirect from "./components/GoRedirect";
 import { useScrollGlow } from "./lib/useScrollGlow";
 
 const App: React.FC = () => {
@@ -22,6 +23,9 @@ const App: React.FC = () => {
 
         {/* De afgeschermde Band Agenda op /agenda */}
         <Route path="/agenda" element={<BandDashboard />} />
+
+        {/* Uitgaande links: tellen in Vercel Analytics, dan doorsturen */}
+        <Route path="/go/*" element={<GoRedirect />} />
       </Routes>
 
       {/* Vercel Web Analytics + Speed Insights (telt ook routewissels) */}

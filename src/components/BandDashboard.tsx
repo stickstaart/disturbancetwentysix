@@ -3,6 +3,7 @@ import { CustomDatePicker } from "./dashboard/CustomDatePicker";
 import { ShowFormSheet, type ShowDraft } from "./dashboard/ShowForm";
 import { IdeaFormSheet, type IdeaDraft } from "./dashboard/IdeaForm";
 import { IdeaCard } from "./dashboard/IdeaCard";
+import { StatsPanel } from "./dashboard/StatsPanel";
 import { ShowCard } from "./dashboard/ShowCard";
 import * as store from "../lib/agendaStore";
 import { FiChevronDown, FiLogOut, FiPlus, FiSettings, FiSlash } from "react-icons/fi";
@@ -154,7 +155,7 @@ const BandDashboard: React.FC = () => {
     return localStorage.getItem("band_active_user") || "Joz (Superadmin)";
   });
 
-  const [activeTab, setActiveTab] = useState<"agenda" | "ideas">("agenda");
+  const [activeTab, setActiveTab] = useState<"agenda" | "ideas" | "stats">("agenda");
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
 
   const [isYearModalOpen, setIsYearModalOpen] = useState<boolean>(false);
@@ -564,7 +565,7 @@ const BandDashboard: React.FC = () => {
                 : "border-transparent opacity-55 hover:opacity-100"
             }`}
           >
-            Agenda & shows
+            Agenda
           </button>
           <button
             onClick={() => { setActiveTab("ideas"); resetIdeaForm(); }}
@@ -576,7 +577,20 @@ const BandDashboard: React.FC = () => {
           >
             Tour-ideeën
           </button>
+          <button
+            onClick={() => setActiveTab("stats")}
+            className={`flex-1 py-2.5 px-2 text-sm font-semibold uppercase tracking-[0.06em] rounded-lg border transition-all flex items-center justify-center gap-2 cursor-pointer font-mono ${
+              activeTab === "stats"
+                ? `${themeStyle.cardBg} ${themeStyle.border} ${themeStyle.accentText} shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_6px_20px_-10px_rgba(0,0,0,0.9)]`
+                : "border-transparent opacity-55 hover:opacity-100"
+            }`}
+          >
+            Stats
+          </button>
         </div>
+
+        {/* TAB 3: STATS (websitecijfers + doorkliks, laatste 30 dagen) */}
+        {activeTab === "stats" && <StatsPanel />}
 
         {/* TAB 1: AGENDA */}
         {activeTab === "agenda" && (

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { goLink } from "../lib/outbound";
 
 const mainReleases = [
   {
@@ -125,10 +126,10 @@ const Discography: React.FC = () => {
 
                   {/* Desktop Links (binnen de hover) */}
                   <div className="hidden md:flex flex-col gap-3 w-full max-w-[160px]">
-                    <a href={release.spotify} target="_blank" className="bg-[#1DB954] hover:bg-[#1ed760] text-white py-2 px-4 rounded-full text-xs font-bold uppercase text-center transition-colors">
+                    <a href={goLink("spotify", release.spotify, release.id)} target="_blank" className="bg-[#1DB954] hover:bg-[#1ed760] text-white py-2 px-4 rounded-full text-xs font-bold uppercase text-center transition-colors">
                       Spotify
                     </a>
-                    <a href={release.bandcamp} target="_blank" className="bg-[#629aa9] hover:bg-[#72aab9] text-white py-2 px-4 rounded-full text-xs font-bold uppercase text-center transition-colors">
+                    <a href={goLink("bandcamp", release.bandcamp, release.id)} target="_blank" className="bg-[#629aa9] hover:bg-[#72aab9] text-white py-2 px-4 rounded-full text-xs font-bold uppercase text-center transition-colors">
                       Bandcamp
                     </a>
                   </div>
@@ -138,14 +139,14 @@ const Discography: React.FC = () => {
               {/* Mobiele Links: Altijd zichtbaar direct onder de afbeelding op kleine schermen */}
               <div className="flex md:hidden border-t border-white/10">
                 <a
-                  href={release.spotify}
+                  href={goLink("spotify", release.spotify, release.id)}
                   target="_blank"
                   className="flex-1 bg-[#1DB954] text-white py-4 text-center text-xs font-black uppercase tracking-tighter"
                 >
                   Spotify
                 </a>
                 <a
-                  href={release.bandcamp}
+                  href={goLink("bandcamp", release.bandcamp, release.id)}
                   target="_blank"
                   className="flex-1 bg-[#629aa9] text-white py-4 text-center text-xs font-black uppercase tracking-tighter border-l border-black/20"
                 >
