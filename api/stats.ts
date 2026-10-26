@@ -4,8 +4,9 @@
 //
 // Benodigde Environment Variables in Vercel (Production + Preview):
 //   STATS_VERCEL_TOKEN  – Vercel access token (Account Settings → Tokens)
-//   STATS_PROJECT_ID    – prj_… (staat in .vercel/project.json)
-//   STATS_TEAM_ID       – team_… (orgId in .vercel/project.json)
+//   STATS_TEAM_ID       – team_… (Team Settings → General → Team ID)
+// Het project-ID komt automatisch uit VERCEL_PROJECT_ID (systeemvariabele van
+// de deployment zelf); STATS_PROJECT_ID is alleen een reserve.
 
 const API = "https://api.vercel.com/v1/query/web-analytics";
 const DAYS = 30;
@@ -16,15 +17,20 @@ const CLICK_FILTER = "startswith(requestPath, '/go/')";
 
 type Row = Record<string, string | number | undefined> & { pageviews?: number; visitors?: number };
 
+const projectId = () => process.env.VERCEL_PROJECT_ID || process.env.STATS_PROJECT_ID || "";
+
 async function query(path: string, params: Record<string, string | string[]>) {
   const url = new URL(`${API}/${path}`);
-  url.searchParams.set("projectId", process.env.STATS_PROJECT_ID ?? "");
+  url.searchParams.set("projectId", projectId());
   if (process.env.STATS_TEAM_ID) url.searchParams.set("teamId", process.env.STATS_TEAM_ID);
   for (const [k, v] of Object.entries(params)) {
     for (const val of Array.isArray(v) ? v : [v]) url.searchParams.append(k, val);
   }
   const res = await fetch(url, { headers: { Authorization: `Bearer ${process.env.STATS_VERCEL_TOKEN}` } });
-  if (!res.ok) throw new Error(`Vercel ${path} ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  if (!res.ok) {
+    const who = `project ${projectId()}, team ${process.env.STATS_TEAM_ID || "(geen)"}`;
+    throw new Error(`Vercel ${path} ${res.status} (${who}): ${(await res.text()).slice(0, 200)}`);
+  }
   return (await res.json()) as { data: unknown };
 }
 
@@ -39,8 +45,8 @@ const json = (body: unknown, status = 200, cache = false) =>
   });
 
 export async function GET() {
-  if (!process.env.STATS_VERCEL_TOKEN || !process.env.STATS_PROJECT_ID) {
-    return json({ error: "not_configured", message: "STATS_VERCEL_TOKEN / STATS_PROJECT_ID ontbreken in Vercel." }, 503);
+  if (!process.env.STATS_VERCEL_TOKEN || !projectId()) {
+    return json({ error: "not_configured", message: "STATS_VERCEL_TOKEN ontbreekt in Vercel (of er is geen project-ID)." }, 503);
   }
 
   const until = new Date();
