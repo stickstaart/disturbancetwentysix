@@ -9,6 +9,7 @@ import * as store from "../lib/agendaStore";
 import { FiChevronDown, FiLogOut, FiPlus, FiSettings, FiSlash } from "react-icons/fi";
 import { useSnapZoom } from "../lib/useSnapZoom";
 import { isTestMode } from "../lib/testMode";
+import { useBandAuth } from "../lib/bandAuth";
 import { BAND_MEMBERS, displayName } from "./dashboard/constants";
 import { parseLocalDate, todayString } from "./dashboard/dateUtils";
 
@@ -143,17 +144,20 @@ const THEME_CONFIGS: Record<ThemeType, { bg: string; cardBg: string; panelBg: st
 const getTodayString = todayString;
 
 const BandDashboard: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => localStorage.getItem("band_auth") === "true");
-  const [passwordInput, setPasswordInput] = useState("");
+  // Inloggen met Google; alleen de vier bandleden komen binnen (zie src/lib/bandAuth.ts)
+  const { state: authState, signIn, logOut } = useBandAuth();
+  const isAuthenticated = authState.status === "ok";
+  const loggedInMember = authState.status === "ok" ? authState.member : "";
+  const canSwitchAccount = loggedInMember === "Joz (Superadmin)";
 
   // Thema State
   const [theme, setTheme] = useState<ThemeType>(() => {
     return (localStorage.getItem("band_theme") as ThemeType) || "ORIGINAL";
   });
 
-  const [currentUser, setCurrentUser] = useState<string>(() => {
-    return localStorage.getItem("band_active_user") || "Joz (Superadmin)";
-  });
+  // Alleen de superadmin kan (testen / corrigeren) tijdelijk als een ander bandlid werken
+  const [actingAs, setActingAs] = useState<string>(() => localStorage.getItem("band_active_user") || "");
+  const currentUser = canSwitchAccount && actingAs ? actingAs : loggedInMember;
 
   const [activeTab, setActiveTab] = useState<"agenda" | "ideas" | "stats">("agenda");
   const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
@@ -226,7 +230,7 @@ const BandDashboard: React.FC = () => {
   };
 
   const handleUserChange = (newUser: string) => {
-    setCurrentUser(newUser);
+    setActingAs(newUser);
     localStorage.setItem("band_active_user", newUser);
   };
 
@@ -414,14 +418,6 @@ const BandDashboard: React.FC = () => {
     if (show) run(store.patchShow(show, { isPublic: !show.isPublic }, currentUser));
   };
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passwordInput === "band2026") {
-      setIsAuthenticated(true);
-      localStorage.setItem("band_auth", "true");
-    }
-  };
-
   const availableYears = Array.from(
     new Set([
       new Date().getFullYear().toString(),
@@ -433,19 +429,22 @@ const BandDashboard: React.FC = () => {
   if (!isAuthenticated) {
     return (
       <div className={`min-h-screen ${themeStyle.bg} ${themeStyle.text} flex items-center justify-center p-4 font-mono band-agenda`}>
-        <form onSubmit={handleLogin} className={`${themeStyle.cardBg} p-8 rounded-lg border ${themeStyle.border} max-w-sm w-full space-y-4`}>
-          <h2 className={`text-xl font-bold ${themeStyle.accentText} text-center uppercase`}>Band Access</h2>
-          <input
-            type="password"
-            placeholder="Wachtwoord"
-            value={passwordInput}
-            onChange={(e) => setPasswordInput(e.target.value)}
-            className="w-full p-3 bg-black/50 border border-zinc-700 rounded-lg text-center text-white"
-          />
-          <button type="submit" className={`w-full py-3 ${themeStyle.primaryBtn} font-bold uppercase text-sm rounded-lg`}>
-            Inloggen
-          </button>
-        </form>
+        <div className={`${themeStyle.cardBg} p-8 rounded-lg border ${themeStyle.border} max-w-sm w-full space-y-4 text-center`}>
+          <h2 className={`text-xl font-bold ${themeStyle.accentText} uppercase`}>Band Access</h2>
+          {authState.status === "loading" ? (
+            <p className="text-sm opacity-70">Even kijken of je al bent ingelogd…</p>
+          ) : (
+            <>
+              {authState.status === "denied" && (
+                <p className="text-sm text-red-400">{authState.email} heeft geen toegang. Log in met het Google-account dat bij de band bekend is.</p>
+              )}
+              {authState.status === "signedOut" && authState.error && <p className="text-sm text-red-400">{authState.error}</p>}
+              <button type="button" onClick={signIn} className={`w-full py-3 ${themeStyle.primaryBtn} font-bold uppercase text-sm rounded-lg border cursor-pointer`}>
+                Inloggen met Google
+              </button>
+            </>
+          )}
+        </div>
       </div>
     );
   }
@@ -477,19 +476,21 @@ const BandDashboard: React.FC = () => {
             <>
               <div className="fixed inset-0 z-30" onClick={() => setIsSettingsOpen(false)} />
               <div className={`absolute right-0 top-full mt-2 z-40 w-[min(20rem,calc(100vw-1.5rem))] p-4 space-y-4 rounded-2xl ${themeStyle.panelBg} border ${themeStyle.border} shadow-[0_20px_50px_-15px_rgba(0,0,0,0.9)] max-h-[calc(100dvh-8rem)] overflow-y-auto`}>
-                {/* Account wisselen: tijdelijk (testen) en straks alleen voor de superadmin */}
-                <label className="block">
-                  <span className="block mb-1.5 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70">Account (testen / corrigeren)</span>
-                  <select
-                    value={currentUser}
-                    onChange={(e) => handleUserChange(e.target.value)}
-                    className={`w-full bg-black/40 border ${themeStyle.border} text-base py-2.5 px-3 rounded-lg focus:outline-none cursor-pointer`}
-                  >
-                    {BAND_MEMBERS.map((member) => (
-                      <option key={member} value={member} className="bg-black text-white">{member}</option>
-                    ))}
-                  </select>
-                </label>
+                {/* Account wisselen: alleen voor de superadmin (testen / corrigeren) */}
+                {canSwitchAccount && (
+                  <label className="block">
+                    <span className="block mb-1.5 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70">Account (testen / corrigeren)</span>
+                    <select
+                      value={currentUser}
+                      onChange={(e) => handleUserChange(e.target.value)}
+                      className={`w-full bg-black/40 border ${themeStyle.border} text-base py-2.5 px-3 rounded-lg focus:outline-none cursor-pointer`}
+                    >
+                      {BAND_MEMBERS.map((member) => (
+                        <option key={member} value={member} className="bg-black text-white">{member}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
 
                 {/* Thema: één rij kleurstalen (achtergrond + accentrand), naam van het gekozen thema eronder */}
                 <div>
@@ -539,7 +540,7 @@ const BandDashboard: React.FC = () => {
 
                 <button
                   type="button"
-                  onClick={() => { setIsAuthenticated(false); localStorage.removeItem("band_auth"); }}
+                  onClick={() => { setIsSettingsOpen(false); void logOut(); }}
                   className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border ${themeStyle.border} ${themeStyle.accentText} text-base font-semibold cursor-pointer`}
                 >
                   <FiLogOut /> Uitloggen

@@ -1,0 +1,39 @@
+rules_version = '2';
+
+// Firestore-regels voor project disturbance-wpa.
+// Plakken in Firebase console → Firestore Database → Rules → Publish.
+// Dezelfde e-maillijst staat in src/lib/bandAuth.ts.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isBand() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() in [
+          'jzvndk@gmail.com',
+          'jostealer@gmail.com',
+          'rehemerik@gmail.com',
+          'makkingaij@gmail.com'
+        ];
+    }
+
+    // Aangekondigde shows: de publieke site (TOUR/HISTORY) leest mee, alleen de band schrijft
+    match /publicShows/{id} {
+      allow read: if true;
+      allow write: if isBand();
+    }
+
+    // Interne agenda en tour-ideeën: alleen de band
+    match /shows/{id} {
+      allow read, write: if isBand();
+    }
+    match /tourIdeas/{id} {
+      allow read, write: if isBand();
+    }
+
+    // statsDaily en al het andere: geen toegang vanuit de browser.
+    // De /api-functies gebruiken een service-account en gaan buiten deze regels om.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

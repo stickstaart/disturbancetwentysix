@@ -1,6 +1,6 @@
 # Disturbance – website + band-agenda
 
-Overdracht voor Claude-sessies. Lees dit eerst. Bijgewerkt: 27 oktober 2026.
+Overdracht voor Claude-sessies. Lees dit eerst. Bijgewerkt: 29 oktober 2026.
 
 ## Werkafspraken
 - Antwoord in het **Nederlands**; Engelse vaktermen zijn prima.
@@ -8,7 +8,6 @@ Overdracht voor Claude-sessies. Lees dit eerst. Bijgewerkt: 27 oktober 2026.
 - Commits: auteur `JØƵ <jos@tharonline.nl>` (in de VM: `git -c user.name=… -c user.email=… commit`).
 - In de Cowork-VM: vraag **eerst** verwijderrecht aan vóór git-operaties (anders blijven `.git/*.lock` hangen en lopen checkout/merge half vast).
 - npm-installs werken niet vanuit de VM (403). Liever geen nieuwe dependencies; serverfuncties gebruiken alleen `fetch` / `node:crypto`.
-- Testfase: nog **geen** aparte inlogs per bandlid bouwen tot Joz het zegt (zie "Open").
 
 ## Stack
 - Vite + React 19 + TypeScript + Tailwind v4, react-router-dom.
@@ -22,10 +21,11 @@ Overdracht voor Claude-sessies. Lees dit eerst. Bijgewerkt: 27 oktober 2026.
 
 ## Structuur
 - `src/components/Home.tsx` e.a. – publieke site. `useScrollGlow` + `.glow-line` (index.css) voor de gifgroene lijnen.
-- `src/components/BandDashboard.tsx` – agenda (tabs Agenda / Tour-ideeën / Stats). Toegang nu via één gedeeld wachtwoord + gekozen bandlid in localStorage (tijdelijk).
+- `src/components/BandDashboard.tsx` – agenda (tabs Agenda / Tour-ideeën / Stats). Inloggen met Google (Firebase Auth) via `src/lib/bandAuth.ts`: alleen de vier e-mailadressen in `MEMBER_BY_EMAIL`. Joz (superadmin) kan in Instellingen tijdelijk als ander bandlid werken.
 - `src/components/dashboard/*` – ShowCard/ShowForm/IdeaCard/IdeaForm, CustomDatePicker, CountryFlag (+ UnavailableFlag), StatsPanel.
 - `src/lib/agendaStore.ts` – Firestore-collecties `shows`, `tourIdeas`, `publicShows` (audit-velden, `isDummy`); `testMode.ts`, `dummyData.ts`, `useSiteShows.ts`.
 - `src/lib/outbound.ts` + `GoRedirect.tsx` – uitgaande links via `/go/<dienst>/<item>?to=<url>` (host-allowlist), zodat Vercel Analytics doorkliks per dienst/land telt.
+- `firestore.rules` – regels voor `disturbance-wpa`, met dezelfde e-maillijst als `bandAuth.ts`. Wordt niet automatisch gedeployd: plakken in Firebase console → Firestore → Rules.
 - `api/stats.ts` – `?range=30d` live uit Vercel Web Analytics API; `?range=12m|all` opgeteld uit Firestore `statsDaily`.
 - `api/stats-snapshot.ts` – Vercel Cron (`vercel.json`, dagelijks 04:20 UTC): bewaart dagcijfers in `statsDaily/{YYYY-MM-DD}`, vult tot 29 dagen terug aan. Alleen op Production.
 - `api/_lib/analytics.ts` (Vercel API), `api/_lib/firestore.ts` (Firestore REST met service-account-JWT, geen firebase-admin).
@@ -42,8 +42,10 @@ Overdracht voor Claude-sessies. Lees dit eerst. Bijgewerkt: 27 oktober 2026.
 - Lokaal (`npm run dev`) toont Stats voorbeelddata: `/api` draait alleen op Vercel.
 
 ## Open – in deze volgorde
-1. **Stats-basis naar `main`** (api/, vercel.json-cron, /go-links in Footer/Discography, GoRedirect-route) zonder de agenda-UI, **vóór ±23 november 2026** – anders vallen de eerste dagen buiten Vercels 30-dagenvenster. Daarna in Vercel → Cron Jobs → Run om te testen.
-2. **Inlogs per bandlid** (Firebase Auth) + strakke Firestore-regels, **vóór 31 december 2026** (dan lopen de huidige testregels af). Preview-domein toevoegen aan Firebase Auth → Authorized domains.
-3. Band test UX/UI op de preview.
-4. `agenda-firestore` naar `main` als iedereen akkoord is.
+- ✅ Stats-basis staat sinds 29 okt 2026 op `main`; cron getest (200). `main` is in `agenda-firestore` gemerged.
+- ✅ Band heeft de UX/UI op de preview goedgekeurd (29 okt 2026).
+1. **Inlogs per bandlid**: code staat op `agenda-firestore`. Nog doen in Firebase: Google-provider aanzetten, domeinen toevoegen aan Authorized domains (preview, disturbance.nl, www.disturbance.nl), daarna `firestore.rules` publiceren. **Vóór 31 december 2026** (dan lopen de testregels af).
+2. Testdata wissen, echte data uit het Google Doc importeren.
+3. `agenda-firestore` naar `main` (doel eind november 2026); Google Doc 1–2 weken op alleen-lezen.
+- Geparkeerd: Spotify/YouTube-stats.
 - Later/optioneel: PWA.

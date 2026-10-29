@@ -1,5 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
 // Firebase-configuratie uit Vite-omgevingsvariabelen (.env.local lokaal, Environment Variables op Vercel).
 // Let op: in .env-bestanden KEY=waarde, zonder aanhalingstekens of komma's.
@@ -30,4 +31,5 @@ const app = !getApps().length
   : getApp();
 
 export const db = getFirestore(app);
-// Auth volgt bij de echte inlog per bandlid (getAuth crasht bij een ongeldige key al tijdens het importeren).
+// Alleen met geldige configuratie: getAuth crasht bij een ongeldige key al tijdens het importeren.
+export const auth = isFirebaseConfigured ? getAuth(app) : null;
