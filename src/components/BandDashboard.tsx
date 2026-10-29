@@ -620,16 +620,14 @@ const BandDashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={toggleShowForm}
-                className={`flex items-center justify-center gap-2 py-3.5 font-bold uppercase text-base tracking-wider rounded-xl cursor-pointer shadow border ${themeStyle.primaryBtn}`}
+                className="flex items-center justify-center gap-2 py-3.5 font-bold uppercase text-base tracking-wider rounded-xl cursor-pointer shadow border bg-emerald-600 hover:bg-emerald-700 border-emerald-600 text-white"
               >
                 <FiPlus className="text-lg" /> Nieuwe show
               </button>
               <button
                 type="button"
                 onClick={toggleBlockModal}
-                className={`flex items-center justify-center gap-2 px-4 py-3.5 font-semibold text-base rounded-xl cursor-pointer border ${
-                  isBlockModalOpen ? "bg-white/10 border-white/20" : `${themeStyle.cardBg} ${themeStyle.border}`
-                }`}
+                className="flex items-center justify-center gap-2 px-4 py-3.5 font-semibold text-base rounded-xl cursor-pointer border bg-red-600 hover:bg-red-700 border-red-600 text-white"
               >
                 <FiSlash /> Blokkeer
               </button>
