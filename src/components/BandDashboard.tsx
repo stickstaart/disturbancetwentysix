@@ -98,7 +98,7 @@ const THEME_CONFIGS: Record<ThemeType, { bg: string; cardBg: string; panelBg: st
     accentText: "text-[#84ff00]",
     rootClass: "theme-tox",
     newBtn: "bg-[#84ff00] hover:bg-[#a6ff4d] border-[#84ff00] text-black shadow-[0_0_18px_rgba(132,255,0,0.45)]",
-    blockBtn: "bg-[#d4001a] hover:bg-[#ec0020] border-[#d4001a] text-white shadow-[0_0_18px_rgba(212,0,26,0.45)]",
+    blockBtn: "bg-[#d4001a] hover:bg-[#ec0020] border-[#d4001a] text-black shadow-[0_0_18px_rgba(212,0,26,0.45)]",
   },
   "80ies Miami": {
     bg: "bg-slate-950",
@@ -217,8 +217,8 @@ const BandDashboard: React.FC = () => {
 
   const isSuperadmin = currentUser === "Joz (Superadmin)";
   const themeStyle = THEME_CONFIGS[theme] || THEME_CONFIGS.ORIGINAL;
-  const newBtnClass = themeStyle.newBtn ?? "bg-emerald-600 hover:bg-emerald-700 border-emerald-600 text-white";
-  const blockBtnClass = themeStyle.blockBtn ?? "bg-red-600 hover:bg-red-700 border-red-600 text-white";
+  const newBtnClass = themeStyle.newBtn ?? "bg-emerald-600 hover:bg-emerald-700 border-emerald-600 text-black";
+  const blockBtnClass = themeStyle.blockBtn ?? "bg-red-600 hover:bg-red-700 border-red-600 text-black";
 
   // Live-abonnement op Firestore zodra je bent ingelogd
   useEffect(() => {
