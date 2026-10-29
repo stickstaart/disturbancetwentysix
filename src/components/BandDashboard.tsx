@@ -508,10 +508,10 @@ const BandDashboard: React.FC = () => {
                   </label>
                 )}
 
-                {/* Thema: één rij kleurstalen (achtergrond + accentrand), naam van het gekozen thema eronder */}
+                {/* Thema: kleurstalen in rijen van vier (achtergrond + accentrand), naam van het gekozen thema eronder */}
                 <div>
                   <span className="block mb-2 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70">Thema</span>
-                  <div className="flex items-center justify-between gap-1" role="radiogroup" aria-label="Thema">
+                  <div className="grid grid-cols-4 justify-items-start gap-2" role="radiogroup" aria-label="Thema">
                     {(Object.keys(THEME_CONFIGS) as ThemeType[]).map((t) => {
                       const c = THEME_CONFIGS[t];
                       const isActive = theme === t;
