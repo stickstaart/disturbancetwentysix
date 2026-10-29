@@ -86,6 +86,7 @@ const THEME_CONFIGS: Record<ThemeType, { bg: string; cardBg: string; panelBg: st
     border: "border-zinc-800",
     primaryBtn: "bg-red-600 hover:bg-red-700 border-red-600 text-white",
     accentText: "text-red-500",
+    rootClass: "theme-original",
   },
   "Tox Populi": {
     bg: "bg-black",

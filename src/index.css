@@ -42,6 +42,15 @@ html {
     background-image: repeating-linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0 8px, transparent 8px 16px);
 }
 
+/* Thema ORIGINAL: feller groen dan Tailwinds standaard-emerald (die oogt wat pastel) */
+.band-agenda.theme-original {
+    --color-emerald-300: #74f7a0;
+    --color-emerald-400: #3df07a;
+    --color-emerald-500: #1fe063;
+    --color-emerald-600: #12c24c;
+    --color-emerald-700: #0ea43f;
+}
+
 /* Thema Tox Populi: statuskleuren giftig i.p.v. pastel.
    Tailwind v4 leest kleuren uit CSS-variabelen, dus binnen .theme-tox worden
    alle emerald-/amber-/red-klassen gifgroen, fluor-oranje en bloedrood. */
