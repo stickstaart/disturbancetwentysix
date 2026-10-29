@@ -1,0 +1,5 @@
+{
+  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
+  "crons": [{ "path": "/api/stats-snapshot", "schedule": "20 4 * * *" }],
+  "functions": { "api/stats-snapshot.ts": { "maxDuration": 60 } }
+}
