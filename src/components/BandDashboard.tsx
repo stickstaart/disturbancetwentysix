@@ -141,9 +141,9 @@ const THEME_CONFIGS: Record<ThemeType, { bg: string; cardBg: string; panelBg: st
     cardBg: "bg-zinc-900",
     panelBg: "bg-zinc-900",
     text: "text-yellow-100",
-    border: "border-yellow-500/30",
-    primaryBtn: "bg-yellow-500 hover:bg-yellow-400 text-black font-bold border-yellow-400",
-    accentText: "text-yellow-400",
+    border: "border-[#ffea00]/30",
+    primaryBtn: "bg-[#ffea00] hover:bg-[#fff35c] text-black font-bold border-[#ffea00]",
+    accentText: "text-[#ffea00]",
   },
   Nerd: {
     bg: "bg-black",
