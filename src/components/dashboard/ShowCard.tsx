@@ -28,21 +28,21 @@ function dateParts(dateString: string) {
 const STATUS: Record<ShowStatus, { text: string; bar: string; tile: string; active: string; label: string }> = {
   confirmed: {
     text: "text-emerald-400",
-    bar: "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.55)]",
+    bar: "bg-emerald-500 shadow-[0_0_12px_color-mix(in_oklab,var(--color-emerald-500)_55%,transparent)]",
     tile: "bg-emerald-500/10 ring-emerald-500/25",
     active: "bg-emerald-500/15 text-emerald-300 ring-emerald-500/50",
     label: "Bevestigd",
   },
   option: {
     text: "text-amber-400",
-    bar: "bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.5)]",
+    bar: "bg-amber-500 shadow-[0_0_12px_color-mix(in_oklab,var(--color-amber-500)_50%,transparent)]",
     tile: "bg-amber-500/10 ring-amber-500/25",
     active: "bg-amber-500/15 text-amber-300 ring-amber-500/50",
     label: "Optie",
   },
   cancelled: {
     text: "text-red-500",
-    bar: "bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.5)]",
+    bar: "bg-red-500 shadow-[0_0_12px_color-mix(in_oklab,var(--color-red-500)_50%,transparent)]",
     tile: "bg-red-500/10 ring-red-500/25",
     active: "bg-red-500/15 text-red-300 ring-red-500/50",
     label: "Afgelast",
@@ -90,7 +90,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
       : "";
     return (
       <div id={`show-${item.id}`} className={`${CARD} flex items-center gap-3 p-2.5 pl-3.5 ${pastStyle}`}>
-        <span className="absolute left-0 inset-y-0 w-[3px] bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.5)]" />
+        <span className="absolute left-0 inset-y-0 w-[3px] bg-red-500 shadow-[0_0_12px_color-mix(in_oklab,var(--color-red-500)_50%,transparent)]" />
         <DateTile date={item.date} tone="text-red-400" tile="bg-red-500/10 ring-red-500/25" />
         <div className="grow min-w-0">
           <div className="flex items-center gap-1.5 font-display text-[26px] md:text-3xl font-bold uppercase leading-none text-red-400">

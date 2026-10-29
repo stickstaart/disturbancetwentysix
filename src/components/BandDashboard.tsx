@@ -70,12 +70,14 @@ export interface TourIdea {
   updatedBy?: string;
 }
 
-export type ThemeType = "ORIGINAL" | "80ies Miami" | "Horror" | "Superdark" | "Superlight" | "Lemon" | "Nerd";
+export type ThemeType = "ORIGINAL" | "Tox Populi" | "80ies Miami" | "Horror" | "Superdark" | "Superlight" | "Lemon" | "Nerd";
 
 
 // Thema Kleurenschema Definities (Zonder aanpassing van font-size of font-family)
 // panelBg = dekkende kleur voor pop-ups en panelen (cardBg is bij veel thema's half-transparant)
-const THEME_CONFIGS: Record<ThemeType, { bg: string; cardBg: string; panelBg: string; text: string; border: string; primaryBtn: string; accentText: string }> = {
+// rootClass = extra klasse op de hele agenda (Tox Populi kleurt daarmee ook de statuskleuren om, zie index.css)
+// newBtn / blockBtn = eigen kleuren voor "Nieuwe show" en "Blokkeer"; zonder waarde gelden de standaardkleuren
+const THEME_CONFIGS: Record<ThemeType, { bg: string; cardBg: string; panelBg: string; text: string; border: string; primaryBtn: string; accentText: string; rootClass?: string; newBtn?: string; blockBtn?: string }> = {
   ORIGINAL: {
     bg: "bg-black",
     cardBg: "bg-zinc-900",
@@ -84,6 +86,18 @@ const THEME_CONFIGS: Record<ThemeType, { bg: string; cardBg: string; panelBg: st
     border: "border-zinc-800",
     primaryBtn: "bg-red-600 hover:bg-red-700 border-red-600 text-white",
     accentText: "text-red-500",
+  },
+  "Tox Populi": {
+    bg: "bg-black",
+    cardBg: "bg-zinc-950",
+    panelBg: "bg-zinc-950",
+    text: "text-zinc-100",
+    border: "border-[#84ff00]/25",
+    primaryBtn: "bg-[#84ff00] hover:bg-[#a6ff4d] border-[#84ff00] text-black font-bold",
+    accentText: "text-[#84ff00]",
+    rootClass: "theme-tox",
+    newBtn: "bg-[#84ff00] hover:bg-[#a6ff4d] border-[#84ff00] text-black shadow-[0_0_18px_rgba(132,255,0,0.45)]",
+    blockBtn: "bg-[#d4001a] hover:bg-[#ec0020] border-[#d4001a] text-white shadow-[0_0_18px_rgba(212,0,26,0.45)]",
   },
   "80ies Miami": {
     bg: "bg-slate-950",
@@ -202,6 +216,8 @@ const BandDashboard: React.FC = () => {
 
   const isSuperadmin = currentUser === "Joz (Superadmin)";
   const themeStyle = THEME_CONFIGS[theme] || THEME_CONFIGS.ORIGINAL;
+  const newBtnClass = themeStyle.newBtn ?? "bg-emerald-600 hover:bg-emerald-700 border-emerald-600 text-white";
+  const blockBtnClass = themeStyle.blockBtn ?? "bg-red-600 hover:bg-red-700 border-red-600 text-white";
 
   // Live-abonnement op Firestore zodra je bent ingelogd
   useEffect(() => {
@@ -428,7 +444,7 @@ const BandDashboard: React.FC = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className={`min-h-screen ${themeStyle.bg} ${themeStyle.text} flex items-center justify-center p-4 font-mono band-agenda`}>
+      <div className={`min-h-screen ${themeStyle.bg} ${themeStyle.text} flex items-center justify-center p-4 font-mono band-agenda ${themeStyle.rootClass ?? ""}`}>
         <div className={`${themeStyle.cardBg} p-8 rounded-lg border ${themeStyle.border} max-w-sm w-full space-y-4 text-center`}>
           <h2 className={`text-xl font-bold ${themeStyle.accentText} uppercase`}>Band Access</h2>
           {authState.status === "loading" ? (
@@ -450,7 +466,7 @@ const BandDashboard: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen ${themeStyle.bg} ${themeStyle.text} p-3 md:p-8 band-agenda transition-colors duration-200`}>
+    <div className={`min-h-screen ${themeStyle.bg} ${themeStyle.text} p-3 md:p-8 band-agenda ${themeStyle.rootClass ?? ""} transition-colors duration-200`}>
       <div className="max-w-4xl mx-auto space-y-6">
 
         {/* COMPACTE KOP: titel + wie je bent + instellingen */}
@@ -620,14 +636,14 @@ const BandDashboard: React.FC = () => {
               <button
                 type="button"
                 onClick={toggleShowForm}
-                className="flex items-center justify-center gap-2 py-3.5 font-bold uppercase text-base tracking-wider rounded-xl cursor-pointer shadow border bg-emerald-600 hover:bg-emerald-700 border-emerald-600 text-white"
+                className={`flex items-center justify-center gap-2 py-3.5 font-bold uppercase text-base tracking-wider rounded-xl cursor-pointer shadow border ${newBtnClass}`}
               >
                 <FiPlus className="text-lg" /> Nieuwe show
               </button>
               <button
                 type="button"
                 onClick={toggleBlockModal}
-                className="flex items-center justify-center gap-2 px-4 py-3.5 font-semibold text-base rounded-xl cursor-pointer border bg-red-600 hover:bg-red-700 border-red-600 text-white"
+                className={`flex items-center justify-center gap-2 px-4 py-3.5 font-semibold text-base rounded-xl cursor-pointer border ${blockBtnClass}`}
               >
                 <FiSlash /> Blokkeer
               </button>
