@@ -1,36 +1,34 @@
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
+
 import "./index.css";
-import Nav from "./components/Nav";
-import Hero from "./components/Hero";
-import Video from "./components/Video";
-import Tour from "./components/Tour";
-import Discography from "./components/Discography";
-import Bio from "./components/Bio";
-import Contact from "./components/Contact";
-import Footer from "./components/Footer";
-import History from "./components/History";
-import { Analytics } from "@vercel/analytics/react"; // <--- Regel 1: Import
-import { SpeedInsights } from "@vercel/speed-insights/react"
+
+// Documentatie: Importeer de hoofdpagina uit de components map
+import Home from "./components/Home";
+import GoRedirect from "./components/GoRedirect";
 import { useScrollGlow } from "./lib/useScrollGlow";
 
-function App() {
+const App: React.FC = () => {
   // Mobiel: groene lijnen lichten op tijdens scrollen (desktop gebruikt hover)
   useScrollGlow();
 
   return (
-    <div className="bg-black text-white">
-      <Nav />
-      <Hero />
-      <Video />
-      <Tour />
-      <Discography />
-      <Bio />
-      <Contact />
-      <Footer />
-      <History />
-      <Analytics /> {/* <--- Regel 2: De tracker */}
+    <Router>
+      <Routes>
+        {/* De openbare homepage op het hoofdadres */}
+        <Route path="/" element={<Home />} />
+
+        {/* Uitgaande links: tellen in Vercel Analytics, dan doorsturen */}
+        <Route path="/go/*" element={<GoRedirect />} />
+      </Routes>
+
+      {/* Vercel Web Analytics + Speed Insights (telt ook routewissels) */}
+      <Analytics />
       <SpeedInsights />
-    </div>
+    </Router>
   );
-}
+};
 
 export default App;

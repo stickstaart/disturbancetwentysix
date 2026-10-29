@@ -1,5 +1,6 @@
 import React from "react";
 import { FaFacebookF, FaInstagram, FaYoutube, FaSpotify, FaBandcamp, FaLink } from 'react-icons/fa';
+import { goLink } from "../lib/outbound";
 
 const Footer: React.FC = () => {
   return (
@@ -18,28 +19,28 @@ const Footer: React.FC = () => {
 
         {/* SOCIAL LINKS GRID */}
         <div className="flex justify-center flex-wrap gap-8 mb-10">
-          <a href="https://www.facebook.com/disturbancepunknl" target="_blank" rel="noopener noreferrer"
+          <a href={goLink("facebook", "https://www.facebook.com/disturbancepunknl", "footer")} target="_blank" rel="noopener noreferrer"
              className="hover:text-white hover:scale-125 transition-all duration-200 text-xl">
             <FaFacebookF title="Facebook" />
           </a>
-          <a href="https://www.instagram.com/disturbance_official" target="_blank" rel="noopener noreferrer"
+          <a href={goLink("instagram", "https://www.instagram.com/disturbance_official", "footer")} target="_blank" rel="noopener noreferrer"
              className="hover:text-white hover:scale-125 transition-all duration-200 text-xl">
             <FaInstagram title="Instagram" />
           </a>
-          <a href="https://www.youtube.com/user/disturbancepunk1?sub_confirmation=1" target="_blank" rel="noopener noreferrer"
+          <a href={goLink("youtube", "https://www.youtube.com/user/disturbancepunk1?sub_confirmation=1", "footer")} target="_blank" rel="noopener noreferrer"
              className="hover:text-white hover:scale-125 transition-all duration-200 text-xl">
             <FaYoutube title="YouTube" />
           </a>
-          <a href="https://open.spotify.com/artist/2YomKyw73NZ5n19DYzp0j8" target="_blank" rel="noopener noreferrer"
+          <a href={goLink("spotify", "https://open.spotify.com/artist/2YomKyw73NZ5n19DYzp0j8", "footer")} target="_blank" rel="noopener noreferrer"
              className="hover:text-[#1DB954] hover:scale-125 transition-all duration-200 text-xl">
             <FaSpotify title="Spotify" />
           </a>
-          <a href="https://disturbance.bandcamp.com" target="_blank" rel="noopener noreferrer"
+          <a href={goLink("bandcamp", "https://disturbance.bandcamp.com", "footer")} target="_blank" rel="noopener noreferrer"
              className="hover:text-[#629aa9] hover:scale-125 transition-all duration-200 text-xl">
             <FaBandcamp title="Bandcamp" />
           </a>
           {/* LINKTREE LINK */}
-          <a href="https://linktr.ee/disturbance_official" target="_blank" rel="noopener noreferrer"
+          <a href={goLink("linktree", "https://linktr.ee/disturbance_official", "footer")} target="_blank" rel="noopener noreferrer"
              className="hover:text-white hover:scale-125 transition-all duration-200 text-xl">
             <FaLink title="Linktree" />
           </a>
