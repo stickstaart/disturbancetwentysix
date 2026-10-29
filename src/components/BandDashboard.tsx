@@ -231,7 +231,11 @@ const BandDashboard: React.FC = () => {
   };
 
   const sortedShows = [...shows].sort((a, b) => a.date.localeCompare(b.date));
-  const filteredShows = sortedShows.filter((s) => s.date && s.date.startsWith(selectedYear));
+  // Lopend jaar: ook alle toekomstige data (volgende jaren) tonen, gewoon als maandkoppen
+  const currentYear = new Date().getFullYear().toString();
+  const filteredShows = sortedShows.filter((s) =>
+    s.date && (s.date.startsWith(selectedYear) || (selectedYear === currentYear && s.date.substring(0, 4) > currentYear))
+  );
 
   // Groeperen per maand (zoals de kopjes in het Google Doc)
   const today = todayString();
