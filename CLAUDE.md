@@ -25,6 +25,8 @@ Overdracht voor Claude-sessies. Lees dit eerst. Bijgewerkt: 29 oktober 2026.
 - `src/components/dashboard/*` – ShowCard/ShowForm/IdeaCard/IdeaForm, CustomDatePicker, CountryFlag (+ UnavailableFlag), StatsPanel.
 - `src/lib/agendaStore.ts` – Firestore-collecties `shows`, `tourIdeas`, `publicShows` (audit-velden, `isDummy`); `testMode.ts`, `dummyData.ts`, `useSiteShows.ts`.
 - `src/lib/outbound.ts` + `GoRedirect.tsx` – uitgaande links via `/go/<dienst>/<item>?to=<url>` (host-allowlist), zodat Vercel Analytics doorkliks per dienst/land telt.
+- Google-login online via eigen domein: `firebase.ts` zet `authDomain` op de huidige host, `vercel.json` stuurt `/__/auth` en `/__/firebase` door naar disturbance-wpa.firebaseapp.com (nodig voor Safari/iPhone). Elk domein moet als redirect-URI `https://<domein>/__/auth/handler` in Google Cloud → Credentials staan.
+- Thema's in `THEME_CONFIGS` (BandDashboard). ORIGINAL en Tox Populi kleuren Tailwinds emerald/amber/red-variabelen om via `.theme-original` / `.theme-tox` in index.css.
 - `firestore.rules` – regels voor `disturbance-wpa`, met dezelfde e-maillijst als `bandAuth.ts`. Wordt niet automatisch gedeployd: plakken in Firebase console → Firestore → Rules.
 - `api/stats.ts` – `?range=30d` live uit Vercel Web Analytics API; `?range=12m|all` opgeteld uit Firestore `statsDaily`.
 - `api/stats-snapshot.ts` – Vercel Cron (`vercel.json`, dagelijks 04:20 UTC): bewaart dagcijfers in `statsDaily/{YYYY-MM-DD}`, vult tot 29 dagen terug aan. Alleen op Production.
