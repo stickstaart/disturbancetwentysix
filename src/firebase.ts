@@ -4,9 +4,17 @@ import { getAuth } from "firebase/auth";
 
 // Firebase-configuratie uit Vite-omgevingsvariabelen (.env.local lokaal, Environment Variables op Vercel).
 // Let op: in .env-bestanden KEY=waarde, zonder aanhalingstekens of komma's.
+// Online loopt de Google-login via ons eigen domein: vercel.json stuurt /__/auth door naar Firebase.
+// Anders blokkeert Safari (iPhone) de login, omdat de pagina en firebaseapp.com hun opslag niet mogen delen.
+// Lokaal (npm run dev) is er geen doorstuurregel, dus daar het standaard firebaseapp-domein.
+function authDomain() {
+  const host = typeof window !== "undefined" ? window.location.hostname : "";
+  return host && host !== "localhost" && host !== "127.0.0.1" ? window.location.host : import.meta.env.VITE_FIREBASE_AUTH_DOMAIN;
+}
+
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  authDomain: authDomain(),
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
