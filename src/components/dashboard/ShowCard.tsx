@@ -171,7 +171,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
   if (item.breakEvenInfo) details.push(["Afspraken", item.breakEvenInfo]);
 
   return (
-    <div id={`show-${item.id}`} className={`${CARD} ${unpaid ? "!ring-red-500/30 !bg-none bg-red-950/45" : isOpen ? "ring-white/[0.12]" : "hover:ring-white/[0.1]"} ${pastStyle}`}>
+    <div id={`show-${item.id}`} className={`${CARD} ${unpaid ? "!ring-red-500/45 !bg-none bg-red-800/55" : isOpen ? "ring-white/[0.12]" : "hover:ring-white/[0.1]"} ${pastStyle}`}>
       <span className={`absolute left-0 inset-y-0 w-[3px] ${st.bar}`} />
 
       {/* COMPACTE REGEL — tik om open te klappen */}
