@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FiChevronDown, FiEdit2, FiGlobe, FiMail, FiPhone, FiTrash2 } from "react-icons/fi";
+import { FiAlertTriangle, FiChevronDown, FiEdit2, FiGlobe, FiMail, FiPhone, FiTrash2 } from "react-icons/fi";
 import type { DateItem, ShowStatus } from "../BandDashboard";
 import { CountryFlag, UnavailableFlag } from "./CountryFlag";
 import { parseLocalDate } from "./dateUtils";
@@ -74,9 +74,11 @@ interface ShowCardProps {
   onStatusChange: (id: string, newStatus: ShowStatus) => void;
   onTogglePublic: (id: string) => void;
   onEditBlock: (block: DateItem) => void;
+  /** Bandleden die op deze datum geblokkeerd hebben */
+  absent?: string[];
 }
 
-export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit, onDelete, onStatusChange, onTogglePublic, onEditBlock }) => {
+export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit, onDelete, onStatusChange, onTogglePublic, onEditBlock, absent = [] }) => {
   const [isOpen, setIsOpen] = useState(false);
   const pastStyle = isPast ? "opacity-55 saturate-50 hover:opacity-100 hover:saturate-100" : "";
 
@@ -182,6 +184,12 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
             <span className="text-zinc-400">@</span> {item.venue || "TBA"}
             {item.otherbands && <span className="text-zinc-400"> · w/ {item.otherbands}</span>}
           </div>
+          {absent.length > 0 && !isCancelled && (
+            <div className="mt-1.5 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-sm font-semibold bg-red-500/10 text-red-300 ring-1 ring-red-500/30">
+              <FiAlertTriangle className="shrink-0" />
+              {absent.join(", ")} afwezig
+            </div>
+          )}
         </div>
 
         <div className="shrink-0 flex flex-col items-end gap-1.5">

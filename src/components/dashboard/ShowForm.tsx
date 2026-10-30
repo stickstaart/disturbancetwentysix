@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FiCheck, FiGlobe } from "react-icons/fi";
+import { FiAlertTriangle, FiCheck, FiGlobe } from "react-icons/fi";
 import type { DateItem, ShowStatus } from "../BandDashboard";
 import { BAND_MEMBERS, displayName } from "./constants";
 import { CountryButton, CountryPicker, Field, FormSheet, MoneyInput, Section } from "./formKit";
@@ -31,9 +31,11 @@ interface ShowFormSheetProps {
   saveButtonClass: string;
   onSave: (draft: ShowDraft) => void;
   onClose: () => void;
+  /** Wie heeft deze datum geblokkeerd */
+  absentOn?: (date: string) => string[];
 }
 
-export const ShowFormSheet: React.FC<ShowFormSheetProps> = ({ initial, defaultOwner, canChangeOwner, saveButtonClass, onSave, onClose }) => {
+export const ShowFormSheet: React.FC<ShowFormSheetProps> = ({ initial, defaultOwner, canChangeOwner, saveButtonClass, onSave, onClose, absentOn }) => {
   const [d, setD] = useState<ShowDraft>(() => ({
     date: initial?.date || todayString(),
     country: initial?.country || "NL",
@@ -93,6 +95,7 @@ export const ShowFormSheet: React.FC<ShowFormSheetProps> = ({ initial, defaultOw
   };
 
   const canSave = !!d.date && !!d.city.trim();
+  const absent = absentOn ? absentOn(d.date) : [];
   const isConfirmed = d.status === "confirmed";
 
   const handleSubmit = () => {
@@ -126,6 +129,15 @@ export const ShowFormSheet: React.FC<ShowFormSheetProps> = ({ initial, defaultOw
             <Field label="Datum">
               <CustomDatePicker label="Datum van de show" value={d.date} onChange={(v) => set("date", v)} />
             </Field>
+            {absent.length > 0 && (
+              <div className="flex items-start gap-2 px-3 py-2 rounded-lg text-sm bg-red-500/10 text-red-200 ring-1 ring-red-500/30">
+                <FiAlertTriangle className="shrink-0 mt-0.5 text-red-300" />
+                <span>
+                  <span className="font-semibold">{absent.join(", ")}</span> {absent.length === 1 ? "heeft" : "hebben"} deze datum geblokkeerd
+                  {" "}({absent.length}/{MEMBER_NAMES.length} afwezig).
+                </span>
+              </div>
+            )}
 
             <div>
               <span className={LABEL}>Stad</span>

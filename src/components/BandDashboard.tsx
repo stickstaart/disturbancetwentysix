@@ -6,6 +6,7 @@ import { IdeaCard } from "./dashboard/IdeaCard";
 import { StatsPanel } from "./dashboard/StatsPanel";
 import { ShowCard } from "./dashboard/ShowCard";
 import { BlockGroup } from "./dashboard/BlockGroup";
+import { absentOn } from "./dashboard/blocks";
 import * as store from "../lib/agendaStore";
 import { FiChevronDown, FiLogOut, FiPlus, FiSettings, FiSlash } from "react-icons/fi";
 import { useSnapZoom } from "../lib/useSnapZoom";
@@ -704,6 +705,7 @@ const BandDashboard: React.FC = () => {
                 saveButtonClass={themeStyle.primaryBtn}
                 onSave={handleSaveShow}
                 onClose={resetShowForm}
+                absentOn={(date) => absentOn(date, shows)}
               />
             )}
 
@@ -787,6 +789,8 @@ const BandDashboard: React.FC = () => {
                   const isPastMonth = group.key < today.substring(0, 7);
                   const isCollapsed = isPastMonth && !openPastMonths.has(group.key);
                   const showCount = group.items.filter((i) => !i.isBlocked).length;
+                  const blockedDays = new Set(group.items.filter((i) => i.isBlocked).map((i) => i.date)).size;
+                  const countLabel = `${showCount} ${showCount === 1 ? "show" : "shows"}${blockedDays ? ` · ${blockedDays} geblokt` : ""}`;
                   // ORIGINAL: maandkoppen wit; andere thema's in hun accentkleur
                   const monthColor = theme === "ORIGINAL" ? "text-white" : themeStyle.accentText;
                   return (
@@ -804,14 +808,14 @@ const BandDashboard: React.FC = () => {
                             {group.label}
                           </span>
                           <span className="flex items-center gap-2 font-mono text-[13px] uppercase tracking-[0.06em] opacity-70 group-hover:opacity-90">
-                            {showCount} {showCount === 1 ? "show" : "shows"}
+                            {countLabel}
                             <span className={`inline-block transition-transform duration-200 ${isCollapsed ? "" : "rotate-180"}`}>▾</span>
                           </span>
                         </button>
                       ) : (
                         <div className="pt-4 pb-2 flex items-baseline justify-between">
                           <span className={`font-display text-[28px] font-bold uppercase tracking-wide ${monthColor}`}>{group.label}</span>
-                          <span className="font-mono text-[13px] uppercase tracking-[0.06em] opacity-50">{showCount} {showCount === 1 ? "show" : "shows"}</span>
+                          <span className="font-mono text-[13px] uppercase tracking-[0.06em] opacity-50">{countLabel}</span>
                         </div>
                       )}
                     </h3>
@@ -837,6 +841,7 @@ const BandDashboard: React.FC = () => {
                             onStatusChange={handleStatusChange}
                             onTogglePublic={handleTogglePublic}
                             onEditBlock={handleEditBlock}
+                            absent={absentOn(row.item.date, shows)}
                           />
                         ) : (
                           <BlockGroup
