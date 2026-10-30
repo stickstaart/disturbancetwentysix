@@ -201,7 +201,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
 
         </div>
 
-        <div className="shrink-0 flex flex-col items-end gap-1.5">
+        <div className="shrink-0 self-stretch flex flex-col items-end justify-between gap-1.5">
           <span className="flex items-center gap-1.5">
             {/* Betaling: alleen bij afgelopen, bevestigde shows met gage; aanvinken door de eigenaar */}
             {showPayment && (
