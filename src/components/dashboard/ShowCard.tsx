@@ -136,7 +136,8 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
   // ---------- Show ----------
   const st = STATUS[item.status] ?? STATUS.option;
   const isCancelled = item.status === "cancelled";
-  const isBlockedOrCancelled = !!item.isBlocked || isCancelled;
+  const showPayment = isPast && item.status === "confirmed" && (parseFloat(item.guaranteedFee || "0") || 0) > 0 && !!onTogglePaid;
+  const canEditPaid = canEdit && !!onTogglePaid;
   const isOnWebsite = !!item.isPublic && item.status === "confirmed";
 
   const fee = parseFloat(item.guaranteedFee || "0") || 0;
@@ -170,7 +171,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
   if (item.breakEvenInfo) details.push(["Afspraken", item.breakEvenInfo]);
 
   return (
-    <div id={`show-${item.id}`} className={`${CARD} ${unpaid ? "!ring-red-500/60 ring-2 bg-red-950/30" : isOpen ? "ring-white/[0.12]" : "hover:ring-white/[0.1]"} ${pastStyle}`}>
+    <div id={`show-${item.id}`} className={`${CARD} ${unpaid ? "!ring-red-500/30 !bg-none bg-red-950/45" : isOpen ? "ring-white/[0.12]" : "hover:ring-white/[0.1]"} ${pastStyle}`}>
       <span className={`absolute left-0 inset-y-0 w-[3px] ${st.bar}`} />
 
       {/* COMPACTE REGEL — tik om open te klappen */}
@@ -201,20 +202,39 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
         </div>
 
         <div className="shrink-0 flex flex-col items-end gap-1.5">
-          {unpaid && (
-            <span className="font-mono text-[12px] font-bold uppercase tracking-[0.06em] px-2 py-0.5 rounded-full text-white bg-red-500/30 ring-1 ring-red-500/60">
-              Niet betaald
-            </span>
-          )}
-          {hasFinancials && !isCancelled && (
-            <span
-              className={`font-mono tabular text-sm font-bold px-2 py-0.5 rounded-full ring-1 ${
-                net >= 0 ? "bg-emerald-500/10 text-emerald-300 ring-emerald-500/30" : "bg-red-500/10 text-red-300 ring-red-500/30"
-              }`}
-            >
-              {net >= 0 ? `+€${net}` : `−€${Math.abs(net)}`}
-            </span>
-          )}
+          <span className="flex items-center gap-1.5">
+            {/* Betaling: alleen bij afgelopen, bevestigde shows met gage; aanvinken door de eigenaar */}
+            {showPayment && (
+              <span
+                role="checkbox"
+                aria-checked={paid}
+                aria-disabled={!canEditPaid}
+                tabIndex={canEditPaid ? 0 : -1}
+                title={canEditPaid ? (paid ? "Markeer als niet betaald" : "Markeer als betaald") : undefined}
+                onClick={(e) => { e.stopPropagation(); if (canEditPaid) onTogglePaid?.(item.id); }}
+                onKeyDown={(e) => {
+                  if (canEditPaid && (e.key === " " || e.key === "Enter")) { e.preventDefault(); e.stopPropagation(); onTogglePaid?.(item.id); }
+                }}
+                className={`inline-flex items-center gap-1.5 font-mono text-[12px] font-bold uppercase tracking-[0.06em] px-2 py-0.5 rounded-full ring-1 ${
+                  paid ? "text-emerald-300 bg-emerald-500/10 ring-emerald-500/30" : "text-red-200 bg-red-500/15 ring-red-500/40"
+                } ${canEditPaid ? "cursor-pointer hover:brightness-125" : ""}`}
+              >
+                <span className={`grid place-items-center w-3.5 h-3.5 rounded-[3px] ring-1 ${paid ? "bg-emerald-500 ring-emerald-400 text-black" : "ring-red-300/70"}`}>
+                  {paid && <FiCheck className="text-[10px]" strokeWidth={4} />}
+                </span>
+                {paid ? "Betaald" : "Niet betaald"}
+              </span>
+            )}
+            {hasFinancials && !isCancelled && (
+              <span
+                className={`font-mono tabular text-sm font-bold px-2 py-0.5 rounded-full ring-1 ${
+                  net >= 0 ? "bg-emerald-500/10 text-emerald-300 ring-emerald-500/30" : "bg-red-500/10 text-red-300 ring-red-500/30"
+                }`}
+              >
+                {net >= 0 ? `+€${net}` : `−€${Math.abs(net)}`}
+              </span>
+            )}
+          </span>
           <span className="flex items-center gap-1.5 text-zinc-400">
             {isOnWebsite && <FiGlobe className="text-sky-400" title="Op de website" />}
             <FiChevronDown className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
@@ -234,30 +254,6 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
                 </React.Fragment>
               ))}
             </dl>
-          )}
-
-          {/* Betaling: alleen bij afgelopen, bevestigde shows met gage */}
-          {isPast && !isBlockedOrCancelled && fee > 0 && item.status === "confirmed" && (
-            canEdit && onTogglePaid ? (
-              <button
-                type="button"
-                role="checkbox"
-                aria-checked={paid}
-                onClick={() => onTogglePaid(item.id)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold uppercase tracking-wider ring-1 cursor-pointer transition-colors ${
-                  paid ? "bg-emerald-500/10 text-emerald-300 ring-emerald-500/40" : "bg-red-500/15 text-red-200 ring-red-500/50"
-                }`}
-              >
-                <span className={`grid place-items-center w-5 h-5 rounded ring-1 ${paid ? "bg-emerald-500 ring-emerald-400 text-black" : "ring-red-400/70"}`}>
-                  {paid && <FiCheck className="text-sm" />}
-                </span>
-                {paid ? "Betaald" : `Betaling · nog €${fee} tegoed`}
-              </button>
-            ) : (
-              <p className={`text-sm font-semibold ${paid ? "text-emerald-300" : "text-red-300"}`}>
-                {paid ? "✓ Betaald" : `Nog niet betaald · €${fee} tegoed`}
-              </p>
-            )
           )}
 
           {canEdit ? (
