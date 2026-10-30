@@ -176,20 +176,21 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
         <DateTile date={item.date} tone={st.text} tile={st.tile} />
 
         <div className="grow min-w-0">
-          <div className={`flex items-center gap-1.5 font-display text-[26px] md:text-3xl font-bold uppercase leading-none break-words ${st.text} ${isCancelled ? "line-through decoration-2" : ""}`}>
+          <div className={`flex flex-wrap items-center gap-1.5 font-display text-[26px] md:text-3xl font-bold uppercase leading-none break-words ${st.text} ${isCancelled ? "line-through decoration-2" : ""}`}>
             <CountryFlag code={item.country} />
             <span className="min-w-0">{item.city}</span>
+            {absent.length > 0 && !isCancelled && (
+              <span className="ml-1.5 shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md font-sans text-sm font-semibold normal-case leading-snug tracking-normal text-white bg-red-500/20 ring-1 ring-red-500/40">
+                <FiAlertTriangle className="shrink-0 text-red-300" />
+                {absent.join(", ")} afwezig
+              </span>
+            )}
           </div>
           <div className={`mt-1 text-base text-zinc-300 leading-snug break-words ${isCancelled ? "line-through opacity-60" : ""}`}>
             <span className="text-zinc-400">@</span> {item.venue || "TBA"}
             {item.otherbands && <span className="text-zinc-400"> · w/ {item.otherbands}</span>}
           </div>
-          {absent.length > 0 && !isCancelled && (
-            <div className="mt-1.5 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-sm font-semibold bg-red-500/10 text-red-300 ring-1 ring-red-500/30">
-              <FiAlertTriangle className="shrink-0" />
-              {absent.join(", ")} afwezig
-            </div>
-          )}
+
         </div>
 
         <div className="shrink-0 flex flex-col items-end gap-1.5">
