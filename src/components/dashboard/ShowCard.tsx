@@ -180,7 +180,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
             <CountryFlag code={item.country} />
             <span className="min-w-0">{item.city}</span>
             {absent.length > 0 && !isCancelled && (
-              <span className="ml-1.5 shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md font-sans text-sm font-semibold normal-case leading-snug tracking-normal text-white bg-red-500/20 ring-1 ring-red-500/40">
+              <span className="ml-1.5 shrink-0 inline-flex items-center gap-[5px] px-[7px] py-px rounded-md font-sans text-[12.5px] font-normal normal-case leading-snug tracking-normal text-white bg-red-500/20 ring-1 ring-red-500/40">
                 <FiAlertTriangle className="shrink-0 text-red-300" />
                 {absent.join(", ")} afwezig
               </span>
