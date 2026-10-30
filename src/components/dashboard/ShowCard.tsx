@@ -81,44 +81,44 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
   const pastStyle = isPast ? "opacity-55 saturate-50 hover:opacity-100 hover:saturate-100" : "";
 
   // ---------- Geblokkeerde datum / periode ----------
-  // Zelfde opbouw als een show (datumtegel + grote titel) zodat het ritme van de lijst rustig blijft,
-  // en dezelfde kleurkracht als de optredens (feedback Rob), in rood.
+  // Bewust compact (halve hoogte, één regel) en grijs i.p.v. rood, zodat afwezigheden
+  // de lijst niet overnemen; de shows blijven de blikvangers.
   if (item.isBlocked) {
+    const fmt = (d: Date) =>
+      new Intl.DateTimeFormat("nl-NL", { weekday: "short", day: "numeric", month: "short" }).format(d).replace(/\./g, "");
+    const start = parseLocalDate(item.date);
     const end = item.endDate ? parseLocalDate(item.endDate) : null;
-    const endLabel = end
-      ? new Intl.DateTimeFormat("nl-NL", { weekday: "short", day: "numeric", month: "short" }).format(end).replace(/\./g, "")
-      : "";
+    const details = [item.reason, end && `t/m ${fmt(end)}`].filter(Boolean).join(" · ");
     return (
-      <div id={`show-${item.id}`} className={`${CARD} flex items-center gap-3 p-2.5 pl-3.5 ${pastStyle}`}>
-        <span className="absolute left-0 inset-y-0 w-[3px] bg-red-500 shadow-[0_0_12px_color-mix(in_oklab,var(--color-red-500)_50%,transparent)]" />
-        <DateTile date={item.date} tone="text-red-400" tile="bg-red-500/10 ring-red-500/25" />
-        <div className="grow min-w-0">
-          <div className="flex items-center gap-1.5 font-display text-[26px] md:text-3xl font-bold uppercase leading-none text-red-400">
-            <UnavailableFlag />
-            <span className="min-w-0">Afwezig</span>
-          </div>
-          <div className="mt-1 text-base text-zinc-300 leading-snug break-words">
-            <span>{item.blockedBy}</span>
-            {item.reason && <> · {item.reason}</>}
-            {end && <> · t/m {endLabel}</>}
-          </div>
+      <div
+        id={`show-${item.id}`}
+        title={[item.blockedBy, details].filter(Boolean).join(" · ")}
+        className={`flex items-center gap-2.5 rounded-lg px-3 py-1 bg-zinc-800/50 ring-1 ring-white/[0.05] stripes-blocked ${pastStyle}`}
+      >
+        <span className="shrink-0 w-[5.5rem] font-mono text-[13px] font-bold uppercase tracking-[0.04em] tabular text-red-300/80">
+          {start ? fmt(start) : item.date}
+        </span>
+        <UnavailableFlag />
+        <div className="grow min-w-0 truncate text-[15px] leading-snug">
+          <span className="font-semibold text-zinc-200">{item.blockedBy}</span>
+          {details && <span className="text-zinc-400"> · {details}</span>}
         </div>
-        <div className="shrink-0 flex items-center gap-1">
+        <div className="shrink-0 flex items-center">
           <button
             onClick={() => onEditBlock(item)}
-            className="p-2.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 cursor-pointer"
+            className="p-1.5 rounded-md text-zinc-500 hover:text-white hover:bg-white/10 cursor-pointer"
             title="Bewerk blokkade"
             aria-label="Bewerk blokkade"
           >
-            <FiEdit2 />
+            <FiEdit2 className="text-sm" />
           </button>
           <button
             onClick={() => onDelete(item.id)}
-            className="p-2.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10 cursor-pointer"
+            className="p-1.5 rounded-md text-zinc-500 hover:text-red-400 hover:bg-red-500/10 cursor-pointer"
             title="Verwijder blokkade"
             aria-label="Verwijder blokkade"
           >
-            <FiTrash2 />
+            <FiTrash2 className="text-sm" />
           </button>
         </div>
       </div>
