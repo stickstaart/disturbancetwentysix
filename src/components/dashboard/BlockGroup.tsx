@@ -16,6 +16,8 @@ interface BlockGroupProps {
   /** Langere periodes die eerder begonnen en deze datum ook dekken */
   covering?: DateItem[];
   isPast?: boolean;
+  /** Ingelogde (of als-ingelogde) bandlid: alleen eigen blokkades zijn te bewerken */
+  me: string;
   onEditBlock: (block: DateItem) => void;
   onDelete: (id: string) => void;
 }
@@ -24,7 +26,8 @@ interface BlockGroupProps {
  * Eén compacte regel per datum, ook als meerdere bandleden blokkeren.
  * Elke blokkade blijft een eigen record per persoon; alleen de weergave wordt samengevoegd.
  */
-export const BlockGroup: React.FC<BlockGroupProps> = ({ date, blocks, covering = [], isPast = false, onEditBlock, onDelete }) => {
+export const BlockGroup: React.FC<BlockGroupProps> = ({ date, blocks, covering = [], isPast = false, me, onEditBlock, onDelete }) => {
+  const isMine = (b: DateItem) => namesOf(b).includes(displayName(me));
   const [isOpen, setIsOpen] = useState(false);
   const pastStyle = isPast ? "opacity-55 saturate-50 hover:opacity-100 hover:saturate-100" : "";
   const start = parseLocalDate(date);
@@ -50,9 +53,8 @@ export const BlockGroup: React.FC<BlockGroupProps> = ({ date, blocks, covering =
       return groups;
     }, []);
 
-  const actions = (b: DateItem, label?: string) => (
+  const actions = (b: DateItem) => !isMine(b) ? null : (
     <div className="shrink-0 flex items-center">
-      {label && <span className="pr-1 font-mono text-[12px] uppercase tracking-[0.04em] text-zinc-500">{label}</span>}
       <button
         onClick={(e) => { e.stopPropagation(); onEditBlock(b); }}
         className="p-1.5 rounded-md text-zinc-500 hover:text-white hover:bg-white/10 cursor-pointer"
@@ -86,7 +88,7 @@ export const BlockGroup: React.FC<BlockGroupProps> = ({ date, blocks, covering =
       <div
         id={`show-${b.id}`}
         title={[names.join(", "), details].filter(Boolean).join(" · ")}
-        className={`flex items-center gap-2.5 rounded-lg px-3 py-1 bg-zinc-800/50 ring-1 ring-white/[0.05] stripes-blocked ${pastStyle}`}
+        className={`flex items-center gap-2.5 min-h-[34px] rounded-lg px-3 py-1 bg-zinc-800/50 ring-1 ring-white/[0.05] stripes-blocked ${pastStyle}`}
       >
         {dateLabel}
         <UnavailableFlag />
@@ -127,20 +129,16 @@ export const BlockGroup: React.FC<BlockGroupProps> = ({ date, blocks, covering =
       {isOpen && (
         <ul className="px-3 pb-1.5 space-y-0.5">
           {groupByDetails(all).map(({ details, items }) => (
-            <li key={items[0].id} className="flex items-start gap-2.5 text-[15px] leading-snug">
+            <li key={items[0].id} className="flex items-center gap-2.5 text-[15px] leading-snug">
               {/* Zelfde kolommen als de kopregel: datum + vlag, zodat de namen recht onder elkaar staan */}
               <span className="shrink-0 w-[5.5rem]" aria-hidden />
-              <span className="invisible py-[3px]" aria-hidden><UnavailableFlag /></span>
+              <span className="invisible" aria-hidden><UnavailableFlag /></span>
               <div className="grow min-w-0 truncate py-[3px]" title={details}>
                 <span className="font-semibold text-zinc-200">{items.flatMap(namesOf).join(", ")}</span>
                 {details && <span className="text-zinc-400"> · {details}</span>}
               </div>
-              {/* Gedeelde reden: één regel tekst, knoppen per persoon onder elkaar */}
-              <div className="shrink-0 flex flex-col items-end">
-                {items.map((b) => (
-                  <React.Fragment key={b.id}>{actions(b, items.length > 1 ? namesOf(b).join(", ") : undefined)}</React.Fragment>
-                ))}
-              </div>
+              {/* Alleen knoppen voor je eigen blokkade */}
+              {items.filter(isMine).map((b) => <React.Fragment key={b.id}>{actions(b)}</React.Fragment>)}
             </li>
           ))}
         </ul>

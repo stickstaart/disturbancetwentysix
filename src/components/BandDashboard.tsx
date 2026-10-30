@@ -849,6 +849,7 @@ const BandDashboard: React.FC = () => {
                             blocks={row.blocks}
                             covering={coveringBlocks(row.date, row.blocks)}
                             isPast={row.blocks.every((b) => (b.endDate || b.date) < today)}
+                            me={currentUser}
                             onEditBlock={handleEditBlock}
                             onDelete={handleDelete}
                           />
