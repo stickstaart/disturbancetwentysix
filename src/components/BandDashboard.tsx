@@ -290,6 +290,9 @@ const BandDashboard: React.FC = () => {
   // Groeperen per maand (zoals de kopjes in het Google Doc)
   const today = todayString();
   const nextShowId = filteredShows.find((s) => (s.endDate || s.date) >= today)?.id;
+  const unpaidShows = sortedShows.filter((s) => isUnpaid(s, today));
+  const unpaidTotal = unpaidShows.reduce((sum, s) => sum + (parseFloat(s.guaranteedFee || "0") || 0), 0);
+
   // Eén waarheid: alleen de eigenaar wijzigt. Zonder eigenaar: alleen de superadmin.
   // De superadmin kan als ieder bandlid inloggen en zo alles aanpassen.
   const canEditOwned = (owner?: string) =>
@@ -797,6 +800,36 @@ const BandDashboard: React.FC = () => {
 
             <div className="space-y-3">
 
+              {/* BETALINGEN: afgelopen shows waarvan de gage nog niet binnen is (alle jaren) */}
+              {unpaidShows.length > 0 && (
+                <section className="space-y-2">
+                  <h3 className={`sticky top-0 z-10 ${themeStyle.bg} border-b ${themeStyle.border}`}>
+                    <div className="pt-4 pb-2 flex items-baseline justify-between">
+                      <span className="font-display text-[28px] font-bold uppercase tracking-wide text-red-400">Betalingen</span>
+                      <span className="font-mono text-[13px] uppercase tracking-[0.06em] text-red-300/80">
+                        {unpaidShows.length} open · €{unpaidTotal} tegoed
+                      </span>
+                    </div>
+                  </h3>
+                  {unpaidShows.map((item) => (
+                    <ShowCard
+                      key={`pay-${item.id}`}
+                      item={item}
+                      isPast
+                      onEdit={handleEditClick}
+                      onDelete={handleDelete}
+                      onStatusChange={handleStatusChange}
+                      onTogglePublic={handleTogglePublic}
+                      onEditBlock={handleEditBlock}
+                      canEdit={canEditOwned(item.owner)}
+                      unpaid
+                      paid={false}
+                      onTogglePaid={handleTogglePaid}
+                    />
+                  ))}
+                </section>
+              )}
+
               {filteredShows.length === 0 ? (
                 <p className="text-sm opacity-70 italic">Geen optredens of blokkades gevonden voor {selectedYear}.</p>
               ) : (
@@ -834,8 +867,7 @@ const BandDashboard: React.FC = () => {
                         </div>
                       )}
                     </h3>
-                    {/* Ingeklapte maand: openstaande betalingen blijven zichtbaar */}
-                    {groupRows(isCollapsed ? group.items.filter((i) => isUnpaid(i, today)) : group.items).map((row) => {
+                    {!isCollapsed && groupRows(group.items).map((row) => {
                       const ids = row.kind === "show" ? [row.item.id] : row.blocks.map((b) => b.id);
                       return (
                       <React.Fragment key={ids[0]}>
