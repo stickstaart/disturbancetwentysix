@@ -52,7 +52,7 @@ export const BlockGroup: React.FC<BlockGroupProps> = ({ date, blocks, covering =
 
   const actions = (b: DateItem, label?: string) => (
     <div className="shrink-0 flex items-center">
-      {label && <span className="pl-1.5 font-mono text-[12px] uppercase tracking-[0.04em] text-zinc-500">{label}</span>}
+      {label && <span className="pr-1 font-mono text-[12px] uppercase tracking-[0.04em] text-zinc-500">{label}</span>}
       <button
         onClick={(e) => { e.stopPropagation(); onEditBlock(b); }}
         className="p-1.5 rounded-md text-zinc-500 hover:text-white hover:bg-white/10 cursor-pointer"
@@ -125,17 +125,22 @@ export const BlockGroup: React.FC<BlockGroupProps> = ({ date, blocks, covering =
         <FiChevronDown className={`shrink-0 text-zinc-500 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
       </button>
       {isOpen && (
-        <ul className="px-3 pb-1.5 pl-[7.6rem] space-y-0.5">
+        <ul className="px-3 pb-1.5 space-y-0.5">
           {groupByDetails(all).map(({ details, items }) => (
-            <li key={items[0].id} className="flex flex-wrap items-center gap-x-2 text-[15px] leading-snug">
-              <div className="grow min-w-0 truncate" title={details}>
+            <li key={items[0].id} className="flex items-start gap-2.5 text-[15px] leading-snug">
+              {/* Zelfde kolommen als de kopregel: datum + vlag, zodat de namen recht onder elkaar staan */}
+              <span className="shrink-0 w-[5.5rem]" aria-hidden />
+              <span className="invisible py-[3px]" aria-hidden><UnavailableFlag /></span>
+              <div className="grow min-w-0 truncate py-[3px]" title={details}>
                 <span className="font-semibold text-zinc-200">{items.flatMap(namesOf).join(", ")}</span>
                 {details && <span className="text-zinc-400"> · {details}</span>}
               </div>
-              {/* Gedeelde reden: één regel, maar knoppen per persoon */}
-              {items.map((b) => (
-                <React.Fragment key={b.id}>{actions(b, items.length > 1 ? namesOf(b).join(", ") : undefined)}</React.Fragment>
-              ))}
+              {/* Gedeelde reden: één regel tekst, knoppen per persoon onder elkaar */}
+              <div className="shrink-0 flex flex-col items-end">
+                {items.map((b) => (
+                  <React.Fragment key={b.id}>{actions(b, items.length > 1 ? namesOf(b).join(", ") : undefined)}</React.Fragment>
+                ))}
+              </div>
             </li>
           ))}
         </ul>
