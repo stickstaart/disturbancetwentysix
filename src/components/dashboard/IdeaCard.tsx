@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FiChevronDown, FiEdit2, FiMail, FiPhone, FiRotateCcw, FiSlash, FiTrash2 } from "react-icons/fi";
+import { FiChevronDown, FiEdit2, FiMail, FiPhone, FiRotateCcw, FiSlash, FiTrash2, FiLock } from "react-icons/fi";
 import type { TourIdea } from "../BandDashboard";
 import { COUNTRIES, displayName } from "./constants";
 import { CountryFlag } from "./CountryFlag";
@@ -17,9 +17,11 @@ interface IdeaCardProps {
   onEdit: (idea: TourIdea) => void;
   onDelete: (id: string) => void;
   onToggleScratch: (id: string) => void;
+  /** Alleen de eigenaar (of de superadmin) mag wijzigen */
+  canEdit?: boolean;
 }
 
-export const IdeaCard: React.FC<IdeaCardProps> = ({ idea, accentText, onEdit, onDelete, onToggleScratch }) => {
+export const IdeaCard: React.FC<IdeaCardProps> = ({ idea, accentText, onEdit, onDelete, onToggleScratch, canEdit = true }) => {
   const [isOpen, setIsOpen] = useState(false);
   const scratched = !!idea.isScratched;
   const countryName = COUNTRIES.find((c) => c.code === idea.country)?.name;
@@ -92,6 +94,8 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({ idea, accentText, onEdit, on
             </dl>
           )}
 
+          {canEdit ? (
+            <>
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
@@ -117,6 +121,12 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({ idea, accentText, onEdit, on
               <FiTrash2 />
             </button>
           </div>
+            </>
+          ) : (
+            <p className="flex items-center gap-1.5 pt-2 border-t border-white/[0.06] text-sm text-zinc-500">
+              <FiLock className="shrink-0" /> Alleen {idea.owner ? displayName(idea.owner) : "de eigenaar"} kan dit idee wijzigen
+            </p>
+          )}
         </div>
       )}
     </div>

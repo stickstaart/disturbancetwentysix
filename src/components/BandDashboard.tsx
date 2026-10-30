@@ -287,6 +287,11 @@ const BandDashboard: React.FC = () => {
   // Groeperen per maand (zoals de kopjes in het Google Doc)
   const today = todayString();
   const nextShowId = filteredShows.find((s) => (s.endDate || s.date) >= today)?.id;
+  // Eén waarheid: alleen de eigenaar wijzigt. Zonder eigenaar: alleen de superadmin.
+  // De superadmin kan als ieder bandlid inloggen en zo alles aanpassen.
+  const canEditOwned = (owner?: string) =>
+    owner ? displayName(owner) === displayName(currentUser) : canSwitchAccount;
+
   // Blokkades op dezelfde datum worden één regel (BlockGroup); shows blijven losse kaarten
   type AgendaRow = { kind: "show"; item: DateItem } | { kind: "block"; date: string; blocks: DateItem[] };
   const groupRows = (items: DateItem[]) =>
@@ -701,7 +706,7 @@ const BandDashboard: React.FC = () => {
                 key={editingId ?? "new"}
                 initial={editingId ? shows.find((s) => s.id === editingId) ?? null : null}
                 defaultOwner={currentUser}
-                canChangeOwner={isSuperadmin}
+                canChangeOwner={canSwitchAccount}
                 saveButtonClass={themeStyle.primaryBtn}
                 onSave={handleSaveShow}
                 onClose={resetShowForm}
@@ -842,6 +847,7 @@ const BandDashboard: React.FC = () => {
                             onTogglePublic={handleTogglePublic}
                             onEditBlock={handleEditBlock}
                             absent={absentOn(row.item.date, shows)}
+                            canEdit={canEditOwned(row.item.owner)}
                           />
                         ) : (
                           <BlockGroup
@@ -877,6 +883,7 @@ const BandDashboard: React.FC = () => {
               onEdit={handleEditIdeaClick}
               onDelete={handleDeleteIdea}
               onToggleScratch={handleToggleScratchIdea}
+              canEdit={canEditOwned(idea.owner)}
             />
           );
           return (
@@ -902,7 +909,7 @@ const BandDashboard: React.FC = () => {
                   key={editingIdeaId ?? "new"}
                   initial={editingIdeaId ? tourIdeas.find((i) => i.id === editingIdeaId) ?? null : null}
                   defaultOwner={currentUser}
-                  canChangeOwner={isSuperadmin}
+                  canChangeOwner={canSwitchAccount}
                   saveButtonClass={themeStyle.primaryBtn}
                   onSave={handleSaveIdea}
                   onClose={resetIdeaForm}

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FiAlertTriangle, FiChevronDown, FiEdit2, FiGlobe, FiMail, FiPhone, FiTrash2 } from "react-icons/fi";
+import { FiAlertTriangle, FiChevronDown, FiLock, FiEdit2, FiGlobe, FiMail, FiPhone, FiTrash2 } from "react-icons/fi";
 import type { DateItem, ShowStatus } from "../BandDashboard";
 import { CountryFlag, UnavailableFlag } from "./CountryFlag";
 import { parseLocalDate } from "./dateUtils";
@@ -76,9 +76,11 @@ interface ShowCardProps {
   onEditBlock: (block: DateItem) => void;
   /** Bandleden die op deze datum geblokkeerd hebben */
   absent?: string[];
+  /** Alleen de eigenaar (of de superadmin) mag wijzigen */
+  canEdit?: boolean;
 }
 
-export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit, onDelete, onStatusChange, onTogglePublic, onEditBlock, absent = [] }) => {
+export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit, onDelete, onStatusChange, onTogglePublic, onEditBlock, absent = [], canEdit = true }) => {
   const [isOpen, setIsOpen] = useState(false);
   const pastStyle = isPast ? "opacity-55 saturate-50 hover:opacity-100 hover:saturate-100" : "";
 
@@ -224,6 +226,8 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
             </dl>
           )}
 
+          {canEdit ? (
+            <>
           {/* Status als segmented control: één tik, geen pop-up */}
           <div className="grid grid-cols-3 gap-1 p-1 rounded-lg bg-black/40 ring-1 ring-white/[0.06]" role="radiogroup" aria-label="Status">
             {STATUS_ORDER.map((value) => (
@@ -274,6 +278,12 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
               <FiTrash2 />
             </button>
           </div>
+            </>
+          ) : (
+            <p className="flex items-center gap-1.5 pt-2 border-t border-white/[0.06] text-sm text-zinc-500">
+              <FiLock className="shrink-0" /> Alleen {item.owner ? displayName(item.owner) : "de eigenaar"} kan deze show wijzigen
+            </p>
+          )}
         </div>
       )}
     </div>
