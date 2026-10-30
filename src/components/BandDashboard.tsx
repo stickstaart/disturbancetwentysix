@@ -5,6 +5,7 @@ import { IdeaFormSheet, type IdeaDraft } from "./dashboard/IdeaForm";
 import { IdeaCard } from "./dashboard/IdeaCard";
 import { StatsPanel } from "./dashboard/StatsPanel";
 import { ShowCard } from "./dashboard/ShowCard";
+import { BlockGroup } from "./dashboard/BlockGroup";
 import * as store from "../lib/agendaStore";
 import { FiChevronDown, FiLogOut, FiPlus, FiSettings, FiSlash } from "react-icons/fi";
 import { useSnapZoom } from "../lib/useSnapZoom";
@@ -285,6 +286,22 @@ const BandDashboard: React.FC = () => {
   // Groeperen per maand (zoals de kopjes in het Google Doc)
   const today = todayString();
   const nextShowId = filteredShows.find((s) => (s.endDate || s.date) >= today)?.id;
+  // Blokkades op dezelfde datum worden één regel (BlockGroup); shows blijven losse kaarten
+  type AgendaRow = { kind: "show"; item: DateItem } | { kind: "block"; date: string; blocks: DateItem[] };
+  const groupRows = (items: DateItem[]) =>
+    items.reduce<AgendaRow[]>((rows, item) => {
+      if (!item.isBlocked) rows.push({ kind: "show", item });
+      else {
+        const same = rows.find((r): r is Extract<AgendaRow, { kind: "block" }> => r.kind === "block" && r.date === item.date);
+        if (same) same.blocks.push(item);
+        else rows.push({ kind: "block", date: item.date, blocks: [item] });
+      }
+      return rows;
+    }, []);
+  // Langere periodes (bv. een week vakantie) die eerder begonnen maar deze datum ook dekken
+  const coveringBlocks = (date: string, own: DateItem[]) =>
+    shows.filter((b) => b.isBlocked && b.endDate && b.date < date && b.endDate >= date && !own.includes(b));
+
   const showsByMonth = filteredShows.reduce<{ key: string; label: string; items: DateItem[] }[]>((groups, item) => {
     const key = item.date.substring(0, 7);
     let group = groups.find((g) => g.key === key);
@@ -383,30 +400,20 @@ const BandDashboard: React.FC = () => {
       return;
     }
 
-    // Losse dag zonder reden: samenvoegen met een bestaande blokkade op die dag ("Joz, Rob")
-    const existing = !endDate && !reason
-      ? shows.find((s) => s.isBlocked && s.date === blockDate && !s.endDate && !s.reason)
-      : undefined;
-
-    if (existing) {
-      const names = existing.blockedBy ? existing.blockedBy.split(", ").map((n) => n.trim()) : [];
-      if (!names.includes(who)) names.push(who);
-      run(store.patchShow(existing, { blockedBy: names.join(", ") }, currentUser));
-    } else {
-      const blockData: DateItem = {
-        id: store.newId(),
-        date: blockDate,
-        endDate,
-        reason,
-        country: "NL",
-        city: "GEBLOKKEERD",
-        venue: "",
-        status: "cancelled",
-        isBlocked: true,
-        blockedBy: who,
-      };
-      run(store.saveShow(blockData, currentUser, true));
-    }
+    // Altijd een eigen record per persoon; de lijst voegt blokkades op dezelfde datum samen (BlockGroup)
+    const blockData: DateItem = {
+      id: store.newId(),
+      date: blockDate,
+      endDate,
+      reason,
+      country: "NL",
+      city: "GEBLOKKEERD",
+      venue: "",
+      status: "cancelled",
+      isBlocked: true,
+      blockedBy: who,
+    };
+    run(store.saveShow(blockData, currentUser, true));
 
     closeBlockModal();
   };
@@ -808,9 +815,11 @@ const BandDashboard: React.FC = () => {
                         </div>
                       )}
                     </h3>
-                    {!isCollapsed && group.items.map((item) => (
-                      <React.Fragment key={item.id}>
-                        {item.id === nextShowId && (
+                    {!isCollapsed && groupRows(group.items).map((row) => {
+                      const ids = row.kind === "show" ? [row.item.id] : row.blocks.map((b) => b.id);
+                      return (
+                      <React.Fragment key={ids[0]}>
+                        {nextShowId && ids.includes(nextShowId) && (
                           <div id="today-marker" className="scroll-mt-16 flex items-center gap-3 py-1">
                             <span className="h-px grow bg-gradient-to-r from-transparent to-white/25" />
                             <span className={`font-mono text-[13px] font-bold uppercase tracking-[0.08em] px-2.5 py-1 rounded-full ring-1 ring-white/15 bg-white/[0.04] ${themeStyle.accentText}`}>
@@ -819,17 +828,29 @@ const BandDashboard: React.FC = () => {
                             <span className="h-px grow bg-gradient-to-l from-transparent to-white/25" />
                           </div>
                         )}
-                        <ShowCard
-                          item={item}
-                          isPast={(item.endDate || item.date) < today}
-                          onEdit={handleEditClick}
-                          onDelete={handleDelete}
-                          onStatusChange={handleStatusChange}
-                          onTogglePublic={handleTogglePublic}
-                          onEditBlock={handleEditBlock}
-                        />
+                        {row.kind === "show" ? (
+                          <ShowCard
+                            item={row.item}
+                            isPast={(row.item.endDate || row.item.date) < today}
+                            onEdit={handleEditClick}
+                            onDelete={handleDelete}
+                            onStatusChange={handleStatusChange}
+                            onTogglePublic={handleTogglePublic}
+                            onEditBlock={handleEditBlock}
+                          />
+                        ) : (
+                          <BlockGroup
+                            date={row.date}
+                            blocks={row.blocks}
+                            covering={coveringBlocks(row.date, row.blocks)}
+                            isPast={row.blocks.every((b) => (b.endDate || b.date) < today)}
+                            onEditBlock={handleEditBlock}
+                            onDelete={handleDelete}
+                          />
+                        )}
                       </React.Fragment>
-                    ))}
+                      );
+                    })}
                   </section>
                   );
                 })
