@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FiAlertTriangle, FiChevronDown, FiLock, FiEdit2, FiGlobe, FiMail, FiPhone, FiTrash2 } from "react-icons/fi";
+import { FiAlertTriangle, FiCheck, FiChevronDown, FiLock, FiEdit2, FiGlobe, FiMail, FiPhone, FiTrash2 } from "react-icons/fi";
 import type { DateItem, ShowStatus } from "../BandDashboard";
 import { CountryFlag, UnavailableFlag } from "./CountryFlag";
 import { parseLocalDate } from "./dateUtils";
@@ -78,11 +78,15 @@ interface ShowCardProps {
   absent?: string[];
   /** Alleen de eigenaar (of de superadmin) mag wijzigen */
   canEdit?: boolean;
+  /** Afgelopen show waarvan de gage nog niet binnen is */
+  unpaid?: boolean;
+  paid?: boolean;
+  onTogglePaid?: (id: string) => void;
 }
 
-export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit, onDelete, onStatusChange, onTogglePublic, onEditBlock, absent = [], canEdit = true }) => {
+export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit, onDelete, onStatusChange, onTogglePublic, onEditBlock, absent = [], canEdit = true, unpaid = false, paid = false, onTogglePaid }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const pastStyle = isPast ? "opacity-55 saturate-50 hover:opacity-100 hover:saturate-100" : "";
+  const pastStyle = isPast && !unpaid ? "opacity-55 saturate-50 hover:opacity-100 hover:saturate-100" : "";
 
   // ---------- Geblokkeerde datum / periode ----------
   // Bewust compact (halve hoogte, één regel) en grijs i.p.v. rood, zodat afwezigheden
@@ -132,6 +136,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
   // ---------- Show ----------
   const st = STATUS[item.status] ?? STATUS.option;
   const isCancelled = item.status === "cancelled";
+  const isBlockedOrCancelled = !!item.isBlocked || isCancelled;
   const isOnWebsite = !!item.isPublic && item.status === "confirmed";
 
   const fee = parseFloat(item.guaranteedFee || "0") || 0;
@@ -165,7 +170,7 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
   if (item.breakEvenInfo) details.push(["Afspraken", item.breakEvenInfo]);
 
   return (
-    <div id={`show-${item.id}`} className={`${CARD} ${isOpen ? "ring-white/[0.12]" : "hover:ring-white/[0.1]"} ${pastStyle}`}>
+    <div id={`show-${item.id}`} className={`${CARD} ${unpaid ? "!ring-red-500/60 ring-2 bg-red-950/30" : isOpen ? "ring-white/[0.12]" : "hover:ring-white/[0.1]"} ${pastStyle}`}>
       <span className={`absolute left-0 inset-y-0 w-[3px] ${st.bar}`} />
 
       {/* COMPACTE REGEL — tik om open te klappen */}
@@ -196,6 +201,11 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
         </div>
 
         <div className="shrink-0 flex flex-col items-end gap-1.5">
+          {unpaid && (
+            <span className="font-mono text-[12px] font-bold uppercase tracking-[0.06em] px-2 py-0.5 rounded-full text-white bg-red-500/30 ring-1 ring-red-500/60">
+              Niet betaald
+            </span>
+          )}
           {hasFinancials && !isCancelled && (
             <span
               className={`font-mono tabular text-sm font-bold px-2 py-0.5 rounded-full ring-1 ${
@@ -224,6 +234,30 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
                 </React.Fragment>
               ))}
             </dl>
+          )}
+
+          {/* Betaling: alleen bij afgelopen, bevestigde shows met gage */}
+          {isPast && !isBlockedOrCancelled && fee > 0 && item.status === "confirmed" && (
+            canEdit && onTogglePaid ? (
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={paid}
+                onClick={() => onTogglePaid(item.id)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-semibold uppercase tracking-wider ring-1 cursor-pointer transition-colors ${
+                  paid ? "bg-emerald-500/10 text-emerald-300 ring-emerald-500/40" : "bg-red-500/15 text-red-200 ring-red-500/50"
+                }`}
+              >
+                <span className={`grid place-items-center w-5 h-5 rounded ring-1 ${paid ? "bg-emerald-500 ring-emerald-400 text-black" : "ring-red-400/70"}`}>
+                  {paid && <FiCheck className="text-sm" />}
+                </span>
+                {paid ? "Betaald" : `Betaling · nog €${fee} tegoed`}
+              </button>
+            ) : (
+              <p className={`text-sm font-semibold ${paid ? "text-emerald-300" : "text-red-300"}`}>
+                {paid ? "✓ Betaald" : `Nog niet betaald · €${fee} tegoed`}
+              </p>
+            )
           )}
 
           {canEdit ? (

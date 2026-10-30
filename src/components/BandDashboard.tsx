@@ -7,6 +7,7 @@ import { StatsPanel } from "./dashboard/StatsPanel";
 import { ShowCard } from "./dashboard/ShowCard";
 import { BlockGroup } from "./dashboard/BlockGroup";
 import { absentOn } from "./dashboard/blocks";
+import { isUnpaid } from "./dashboard/payment";
 import * as store from "../lib/agendaStore";
 import { FiChevronDown, FiLogOut, FiPlus, FiSettings, FiSlash } from "react-icons/fi";
 import { useSnapZoom } from "../lib/useSnapZoom";
@@ -34,6 +35,8 @@ export interface DateItem {
   contact?: ContactPerson;
   guaranteedFee?: string;
   paymentMethod?: "cash" | "wire";
+  /** Gage ontvangen (alleen relevant voor afgelopen, bevestigde shows) */
+  isPaid?: boolean;
   breakEvenInfo?: string;
   owner?: string;
   drivers?: string;
@@ -467,6 +470,13 @@ const BandDashboard: React.FC = () => {
     if (show) run(store.patchShow(show, { status: newStatus }, currentUser));
   };
 
+  const handleTogglePaid = (id: string) => {
+    const show = shows.find((s) => s.id === id);
+    if (show) run(store.patchShow(show, { isPaid: !isPaidNow(show) }, currentUser));
+  };
+  // Zonder vinkje telt een oude show als betaald, een nieuwe als open (zie payment.ts)
+  const isPaidNow = (s: DateItem) => !isUnpaid(s, todayString());
+
   const handleTogglePublic = (id: string) => {
     const show = shows.find((s) => s.id === id);
     if (show) run(store.patchShow(show, { isPublic: !show.isPublic }, currentUser));
@@ -824,7 +834,8 @@ const BandDashboard: React.FC = () => {
                         </div>
                       )}
                     </h3>
-                    {!isCollapsed && groupRows(group.items).map((row) => {
+                    {/* Ingeklapte maand: openstaande betalingen blijven zichtbaar */}
+                    {groupRows(isCollapsed ? group.items.filter((i) => isUnpaid(i, today)) : group.items).map((row) => {
                       const ids = row.kind === "show" ? [row.item.id] : row.blocks.map((b) => b.id);
                       return (
                       <React.Fragment key={ids[0]}>
@@ -848,6 +859,9 @@ const BandDashboard: React.FC = () => {
                             onEditBlock={handleEditBlock}
                             absent={absentOn(row.item.date, shows)}
                             canEdit={canEditOwned(row.item.owner)}
+                            unpaid={isUnpaid(row.item, today)}
+                            paid={isPaidNow(row.item)}
+                            onTogglePaid={handleTogglePaid}
                           />
                         ) : (
                           <BlockGroup
