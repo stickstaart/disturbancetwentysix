@@ -241,6 +241,30 @@ const BandDashboard: React.FC = () => {
   // Fouten bij opslaan zichtbaar maken i.p.v. stil falen
   const run = (p: Promise<unknown>) => p.catch((e: Error) => setSyncError(e.message));
 
+  // Eenmalige overstap van het Google Doc (JSON-bestand, staat bewust niet in de code: er staan gages en contacten in).
+  // De show in Londen op 12 juni 2027 blijft staan.
+  const importInputRef = React.useRef<HTMLInputElement>(null);
+  const keepOnImport = (s: DateItem) => s.date === "2027-06-12" && !s.isBlocked;
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text()) as store.AgendaImport;
+      if (!Array.isArray(data.shows) || !Array.isArray(data.ideas)) throw new Error("Dit is geen geldig importbestand.");
+      const kept = shows.filter(keepOnImport);
+      const message =
+        `Dit verwijdert ${shows.length - kept.length} shows/blokkades en ${tourIdeas.length} tour-ideeën` +
+        (kept.length ? ` (blijft staan: ${kept.map((s) => `${s.city} ${s.date}`).join(", ")})` : " (let op: Londen 12-06-2027 niet gevonden)") +
+        ` en zet er ${data.shows.length} shows/blokkades en ${data.ideas.length} tour-ideeën voor in de plaats. Doorgaan?`;
+      if (!confirm(message)) return;
+      setIsSettingsOpen(false);
+      run(store.replaceWithImport(data, keepOnImport, currentUser));
+    } catch (err) {
+      setSyncError((err as Error).message);
+    }
+  };
+
   const handleThemeChange = (newTheme: ThemeType) => {
     setTheme(newTheme);
     localStorage.setItem("band_theme", newTheme);
@@ -534,6 +558,20 @@ const BandDashboard: React.FC = () => {
                   </div>
                   <div className="mt-2 text-base font-semibold">{theme}</div>
                 </div>
+
+                {/* Echte data importeren (eenmalig, alleen superadmin) */}
+                {canSwitchAccount && (
+                  <>
+                    <input ref={importInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} />
+                    <button
+                      type="button"
+                      onClick={() => importInputRef.current?.click()}
+                      className="w-full py-2.5 rounded-lg border border-dashed border-amber-600 text-amber-400 text-sm cursor-pointer"
+                    >
+                      📥 Importeer echte data (JSON)
+                    </button>
+                  </>
+                )}
 
                 {/* TESTDATA — alleen zichtbaar bij `npm run dev`, nooit op de live site */}
                 {isTestMode && isSuperadmin && (

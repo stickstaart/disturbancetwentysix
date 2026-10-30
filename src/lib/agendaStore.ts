@@ -14,6 +14,7 @@ import {
   updateDoc,
   where,
   writeBatch,
+  type WriteBatch,
 } from "firebase/firestore";
 import { db } from "../firebase";
 import { dummyIdeas, dummyShows } from "./dummyData";
@@ -156,6 +157,42 @@ export async function migrateLocalStorage(actor: string) {
     localStorage.setItem(FLAG, new Date().toISOString());
   } catch (err) {
     console.error("[agendaStore] migratie mislukt:", err);
+  }
+}
+
+// --- Eenmalige import: echte data uit het oude Google Doc ---
+
+export interface AgendaImport {
+  shows: Omit<DateItem, "id">[];
+  ideas: Omit<TourIdea, "id">[];
+}
+
+/** Vervangt alle shows/blokkades (behalve wat `keep` wil houden) en alle tour-ideeën door de import. */
+export async function replaceWithImport(data: AgendaImport, keep: (s: DateItem) => boolean, actor: string) {
+  const [shows, ideas, pub] = await Promise.all([SHOWS, IDEAS, PUBLIC].map((n) => getDocs(collection(db, n))));
+  const keptIds = new Set(shows.docs.filter((d) => keep({ ...(d.data() as DateItem), id: d.id })).map((d) => d.id));
+
+  const ops: ((b: WriteBatch) => void)[] = [];
+  shows.docs.forEach((d) => { if (!keptIds.has(d.id)) ops.push((b) => b.delete(d.ref)); });
+  pub.docs.forEach((d) => { if (!keptIds.has(d.id)) ops.push((b) => b.delete(d.ref)); });
+  ideas.docs.forEach((d) => ops.push((b) => b.delete(d.ref)));
+  data.shows.forEach((s) => {
+    const show = { ...s, id: newId() } as DateItem;
+    ops.push((b) => {
+      b.set(doc(db, SHOWS, show.id), auditedData(show, actor, true));
+      syncPublic(b, show);
+    });
+  });
+  data.ideas.forEach((i) => {
+    const ref = doc(collection(db, IDEAS));
+    ops.push((b) => b.set(ref, auditedData({ ...i, id: ref.id }, actor, true)));
+  });
+
+  // Firestore staat max. 500 schrijfacties per batch toe; een show telt dubbel (shows + publicShows)
+  for (let i = 0; i < ops.length; i += 200) {
+    const batch = writeBatch(db);
+    ops.slice(i, i + 200).forEach((op) => op(batch));
+    await batch.commit();
   }
 }
 
