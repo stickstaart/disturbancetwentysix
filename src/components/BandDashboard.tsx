@@ -163,7 +163,30 @@ const THEME_CONFIGS: Record<ThemeType, { bg: string; cardBg: string; panelBg: st
 
 const getTodayString = todayString;
 
+
+/**
+ * Maakt /agenda installeerbaar als app ("Toevoegen aan startscherm"):
+ * manifest + icoon alleen op deze route, zodat de homepage geen app-prompt krijgt.
+ */
+function useAgendaAppManifest() {
+  useEffect(() => {
+    const tags = [
+      Object.assign(document.createElement("link"), { rel: "manifest", href: "/agenda.webmanifest" }),
+      Object.assign(document.createElement("link"), { rel: "apple-touch-icon", href: "/icons/agenda-apple-180.png" }),
+      Object.assign(document.createElement("meta"), { name: "theme-color", content: "#000000" }),
+    ];
+    tags.forEach((t) => document.head.appendChild(t));
+    const previousTitle = document.title;
+    document.title = "Disturbance Agenda";
+    return () => {
+      tags.forEach((t) => t.remove());
+      document.title = previousTitle;
+    };
+  }, []);
+}
+
 const BandDashboard: React.FC = () => {
+  useAgendaAppManifest();
   // Inloggen met Google; alleen de vier bandleden komen binnen (zie src/lib/bandAuth.ts)
   const { state: authState, signIn, logOut } = useBandAuth();
   const isAuthenticated = authState.status === "ok";
