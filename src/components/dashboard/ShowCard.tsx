@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { FiAlertTriangle, FiCheck, FiChevronDown, FiLock, FiEdit2, FiGlobe, FiMail, FiPhone, FiTrash2 } from "react-icons/fi";
+import { FiAlertTriangle, FiCheck, FiChevronDown, FiLock, FiEdit2, FiGlobe, FiTrash2 } from "react-icons/fi";
 import type { DateItem, ShowStatus } from "../BandDashboard";
 import { CountryFlag, UnavailableFlag } from "./CountryFlag";
 import { parseLocalDate } from "./dateUtils";
 import { displayName } from "./constants";
+import { ContactsView } from "./contacts";
+import { contactsOfShow } from "./contactUtils";
 
 function isoWeek(date: Date): number {
   const target = new Date(date.valueOf());
@@ -151,23 +153,8 @@ export const ShowCard: React.FC<ShowCardProps> = ({ item, isPast = false, onEdit
   if (item.guaranteedFee) details.push(["Gage", <span className="tabular">€{item.guaranteedFee}{item.paymentMethod ? ` · ${item.paymentMethod === "wire" ? "bank" : "cash"}` : ""}</span>]);
   if (item.drivers) details.push(["Chauffeur", item.drivers]);
   if (item.transportMethod) details.push(["Vervoer", <span className="tabular">{item.transportMethod}{item.transportCost ? ` · €${item.transportCost}` : ""}</span>]);
-  if (item.contact?.name || item.contact?.phone || item.contact?.email)
-    details.push([
-      "Contact",
-      <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        {item.contact?.name && <span>{item.contact.name}</span>}
-        {item.contact?.phone && (
-          <a href={`tel:${item.contact.phone}`} className="inline-flex items-center gap-1 text-zinc-200 hover:text-white underline decoration-zinc-600 underline-offset-2">
-            <FiPhone className="text-sm" />{item.contact.phone}
-          </a>
-        )}
-        {item.contact?.email && (
-          <a href={`mailto:${item.contact.email}`} className="inline-flex items-center gap-1 text-zinc-200 hover:text-white underline decoration-zinc-600 underline-offset-2 break-all">
-            <FiMail className="text-sm" />{item.contact.email}
-          </a>
-        )}
-      </span>,
-    ]);
+  const contacts = contactsOfShow(item);
+  if (contacts.length) details.push([contacts.length > 1 ? "Contacten" : "Contact", <ContactsView list={contacts} />]);
   if (item.breakEvenInfo) details.push(["Afspraken", item.breakEvenInfo]);
 
   return (

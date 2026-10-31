@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { FiAlertTriangle, FiCheck, FiGlobe } from "react-icons/fi";
-import type { DateItem, ShowStatus } from "../BandDashboard";
+import type { ContactPerson, DateItem, ShowStatus } from "../BandDashboard";
+import { ContactsEditor } from "./contacts";
+import { contactsOfShow, contactsSummary, tidyContacts } from "./contactUtils";
 import { BAND_MEMBERS, displayName } from "./constants";
 import { CountryButton, CountryPicker, Field, FormSheet, MoneyInput, Section } from "./formKit";
 import { chipClass, INPUT, LABEL, num, splitList } from "./formStyles";
@@ -50,19 +52,18 @@ export const ShowFormSheet: React.FC<ShowFormSheetProps> = ({ initial, defaultOw
     drivers: initial?.drivers || "",
     transportMethod: initial?.transportMethod || "",
     transportCost: initial?.transportCost || "",
-    contact: { name: initial?.contact?.name || "", phone: initial?.contact?.phone || "", email: initial?.contact?.email || "" },
     breakEvenInfo: initial?.breakEvenInfo || "",
     owner: initial?.owner || defaultOwner,
   }));
   const set = <K extends keyof ShowDraft>(key: K, value: ShowDraft[K]) => setD((prev) => ({ ...prev, [key]: value }));
-  const setContact = (key: "name" | "phone" | "email", value: string) => setD((prev) => ({ ...prev, contact: { ...prev.contact, [key]: value } }));
+  const [contacts, setContacts] = useState<ContactPerson[]>(() => contactsOfShow(initial));
 
   // Bij bewerken: blokken met gegevens staan open
   const [open, setOpen] = useState<Record<string, boolean>>(() => ({
     lineup: !!(initial?.otherbands || initial?.tourName),
     money: !!initial?.guaranteedFee,
     transport: !!(initial?.drivers || initial?.transportMethod || initial?.transportCost),
-    contact: !!(initial?.contact?.name || initial?.contact?.phone || initial?.contact?.email),
+    contact: contactsOfShow(initial).length > 0,
     notes: !!initial?.breakEvenInfo,
   }));
   const toggle = (k: string) => setOpen((o) => ({ ...o, [k]: !o[k] }));
@@ -90,7 +91,7 @@ export const ShowFormSheet: React.FC<ShowFormSheetProps> = ({ initial, defaultOw
       ? `${euro(fee)} · ${d.paymentMethod === "wire" ? "bank" : "cash"}${d.transportCost ? ` → netto ${net >= 0 ? "+" : "−"}${euro(Math.abs(net))}` : ""}`
       : "",
     transport: [d.transportMethod, d.drivers, d.transportCost && euro(cost)].filter(Boolean).join(" · "),
-    contact: [d.contact?.name, d.contact?.phone || d.contact?.email].filter(Boolean).join(" · "),
+    contact: contactsSummary(contacts),
     notes: d.breakEvenInfo ? d.breakEvenInfo.slice(0, 40) + (d.breakEvenInfo.length > 40 ? "…" : "") : "",
   };
 
@@ -104,11 +105,8 @@ export const ShowFormSheet: React.FC<ShowFormSheetProps> = ({ initial, defaultOw
       city: d.city.trim(),
       drivers: [...memberDrivers, ...splitList(othersText)].join(", "),
       isPublic: isConfirmed && !!d.isPublic,
-      contact: {
-        name: d.contact?.name || undefined,
-        phone: d.contact?.phone || undefined,
-        email: d.contact?.email || undefined,
-      },
+      contact: undefined, // oud formaat opruimen
+      contacts: tidyContacts(contacts),
     });
   };
 
@@ -297,17 +295,7 @@ export const ShowFormSheet: React.FC<ShowFormSheetProps> = ({ initial, defaultOw
             </Section>
 
             <Section title="Contact" summary={summaries.contact} open={open.contact} onToggle={() => toggle("contact")}>
-              <Field label="Naam">
-                <input type="text" value={d.contact?.name} onChange={(e) => setContact("name", e.target.value)} className={INPUT} />
-              </Field>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Field label="Telefoon">
-                  <input type="tel" inputMode="tel" value={d.contact?.phone} onChange={(e) => setContact("phone", e.target.value)} className={INPUT} />
-                </Field>
-                <Field label="E-mail">
-                  <input type="email" inputMode="email" value={d.contact?.email} onChange={(e) => setContact("email", e.target.value)} className={INPUT} />
-                </Field>
-              </div>
+              <ContactsEditor value={contacts} onChange={setContacts} />
             </Section>
 
             <Section title="Afspraken" summary={summaries.notes} open={open.notes} onToggle={() => toggle("notes")}>
