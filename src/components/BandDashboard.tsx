@@ -173,6 +173,7 @@ function useAgendaAppManifest() {
     const tags = [
       Object.assign(document.createElement("link"), { rel: "manifest", href: "/agenda.webmanifest" }),
       Object.assign(document.createElement("link"), { rel: "apple-touch-icon", href: "/icons/agenda-apple-180.png" }),
+      Object.assign(document.createElement("link"), { rel: "icon", type: "image/png", href: "/icons/agenda-192.png" }),
       Object.assign(document.createElement("meta"), { name: "theme-color", content: "#000000" }),
     ];
     tags.forEach((t) => document.head.appendChild(t));
