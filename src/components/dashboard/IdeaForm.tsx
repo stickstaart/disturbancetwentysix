@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import type { TourIdea } from "../BandDashboard";
+import type { ContactPerson, TourIdea } from "../BandDashboard";
+import { ContactsEditor } from "./contacts";
+import { contactsOfIdea, contactsSummary, tidyContacts } from "./contactUtils";
 import { CountryButton, CountryPicker, Field, FormSheet, Section } from "./formKit";
 import { INPUT, LABEL } from "./formStyles";
 
@@ -24,18 +26,16 @@ export const IdeaFormSheet: React.FC<IdeaFormSheetProps> = ({ initial, defaultOw
     country: initial?.country || "NL",
     targetPeriod: initial?.targetPeriod || "",
     supportBands: initial?.supportBands || "",
-    contactPerson: initial?.contactPerson || "",
-    contactPhone: initial?.contactPhone || "",
-    contactEmail: initial?.contactEmail || "",
     notes: initial?.notes || "",
     owner: initial?.owner || defaultOwner,
     isScratched: initial?.isScratched ?? false,
   }));
+  const [contacts, setContacts] = useState<ContactPerson[]>(() => contactsOfIdea(initial));
   const set = <K extends keyof IdeaDraft>(key: K, value: IdeaDraft[K]) => setD((prev) => ({ ...prev, [key]: value }));
 
   const [open, setOpen] = useState<Record<string, boolean>>(() => ({
     lineup: !!initial?.supportBands,
-    contact: !!(initial?.contactPerson || initial?.contactPhone || initial?.contactEmail),
+    contact: contactsOfIdea(initial).length > 0,
     notes: !!initial?.notes,
   }));
   const toggle = (k: string) => setOpen((o) => ({ ...o, [k]: !o[k] }));
@@ -43,7 +43,7 @@ export const IdeaFormSheet: React.FC<IdeaFormSheetProps> = ({ initial, defaultOw
 
   const summaries = {
     lineup: d.supportBands ? `w/ ${d.supportBands}` : "",
-    contact: [d.contactPerson, d.contactPhone || d.contactEmail].filter(Boolean).join(" · "),
+    contact: contactsSummary(contacts),
     notes: d.notes ? d.notes.slice(0, 40) + (d.notes.length > 40 ? "…" : "") : "",
   };
   const canSave = !!d.title.trim();
@@ -57,7 +57,17 @@ export const IdeaFormSheet: React.FC<IdeaFormSheetProps> = ({ initial, defaultOw
       canSave={canSave}
       saveLabel={initial ? "Wijzigingen opslaan" : "Idee opslaan"}
       saveButtonClass={saveButtonClass}
-      onSubmit={() => onSave({ ...d, title: d.title.trim() })}
+      onSubmit={() =>
+        onSave({
+          ...d,
+          title: d.title.trim(),
+          // oud formaat opruimen
+          contactPerson: undefined,
+          contactPhone: undefined,
+          contactEmail: undefined,
+          contacts: tidyContacts(contacts),
+        })
+      }
       onClose={onClose}
     >
       {/* ---- BASIS ---- */}
@@ -102,17 +112,7 @@ export const IdeaFormSheet: React.FC<IdeaFormSheetProps> = ({ initial, defaultOw
         </Section>
 
         <Section title="Contact / agent" summary={summaries.contact} open={open.contact} onToggle={() => toggle("contact")}>
-          <Field label="Naam">
-            <input type="text" value={d.contactPerson} onChange={(e) => set("contactPerson", e.target.value)} className={INPUT} />
-          </Field>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Field label="Telefoon">
-              <input type="tel" inputMode="tel" value={d.contactPhone} onChange={(e) => set("contactPhone", e.target.value)} className={INPUT} />
-            </Field>
-            <Field label="E-mail">
-              <input type="email" inputMode="email" value={d.contactEmail} onChange={(e) => set("contactEmail", e.target.value)} className={INPUT} />
-            </Field>
-          </div>
+          <ContactsEditor value={contacts} onChange={setContacts} />
         </Section>
 
         <Section title="Notities" summary={summaries.notes} open={open.notes} onToggle={() => toggle("notes")}>

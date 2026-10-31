@@ -20,6 +20,8 @@ export type ShowStatus = "confirmed" | "option" | "cancelled";
 
 export interface ContactPerson {
   name?: string;
+  /** Promotor, zaal, agent, … */
+  role?: string;
   email?: string;
   phone?: string;
 }
@@ -32,7 +34,9 @@ export interface DateItem {
   venue: string;
   otherbands?: string;
   status: ShowStatus;
+  /** Oud: één contact. Nieuw: `contacts` (zie dashboard/contacts.tsx) */
   contact?: ContactPerson;
+  contacts?: ContactPerson[];
   guaranteedFee?: string;
   paymentMethod?: "cash" | "wire";
   /** Gage ontvangen (alleen relevant voor afgelopen, bevestigde shows) */
@@ -66,6 +70,8 @@ export interface TourIdea {
   contactPerson?: string;
   contactEmail?: string;
   contactPhone?: string;
+  /** Meerdere contactpersonen; de losse contact*-velden hierboven zijn het oude formaat */
+  contacts?: ContactPerson[];
   notes?: string;
   isScratched?: boolean;
   owner?: string;

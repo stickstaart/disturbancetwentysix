@@ -1,7 +1,9 @@
 import React, { useState } from "react";
-import { FiChevronDown, FiEdit2, FiMail, FiPhone, FiRotateCcw, FiSlash, FiTrash2, FiLock } from "react-icons/fi";
+import { FiChevronDown, FiEdit2, FiRotateCcw, FiSlash, FiTrash2, FiLock } from "react-icons/fi";
 import type { TourIdea } from "../BandDashboard";
 import { COUNTRIES, displayName } from "./constants";
+import { ContactsView } from "./contacts";
+import { contactsOfIdea } from "./contactUtils";
 import { CountryFlag } from "./CountryFlag";
 
 // Kaart voor een tour-idee, in dezelfde stijl als ShowCard:
@@ -30,23 +32,8 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({ idea, accentText, onEdit, on
   if (idea.owner) details.push(["Eigenaar", <span className="font-semibold text-white">{displayName(idea.owner)}</span>]);
   if (idea.targetPeriod) details.push(["Periode", idea.targetPeriod]);
   if (idea.supportBands) details.push(["Bands", idea.supportBands]);
-  if (idea.contactPerson || idea.contactPhone || idea.contactEmail)
-    details.push([
-      "Contact",
-      <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        {idea.contactPerson && <span>{idea.contactPerson}</span>}
-        {idea.contactPhone && (
-          <a href={`tel:${idea.contactPhone}`} className="inline-flex items-center gap-1 text-zinc-200 hover:text-white underline decoration-zinc-600 underline-offset-2">
-            <FiPhone className="text-sm" />{idea.contactPhone}
-          </a>
-        )}
-        {idea.contactEmail && (
-          <a href={`mailto:${idea.contactEmail}`} className="inline-flex items-center gap-1 text-zinc-200 hover:text-white underline decoration-zinc-600 underline-offset-2 break-all">
-            <FiMail className="text-sm" />{idea.contactEmail}
-          </a>
-        )}
-      </span>,
-    ]);
+  const contacts = contactsOfIdea(idea);
+  if (contacts.length) details.push([contacts.length > 1 ? "Contacten" : "Contact", <ContactsView list={contacts} />]);
   if (idea.notes) details.push(["Notities", <span className="whitespace-pre-line">{idea.notes}</span>]);
 
   return (
