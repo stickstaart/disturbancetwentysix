@@ -4142,25 +4142,8 @@
     otherbands: "Marode, Trümmerratten",
   },
 
-  {
-    date: "10-12-2026",
-    country: "NL",
-    city: "Dordrecht",
-    venue: "Bibelot",
-    name: "",
-    tour: "",
-    otherbands: "Peter and the Test Tube Babies, Cittizins, De Badslippers",
-  },
-
-  {
-    date: "13-12-2026",
-    country: "NL",
-    city: "Utrecht",
-    venue: "DB's",
-    name: "",
-    tour: "",
-    otherbands: "Mullet Monster Mafia, Röt Stewart, Mouser",
-  },
+  // Komende shows staan in de band-agenda (/agenda → publicShows), niet meer hier.
+  // Deze lijst is alleen het archief; shows schuiven vanzelf via de agenda naar HISTORY.
 ];
 
 ////////////////////////////////////////////////////////////////////////////
