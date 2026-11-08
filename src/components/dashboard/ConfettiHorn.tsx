@@ -135,18 +135,23 @@ function Confetti({ onDone }: { onDone: () => void }) {
 }
 
 export const ConfettiHornButton: React.FC<{ className?: string }> = ({ className = "" }) => {
-  const [burst, setBurst] = useState(0); // telt op per druk, zodat opnieuw drukken opnieuw start
+  // Elk schot is een eigen laag; een nieuw schot komt erbij en laat de vorige confetti gewoon uitvallen
+  const [bursts, setBursts] = useState<number[]>([]);
+  const nextId = useRef(0);
 
-  const fire = () => setBurst((b) => b + 1);
+  const fire = () => {
+    const id = ++nextId.current;
+    setBursts((b) => [...b, id]);
+  };
 
   return (
     <>
       <button type="button" onClick={fire} aria-label="Confetti!" title="Confetti!" className={`shrink-0 p-3 rounded-xl border cursor-pointer text-xl leading-none ${className}`}>
         <span aria-hidden>🎉</span>
       </button>
-      {burst > 0 && (
-        <Confetti key={burst} onDone={() => setBurst(0)} />
-      )}
+      {bursts.map((id) => (
+        <Confetti key={id} onDone={() => setBursts((b) => b.filter((x) => x !== id))} />
+      ))}
     </>
   );
 };
