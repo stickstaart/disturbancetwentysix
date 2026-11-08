@@ -8,6 +8,7 @@ import { ShowCard } from "./dashboard/ShowCard";
 import { BlockGroup } from "./dashboard/BlockGroup";
 import { absentOn } from "./dashboard/blocks";
 import { isUnpaid } from "./dashboard/payment";
+import { ConfettiHornButton } from "./dashboard/ConfettiHorn";
 import * as store from "../lib/agendaStore";
 import { FiChevronDown, FiLogOut, FiPlus, FiSettings, FiSlash } from "react-icons/fi";
 import { useSnapZoom } from "../lib/useSnapZoom";
@@ -556,6 +557,8 @@ const BandDashboard: React.FC = () => {
               Ingelogd als <span className={`font-semibold ${themeStyle.accentText}`}>{displayName(currentUser)}</span>
             </div>
           </div>
+          <div className="shrink-0 flex items-center gap-2">
+          <ConfettiHornButton className={`${themeStyle.border} bg-black/30`} />
           <button
             type="button"
             onClick={() => setIsSettingsOpen((o) => !o)}
@@ -565,6 +568,7 @@ const BandDashboard: React.FC = () => {
           >
             <FiSettings className="text-xl" />
           </button>
+          </div>
 
           {/* INSTELLINGEN-PANEEL */}
           {isSettingsOpen && (
