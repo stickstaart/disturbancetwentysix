@@ -1,41 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 
-// Feestknop naast het tandwieltje: scheepshoorn + "HAHA, I LIVE!!" + langzaam dwarrelende confetti.
-// Geen dependencies: confetti op een <canvas>, de hoorn met de Web Audio API.
-// Geluid speelt alleen als het apparaat geluid aan heeft (iOS: stille modus = stil).
+// Feestknop naast het tandwieltje: "HAHA, I LIVE!!" + confettikanon.
+// Confetti schiet centraal van onderen omhoog, waaiert uit naar links en rechts en dwarrelt daarna langzaam neer.
+// Geen dependencies: alles op een <canvas>.
 
 const COLORS = ["#1fe063", "#84ff00", "#ff2a45", "#ff8a1f", "#ffea00", "#ffffff", "#38bdf8"];
-const DURATION = 7000; // ms tot alles weg is
+const DURATION = 9000; // ms tot alles weg is (omhoog + langzaam neer)
 
-/** Scheepshoorn: twee lage, licht ontstemde zaagtanden door een laagdoorlaatfilter */
-function playHorn() {
-  const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-  if (!Ctx) return;
-  const ctx = new Ctx();
-  const now = ctx.currentTime;
-  const out = ctx.createGain();
-  out.gain.setValueAtTime(0.0001, now);
-  out.gain.exponentialRampToValueAtTime(0.35, now + 0.15); // aanzwellen
-  out.gain.setValueAtTime(0.35, now + 1.6);
-  out.gain.exponentialRampToValueAtTime(0.0001, now + 2.4); // uitsterven
-  const filter = ctx.createBiquadFilter();
-  filter.type = "lowpass";
-  filter.frequency.value = 700;
-  filter.Q.value = 4;
-  filter.connect(out).connect(ctx.destination);
-  [73.4, 110.1, 74.2].forEach((f) => {
-    const osc = ctx.createOscillator();
-    osc.type = "sawtooth";
-    osc.frequency.setValueAtTime(f * 0.97, now);
-    osc.frequency.linearRampToValueAtTime(f, now + 0.25); // klein "glijtje" omhoog bij het aanblazen
-    osc.connect(filter);
-    osc.start(now);
-    osc.stop(now + 2.5);
-  });
-  window.setTimeout(() => void ctx.close(), 3000);
-}
-
-interface Piece { x: number; y: number; w: number; h: number; vy: number; vx: number; rot: number; vr: number; sway: number; phase: number; color: string }
+interface Piece { x: number; y: number; w: number; h: number; vy: number; vx: number; rot: number; vr: number; sway: number; phase: number; color: string; delay: number }
 
 function Confetti({ onDone }: { onDone: () => void }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -56,20 +28,28 @@ function Confetti({ onDone }: { onDone: () => void }) {
     window.addEventListener("resize", resize);
 
     const W = window.innerWidth;
-    const count = Math.min(220, Math.round(W / 4));
-    const pieces: Piece[] = Array.from({ length: count }, () => ({
-      x: Math.random() * W,
-      y: -20 - Math.random() * window.innerHeight * 0.6, // verspreid boven het scherm starten
-      w: 6 + Math.random() * 6,
-      h: 8 + Math.random() * 10,
-      vy: 0.6 + Math.random() * 1.1, // langzaam vallen
-      vx: (Math.random() - 0.5) * 0.6,
-      rot: Math.random() * Math.PI,
-      vr: (Math.random() - 0.5) * 0.12,
-      sway: 0.6 + Math.random() * 1.4,
-      phase: Math.random() * Math.PI * 2,
-      color: COLORS[Math.floor(Math.random() * COLORS.length)],
-    }));
+    const H = window.innerHeight;
+    const count = Math.min(240, Math.round(W / 4));
+    const GRAVITY = 0.22;  // px per frame²
+    const TERMINAL = 1.3;  // max valsnelheid: langzaam dwarrelen
+    const pieces: Piece[] = Array.from({ length: count }, () => {
+      const angle = (Math.random() - 0.5) * 1.3;                          // ±37° rond recht omhoog
+      const speed = Math.sqrt(2 * GRAVITY * H * (0.55 + Math.random() * 0.5)); // komt tot ~55–105% van de schermhoogte
+      return {
+        x: W / 2 + (Math.random() - 0.5) * 24, // uit de "loop" van het kanon
+        y: H + 10,
+        w: 6 + Math.random() * 6,
+        h: 8 + Math.random() * 10,
+        vx: Math.sin(angle) * speed * 1.35,     // iets extra breed uitwaaieren
+        vy: -Math.cos(angle) * speed,
+        rot: Math.random() * Math.PI,
+        vr: (Math.random() - 0.5) * 0.2,
+        sway: 0.6 + Math.random() * 1.4,
+        phase: Math.random() * Math.PI * 2,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+        delay: Math.floor(Math.random() * 12), // salvo over ~0,2 s
+      };
+    });
 
     const start = performance.now();
     let raf = 0;
@@ -79,8 +59,12 @@ function Confetti({ onDone }: { onDone: () => void }) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.globalAlpha = fade;
       for (const p of pieces) {
+        if (p.delay > 0) { p.delay--; continue; }
         p.phase += 0.03;
-        p.x += p.vx + Math.sin(p.phase) * p.sway * 0.5; // dwarrelen
+        p.vy = Math.min(p.vy + GRAVITY, TERMINAL);
+        p.vx *= p.vy < 0 ? 0.985 : 0.96; // luchtweerstand, sterker zodra hij valt
+        const falling = p.vy > 0;
+        p.x += p.vx + (falling ? Math.sin(p.phase) * p.sway * 0.5 : 0); // dwarrelen bij het vallen
         p.y += p.vy;
         p.rot += p.vr;
         ctx.save();
@@ -107,10 +91,7 @@ function Confetti({ onDone }: { onDone: () => void }) {
 export const ConfettiHornButton: React.FC<{ className?: string }> = ({ className = "" }) => {
   const [burst, setBurst] = useState(0); // telt op per druk, zodat opnieuw drukken opnieuw start
 
-  const fire = () => {
-    playHorn();
-    setBurst((b) => b + 1);
-  };
+  const fire = () => setBurst((b) => b + 1);
 
   return (
     <>
