@@ -1,13 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 
-// Feestknop naast het tandwieltje: "HAHA, I LIVE!!" + confettikanon.
-// Confetti schiet centraal van onderen omhoog, waaiert uit naar links en rechts en dwarrelt daarna langzaam neer.
+// Feestknop naast het tandwieltje: confettikanon.
+// Confetti schiet centraal van onderen met hoge snelheid omhoog, waaiert uit naar links en rechts,
+// wordt door luchtweerstand steeds trager en dwarrelt daarna langzaam neer.
 // Geen dependencies: alles op een <canvas>.
 
 const COLORS = ["#1fe063", "#84ff00", "#ff2a45", "#ff8a1f", "#ffea00", "#ffffff", "#38bdf8"];
-const DURATION = 9000; // ms tot alles weg is (omhoog + langzaam neer)
+const DURATION = 10000; // ms tot alles weg is (omhoog + langzaam neer)
 
-interface Piece { x: number; y: number; w: number; h: number; vy: number; vx: number; rot: number; vr: number; sway: number; phase: number; color: string; delay: number }
+interface Piece { x: number; y: number; w: number; h: number; vy: number; vx: number; drag: number; rot: number; vr: number; sway: number; phase: number; color: string; delay: number }
 
 function Confetti({ onDone }: { onDone: () => void }) {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -30,43 +31,53 @@ function Confetti({ onDone }: { onDone: () => void }) {
     const W = window.innerWidth;
     const H = window.innerHeight;
     const count = Math.min(240, Math.round(W / 4));
-    const GRAVITY = 0.22;  // px per frame²
-    const TERMINAL = 1.3;  // max valsnelheid: langzaam dwarrelen
+    // Natuurkunde per frame van 60 fps. Luchtweerstand = lineair + kwadratisch:
+    // bij hoge snelheid remt het hard af, daarna blijft een lage valsnelheid (~2 px/frame) over.
+    const GRAVITY = 0.05;
+    const LINEAR = 0.022;
+    const QUADRATIC = 0.0006;
     const pieces: Piece[] = Array.from({ length: count }, () => {
-      const angle = (Math.random() - 0.5) * 1.3;                          // ±37° rond recht omhoog
-      const speed = Math.sqrt(2 * GRAVITY * H * (0.55 + Math.random() * 0.5)); // komt tot ~55–105% van de schermhoogte
+      const angle = (Math.random() - 0.5) * 1.9;                           // ±54° rond recht omhoog
+      const speed = (H * (0.55 + Math.random() * 0.45)) / 21;               // komt tot ~55–100% van de schermhoogte
       return {
-        x: W / 2 + (Math.random() - 0.5) * 24, // uit de "loop" van het kanon
-        y: H + 10,
+        x: W / 2 + (Math.random() - 0.5) * 6,  // uit de smalle loop van het kanon
+        y: H + 4,
         w: 6 + Math.random() * 6,
         h: 8 + Math.random() * 10,
-        vx: Math.sin(angle) * speed * 1.35,     // iets extra breed uitwaaieren
+        vx: Math.sin(angle) * speed,
         vy: -Math.cos(angle) * speed,
+        drag: 0.8 + Math.random() * 0.45,      // lichte en zwaardere snippers
         rot: Math.random() * Math.PI,
         vr: (Math.random() - 0.5) * 0.2,
         sway: 0.6 + Math.random() * 1.4,
         phase: Math.random() * Math.PI * 2,
         color: COLORS[Math.floor(Math.random() * COLORS.length)],
-        delay: Math.floor(Math.random() * 12), // salvo over ~0,2 s
+        delay: Math.random() * 120,            // salvo over ~0,12 s (ms)
       };
     });
 
     const start = performance.now();
+    let last = start;
     let raf = 0;
     const tick = (t: number) => {
       const elapsed = t - start;
+      const f = Math.min((t - last) / (1000 / 60), 3); // onafhankelijk van 60/120 Hz-schermen
+      last = t;
       const fade = elapsed > DURATION - 1500 ? Math.max(0, (DURATION - elapsed) / 1500) : 1;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.globalAlpha = fade;
       for (const p of pieces) {
-        if (p.delay > 0) { p.delay--; continue; }
-        p.phase += 0.03;
-        p.vy = Math.min(p.vy + GRAVITY, TERMINAL);
-        p.vx *= p.vy < 0 ? 0.985 : 0.96; // luchtweerstand, sterker zodra hij valt
+        if (elapsed < p.delay) continue;
+        p.phase += 0.03 * f;
+        p.vy += GRAVITY * f;
+        const v = Math.hypot(p.vx, p.vy);
+        const keep = Math.max(0, Math.exp(-LINEAR * p.drag * f) - QUADRATIC * p.drag * v * f);
+        p.vx *= keep;
+        p.vy *= keep;
         const falling = p.vy > 0;
-        p.x += p.vx + (falling ? Math.sin(p.phase) * p.sway * 0.5 : 0); // dwarrelen bij het vallen
-        p.y += p.vy;
-        p.rot += p.vr;
+        p.x += (p.vx + (falling ? Math.sin(p.phase) * p.sway * 0.5 : 0)) * f; // dwarrelen bij het vallen
+        p.y += p.vy * f;
+        p.rot += p.vr * f;
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rot);
@@ -95,18 +106,11 @@ export const ConfettiHornButton: React.FC<{ className?: string }> = ({ className
 
   return (
     <>
-      <button type="button" onClick={fire} aria-label="HAHA, I LIVE!!" title="HAHA, I LIVE!!" className={`shrink-0 p-3 rounded-xl border cursor-pointer text-xl leading-none ${className}`}>
+      <button type="button" onClick={fire} aria-label="Confetti!" title="Confetti!" className={`shrink-0 p-3 rounded-xl border cursor-pointer text-xl leading-none ${className}`}>
         <span aria-hidden>🎉</span>
       </button>
       {burst > 0 && (
-        <React.Fragment key={burst}>
-          <Confetti onDone={() => setBurst(0)} />
-          <div className="fixed inset-0 z-[71] pointer-events-none flex items-center justify-center px-4" role="status">
-            <span className="haha-i-live font-display text-[clamp(3rem,12vw,8rem)] font-extrabold uppercase leading-none text-center text-white">
-              HAHA, I LIVE!!
-            </span>
-          </div>
-        </React.Fragment>
+        <Confetti key={burst} onDone={() => setBurst(0)} />
       )}
     </>
   );
